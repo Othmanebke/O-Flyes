@@ -1,7 +1,151 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Plane, Loader2, ArrowUpRight } from "lucide-react";
 import axios from "axios";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const SUGGESTIONS = [
+  "Je veux du soleil en juillet avec 1500€",
+  "Destination froide et nature, 2 semaines en décembre",
+  "Ville culturelle en Europe, budget serré, printemps",
+  "Plage tropicale, mois d'août, 2000€ pour 2 personnes",
+];
+
+export default function Chatbot() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content:
+        "Bonjour ! Je suis votre assistant de voyage O-Flyes.\n\nDites-moi ce que vous recherchez : votre budget, vos envies (plage, montagne, ville…), si vous préférez le chaud ou le froid, et quand vous voulez partir. Je vous trouve la destination parfaite !",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const send = async (text: string) => {
+    if (!text.trim() || loading) return;
+    const userMsg: Message = { role: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+    try {
+      const history = [...messages, userMsg].map(({ role, content }) => ({ role, content }));
+      const res = await axios.post("/api/ai/chat", { messages: history });
+      setMessages((prev) => [...prev, { role: "assistant", content: res.data.reply }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Désolé, une erreur s'est produite. Veuillez réessayer." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="border border-dark-100 rounded-3xl overflow-hidden flex flex-col h-[68vh] bg-white shadow-sm">
+      {/* Header strip */}
+      <div className="border-b border-dark-100 px-6 py-3.5 flex items-center gap-3">
+        <div className="w-8 h-8 bg-dark rounded-full flex items-center justify-center">
+          <Plane className="w-3.5 h-3.5 text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-dark">O-Flyes IA</p>
+          <p className="text-[10px] text-dark-400">Assistant voyage · En ligne</p>
+        </div>
+        <span className="ml-auto w-2 h-2 rounded-full bg-green-400" />
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 bg-sand-50">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+          >
+            {msg.role === "assistant" && (
+              <div className="flex-shrink-0 w-7 h-7 bg-dark rounded-full flex items-center justify-center">
+                <Plane className="w-3 h-3 text-white" />
+              </div>
+            )}
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
+                msg.role === "assistant"
+                  ? "bg-white text-dark border border-dark-100"
+                  : "bg-dark text-white ml-auto"
+              }`}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex gap-3">
+            <div className="w-7 h-7 bg-dark rounded-full flex items-center justify-center">
+              <Plane className="w-3 h-3 text-white" />
+            </div>
+            <div className="bg-white border border-dark-100 rounded-2xl px-4 py-3 shadow-sm">
+              <Loader2 className="w-4 h-4 text-dark-400 animate-spin" />
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Suggestions */}
+      {messages.length === 1 && (
+        <div className="px-6 py-3 border-t border-dark-100 bg-white flex flex-wrap gap-2">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => send(s)}
+              className="text-xs px-3 py-1.5 rounded-full border border-dark-100 text-dark-400 hover:border-dark hover:text-dark transition-colors flex items-center gap-1.5"
+            >
+              {s}
+              <ArrowUpRight className="w-3 h-3" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="p-4 border-t border-dark-100 bg-white">
+        <form
+          onSubmit={(e) => { e.preventDefault(); send(input); }}
+          className="flex gap-2"
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Décrivez votre voyage idéal…"
+            className="flex-1 bg-sand-50 border border-dark-100 rounded-full px-5 py-3 text-sm text-dark placeholder-dark-300 focus:outline-none focus:border-dark transition-colors"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            aria-label="Envoyer"
+            title="Envoyer"
+            disabled={loading || !input.trim()}
+            className="btn-dark px-5 py-3 rounded-full disabled:opacity-40"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 
 interface Message {
   role: "user" | "assistant";

@@ -6,7 +6,7 @@
 
 ## Architecture microservices
 
-```
+```text
 O-Flyes/
 ├── frontend/                  # Next.js 14 + TypeScript + Tailwind
 │   └── src/
@@ -30,16 +30,16 @@ O-Flyes/
 
 ## Stack technique
 
-| Couche        | Technologie                            |
-|---------------|----------------------------------------|
-| Frontend      | Next.js 14, TypeScript, Tailwind CSS   |
-| Auth          | Passport.js, OAuth2/Google, JWT        |
+| Couche          | Technologie                          |
+|-----------------|--------------------------------------|
+| Frontend        | Next.js 14, TypeScript, Tailwind CSS |
+| Auth            | Passport.js, OAuth2/Google, JWT      |
 | Base de données | PostgreSQL 16, Drizzle ORM           |
-| IA / Chatbot  | OpenAI GPT-4o-mini                     |
-| Notifications | Nodemailer (SMTP), Twilio (SMS)        |
-| Paiements     | Stripe (abonnements)                   |
-| Métriques     | Prometheus + Grafana                   |
-| Conteneurs    | Docker, Docker Compose                 |
+| IA / Chatbot    | OpenAI GPT-4o-mini                   |
+| Notifications   | Nodemailer (SMTP), Twilio (SMS)      |
+| Paiements       | Stripe (abonnements)                 |
+| Métriques       | Prometheus + Grafana                 |
+| Conteneurs      | Docker, Docker Compose               |
 
 ## Démarrage rapide
 
@@ -56,17 +56,17 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-| Service       | URL                        |
-|---------------|----------------------------|
-| Frontend      | http://localhost:3000       |
-| Auth          | http://localhost:3001/health|
-| Database      | http://localhost:3002/health|
-| AI            | http://localhost:3003/health|
-| Notifications | http://localhost:3004/health|
-| Payments      | http://localhost:3005/health|
-| Metrics       | http://localhost:3006/metrics|
-| Grafana       | http://localhost:3007       |
-| Prometheus    | http://localhost:9090       |
+| Service       | URL                              |
+|---------------|----------------------------------|
+| Frontend      | `http://localhost:3000`          |
+| Auth          | `http://localhost:3001/health`   |
+| Database      | `http://localhost:3002/health`   |
+| AI            | `http://localhost:3003/health`   |
+| Notifications | `http://localhost:3004/health`   |
+| Payments      | `http://localhost:3005/health`   |
+| Metrics       | `http://localhost:3006/metrics`  |
+| Grafana       | `http://localhost:3007`          |
+| Prometheus    | `http://localhost:9090`          |
 
 ### 3. Initialiser la base de données
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "O-Flyes – Votre assistant voyage intelligent",
@@ -10,12 +11,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col bg-white text-dark">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="text-center text-gray-500 text-sm py-6 border-t border-gray-800">
-          © {new Date().getFullYear()} O-Flyes – Tous droits réservés
-        </footer>
+        <Footer />
       </body>
     </html>
   );

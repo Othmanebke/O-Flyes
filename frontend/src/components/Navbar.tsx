@@ -5,41 +5,46 @@ import { Plane } from "lucide-react";
 import { clsx } from "clsx";
 
 const links = [
-  { href: "/", label: "Accueil" },
-  { href: "/explore", label: "Explorer" },
-  { href: "/chat", label: "Chatbot" },
+  { href: "/explore", label: "Destinations" },
+  { href: "/chat",    label: "Chatbot IA" },
+  { href: "/blog",    label: "Blog" },
+  { href: "/gallery", label: "Galerie" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-white">
-          <Plane className="w-6 h-6 text-brand-400" />
+    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-dark-100">
+      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-1.5 font-semibold text-[15px] text-dark">
+          <span className="w-6 h-6 bg-dark-700 rounded-full flex items-center justify-center">
+            <Plane className="w-3 h-3 text-white" />
+          </span>
           O-Flyes
         </Link>
-        <div className="flex items-center gap-1">
+
+        {/* Center label */}
+        <span className="hidden md:block text-xs text-dark-300 tracking-wide">
+          Basé sur l'IA Voyage
+        </span>
+
+        {/* Nav links */}
+        <div className="flex items-center gap-6">
           {links.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               className={clsx(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                "text-[13px] font-medium transition-colors",
                 pathname === href
-                  ? "bg-brand-500/20 text-brand-300"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                  ? "text-dark"
+                  : "text-dark-400 hover:text-dark"
               )}
             >
               {label}
             </Link>
           ))}
-          <Link
-            href="/pricing"
-            className="ml-4 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            Pro
-          </Link>
         </div>
       </div>
     </nav>
