@@ -5,7 +5,7 @@ import { Pool } from "pg";
 import fs from "fs";
 import path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
 const PORT = process.env.DB_PORT || 3002;

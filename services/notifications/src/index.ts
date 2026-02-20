@@ -1,10 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import nodemailer from "nodemailer";
 import twilio from "twilio";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
 const PORT = process.env.NOTIF_PORT || 3004;
