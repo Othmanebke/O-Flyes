@@ -1,0 +1,18 @@
+{
+  "name": "o-flyes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered travel recommendation platform",
+  "workspaces": [
+    "frontend",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=services/auth\" \"npm run dev --workspace=services/database\" \"npm run dev --workspace=services/ai\" \"npm run dev --workspace=services/notifications\" \"npm run dev --workspace=services/payments\" \"npm run dev --workspace=services/metrics\"",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
