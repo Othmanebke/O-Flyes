@@ -66,6 +66,7 @@ export default function SearchForm({ onSearch }: Props) {
         <div>
           <label className="block text-xs text-gray-400 mb-1.5 font-medium">Climat</label>
           <select
+            title="Climat"
             value={climate}
             onChange={(e) => setClimate(e.target.value)}
             className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
@@ -104,6 +105,7 @@ export default function SearchForm({ onSearch }: Props) {
         <div>
           <label className="block text-xs text-gray-400 mb-1.5 font-medium">Période</label>
           <select
+            title="Période"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
             className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
