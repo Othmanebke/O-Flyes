@@ -6,9 +6,9 @@ import { clsx } from "clsx";
 
 const links = [
   { href: "/explore", label: "Destinations" },
-  { href: "/chat",    label: "Chatbot IA" },
   { href: "/blog",    label: "Blog" },
   { href: "/gallery", label: "Galerie" },
+  { href: "/pricing", label: "Tarifs" },
 ];
 
 export default function Navbar() {

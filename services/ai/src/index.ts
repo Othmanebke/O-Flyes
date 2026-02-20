@@ -58,6 +58,10 @@ app.post("/chat", async (req, res) => {
     res.json({ reply });
   } catch (err: any) {
     console.error(err.message);
+    const status = err?.status || err?.response?.status;
+    if (status === 429) {
+      return res.status(429).json({ error: "quota_exceeded", message: "Quota OpenAI dépassé" });
+    }
     res.status(500).json({ error: "AI service error" });
   }
 });
