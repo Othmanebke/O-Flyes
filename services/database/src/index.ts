@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool } from "pg";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -16,9 +18,23 @@ export const pool = new Pool({
   host: process.env.POSTGRES_HOST || "localhost",
   port: Number(process.env.POSTGRES_PORT) || 5432,
   user: process.env.POSTGRES_USER || "oflyes",
-  password: process.env.POSTGRES_PASSWORD || "changeme",
+  password: process.env.POSTGRES_PASSWORD || "oflyes_password",
   database: process.env.POSTGRES_DB || "oflyes_db",
 });
+
+// ── Auto-initialisation du schéma ────────────────────────────────────────────
+async function initSchema() {
+  try {
+    const schemaPath = path.join(__dirname, "schema.sql");
+    if (fs.existsSync(schemaPath)) {
+      const sql = fs.readFileSync(schemaPath, "utf-8");
+      await pool.query(sql);
+      console.log("[database-service] Schema initialized ✓");
+    }
+  } catch (err: any) {
+    console.warn("[database-service] Schema init skipped:", err.message);
+  }
+}
 
 // ── Health ───────────────────────────────────────────────────────────────────
 app.get("/health", async (_req, res) => {
@@ -88,4 +104,7 @@ app.get("/trips/user/:userId", async (req, res) => {
   res.json(result.rows);
 });
 
-app.listen(PORT, () => console.log(`[database-service] running on port ${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`[database-service] running on port ${PORT}`);
+  await initSchema();
+});
