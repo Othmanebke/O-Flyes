@@ -1,4 +1,5 @@
-import { MapPin, Star, Plane, Hotel } from "lucide-react";
+import { MapPin, Star, Plane, Hotel, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import type { Destination } from "@/app/explore/page";
 
 const BUDGET_BADGE: Record<string, string> = {
@@ -8,9 +9,10 @@ const BUDGET_BADGE: Record<string, string> = {
   luxe:    "bg-yellow-100 text-yellow-700",
 };
 
-export default function DestinationCard({ destination: d }: { destination: Destination }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden card-hover group border border-sand-100">
+    <div className="bg-white rounded-2xl overflow-hidden card-hover group border border-sand-100 shadow-md relative transition-all duration-300"
+      style={{ border: '2px solid #FFD700' }} // Contour doré
+    >
       <div className="relative h-44 overflow-hidden">
         <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -21,6 +23,12 @@ export default function DestinationCard({ destination: d }: { destination: Desti
           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
           <span className="text-white text-xs font-semibold">{d.rating}</span>
         </div>
+        {/* Bouton pour accéder à la page de détails */}
+        <Link href={`/destination/${d.id}`} passHref legacyBehavior>
+          <a className="absolute top-3 right-3 bg-white/80 rounded-full p-2 shadow hover:bg-yellow-100 transition-colors border border-yellow-400">
+            <ArrowUpRight className="w-5 h-5 text-yellow-600" />
+          </a>
+        </Link>
       </div>
       <div className="p-4">
         <h3 className="font-serif text-lg text-dark leading-tight mb-0.5">{d.name}</h3>
