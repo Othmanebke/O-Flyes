@@ -23,15 +23,8 @@ export default function HomePage() {
   return (
     <div className="bg-white">
 
-      {/* ── Plane animation strip ──────────────────────────────────────── */}
-      <div className="fixed top-20 left-0 right-0 pointer-events-none z-40 overflow-hidden h-8">
-        <div className="plane-fly text-dark/20">
-          <Plane className="w-5 h-5" />
-        </div>
-      </div>
-
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[88vh] flex items-end overflow-hidden">
+      <section className="relative min-h-[88vh] flex items-end overflow-hidden -mt-20">
         {/* Full-bleed photo */}
         <img
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=90"
@@ -57,7 +50,7 @@ export default function HomePage() {
                   Explorez les<br />Plus Beaux<br />Endroits du Monde
                 </h1>
                 <div className="flex items-center gap-3 mt-8 fade-up-delay-2">
-                  <Link href="/explore" className="btn-dark text-sm">
+                  <Link href="/explore" className="btn-gold text-sm">
                     Découvrir les destinations
                   </Link>
                   <span className="text-white/50 text-sm">ou</span>
@@ -75,7 +68,7 @@ export default function HomePage() {
                 <p className="text-white font-semibold text-2xl mb-3">12 000+</p>
                 <p className="text-white/60 text-xs mb-1">Note moyenne</p>
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-gold text-gold" />
                   <span className="text-white font-semibold text-lg">4.9</span>
                 </div>
               </div>
@@ -122,7 +115,7 @@ export default function HomePage() {
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex justify-between items-end">
                       <div>
-                        <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-[10px] tracking-wide uppercase px-2 py-0.5 rounded-full mb-1">
+                        <span className="inline-block bg-gold/80 backdrop-blur-sm text-dark text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full mb-1">
                           {d.tag}
                         </span>
                         <p className="text-white font-semibold text-sm leading-tight">{d.name}</p>
@@ -146,14 +139,14 @@ export default function HomePage() {
       </section>
 
       {/* ── MARQUEE STRIP ─────────────────────────────────────────────────── */}
-      <div className="bg-dark-700 py-4 overflow-hidden">
+      <div className="bg-dark py-4 overflow-hidden">
         <div className="marquee-inner">
           {[...Array(2)].map((_, k) => (
             <div key={k} className="flex items-center gap-10 px-10 whitespace-nowrap">
               {["Bali", "Islande", "Japon", "Maroc", "Thaïlande", "Pérou", "Norvège", "Mexique", "Vietnam", "Portugal"].map((c) => (
                 <span key={c} className="text-white/50 text-sm tracking-wider uppercase flex items-center gap-4">
                   {c}
-                  <span className="text-sand-300 text-lg">✦</span>
+                  <span className="text-gold text-lg">❖</span>
                 </span>
               ))}
             </div>
@@ -175,7 +168,7 @@ export default function HomePage() {
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
               </p>
-              <Link href="/chat" className="btn-dark">
+              <Link href="/chat" className="btn-gold">
                 Parler à notre IA
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
@@ -214,7 +207,7 @@ export default function HomePage() {
                 </p>
               </div>
               {/* Stats bubble */}
-              <div className="hidden md:block bg-white rounded-2xl p-6 min-w-[160px] text-center">
+              <div className="hidden md:block bg-white rounded-2xl p-6 min-w-[160px] text-center border-b-4 border-gold">
                 <p className="font-bold text-4xl text-dark mb-1">95%</p>
                 <p className="text-dark-400 text-xs">de voyageurs<br/>pleinement satisfaits</p>
               </div>
@@ -243,7 +236,7 @@ export default function HomePage() {
             <div className="hidden md:flex flex-col items-end">
               <p className="font-bold text-5xl text-dark">4.9</p>
               <div className="flex gap-0.5 my-1">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-sand-300 text-sand-300" />)}
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
               </div>
               <p className="text-dark-400 text-xs">856 avis vérifiés</p>
             </div>
@@ -256,11 +249,11 @@ export default function HomePage() {
             ].map((t, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 card-hover">
                 <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-sand-300 text-sand-300" />)}
+                  {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
                 </div>
                 <p className="text-dark leading-relaxed text-sm mb-5">&ldquo;{t.text}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-sand-200 rounded-full flex items-center justify-center text-sm font-semibold text-sand-500">
+                  <div className="w-9 h-9 bg-gold-50 rounded-full flex items-center justify-center text-sm font-semibold text-gold-500">
                     {t.name[0]}
                   </div>
                   <div>
@@ -327,7 +320,7 @@ export default function HomePage() {
                 de chaque instant de votre escapade.
               </p>
               <div className="flex items-center gap-3">
-                <Link href="/explore" className="btn-dark">
+                <Link href="/explore" className="btn-gold">
                   Planifier mon voyage
                 </Link>
                 <Link href="/explore" className="w-10 h-10 rounded-full border border-dark flex items-center justify-center hover:bg-dark hover:text-white transition-colors">
