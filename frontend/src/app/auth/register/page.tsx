@@ -28,7 +28,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-sand-50 flex">
       {/* Left — decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
         <div className="relative z-10">
@@ -41,9 +41,7 @@ export default function RegisterPage() {
         </div>
         <div className="relative z-10">
           <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Inscription</p>
-          <h2 className="font-serif text-5xl text-white leading-tight mb-6">
-            Votre aventure<br />vous attend.
-          </h2>
+          <h2 className="font-serif text-5xl text-white leading-tight mb-6">Votre aventure<br />vous attend.</h2>
           <p className="text-white/50 text-sm max-w-xs leading-relaxed">
             Rejoignez des milliers de voyageurs qui font confiance à O-Flyes pour planifier leurs escapades.
           </p>
@@ -75,13 +73,13 @@ export default function RegisterPage() {
             <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-white -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-dark">O-<span style={{ color: "var(--gold)" }}>Flyes</span></span>
+            <span className="font-serif text-2xl text-dark">O-<span className="text-gold">Flyes</span></span>
           </div>
           <p className="section-label mb-3">Inscription</p>
           <h1 className="font-serif text-4xl text-dark mb-2">Créer un compte</h1>
           <p className="text-dark-400 text-sm mb-10">
             Déjà inscrit ?{" "}
-            <Link href="/auth/login" className="font-medium hover:underline" style={{ color: "var(--gold)" }}>Se connecter</Link>
+            <Link href="/auth/login" className="font-medium hover:underline text-gold">Se connecter</Link>
           </p>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
@@ -91,35 +89,25 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Prénom</label>
-              <input
-                type="text" value={name} onChange={(e) => setName(e.target.value)} required
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
                 className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
-                placeholder="Votre prénom"
-              />
+                placeholder="Votre prénom" />
             </div>
             <div>
               <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Email</label>
-              <input
-                type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                 className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
-                placeholder="vous@exemple.com"
-              />
+                placeholder="vous@exemple.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Mot de passe</label>
-              <input
-                type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
                 className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
-                placeholder="8 caractères minimum"
-              />
+                placeholder="8 caractères minimum" />
             </div>
-            <button
-              type="submit" disabled={loading}
-              className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-2"
-            >
-              {loading ? "Création…" : (
-                <><span>Créer mon compte</span><ArrowRight className="w-4 h-4" /></>
-              )}
+            <button type="submit" disabled={loading}
+              className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-2">
+              {loading ? "Création…" : (<><span>Créer mon compte</span><ArrowRight className="w-4 h-4" /></>)}
             </button>
           </form>
           <p className="text-center text-xs text-dark-300 mt-8">

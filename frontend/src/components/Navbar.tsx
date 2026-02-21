@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plane } from "lucide-react";
+import { Plane, UserCircle } from "lucide-react";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 
@@ -65,6 +65,18 @@ export default function Navbar() {
             />
           </Link>
         ))}
+        <Link
+          href="/auth/login"
+          className={clsx(
+            "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:scale-105",
+            pathname.startsWith("/auth")
+              ? "border-gold text-gold bg-gold/10"
+              : "border-gold/50 text-gold hover:border-gold hover:bg-gold/10"
+          )}
+          title="Mon compte"
+        >
+          <UserCircle className="w-4 h-4" />
+        </Link>
       </div>
     </nav>
   );

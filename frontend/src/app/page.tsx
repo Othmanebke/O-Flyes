@@ -21,7 +21,7 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="bg-white">
+    <div className="bg-sand-50">
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[88vh] flex items-end overflow-hidden -mt-20">

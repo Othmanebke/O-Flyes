@@ -2,7 +2,7 @@ import { Plane } from "lucide-react";
 
 export default function ChatPage() {
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-sand-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-8 py-14 text-center">
         <p className="section-label mb-4">IA Voyage</p>
         <h1 className="font-serif text-5xl md:text-6xl text-dark leading-tight mb-6">

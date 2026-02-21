@@ -43,7 +43,7 @@ const posts = [
 export default function BlogPage() {
   const [featured, ...rest] = posts;
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-sand-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-8 py-14">
 
         {/* Header */}
