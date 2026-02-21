@@ -316,15 +316,15 @@ export default function ExplorePage() {
   const activeCount = (continent !== "Tous" ? 1 : 0) + (budgetTier !== "tous" ? 1 : 0) + (style !== "Tous" ? 1 : 0);
 
   return (
-    <div className="bg-sand-50 min-h-screen">
+    <div className="bg-sand-50 min-h-screen -mt-20">
 
       {/* ═══ HERO ════════════════════════════════════════════════════════════ */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 h-[520px]">
+      <div className="relative min-h-[580px] overflow-hidden">
+        <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=90" alt="Voyage" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-dark/50 via-dark/20 to-sand-50" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-8 pt-28 pb-0">
+        <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0">
           <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
             <Plane className="w-3.5 h-3.5 text-yellow-300" />
             <span className="text-white/90 text-xs font-medium tracking-wide">O-Flyes Destinations</span>
@@ -337,9 +337,9 @@ export default function ExplorePage() {
           </p>
           <div className="flex flex-wrap gap-6 pb-36">
             {[{ v:"22+",l:"Destinations"},{v:"5",l:"Continents"},{v:"650€",l:"À partir de"},{v:"14k€",l:"Luxe absolu"}].map(s => (
-              <div key={s.l} className="text-white">
-                <p className="text-2xl md:text-3xl font-bold">{s.v}</p>
-                <p className="text-white/50 text-xs uppercase tracking-widest">{s.l}</p>
+              <div key={s.l}>
+                <p className="text-2xl md:text-3xl font-bold text-gold-200">{s.v}</p>
+                <p className="text-white/60 text-xs uppercase tracking-widest">{s.l}</p>
               </div>
             ))}
           </div>
