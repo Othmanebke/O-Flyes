@@ -157,8 +157,8 @@ export default function PricingPage() {
               Créez votre compte gratuit et commencez à explorer en 30 secondes.
             </p>
             <div className="flex items-center gap-3">
-              <Link href="/auth/register" className="btn-dark">Créer mon compte</Link>
-              <Link href="/auth/register" className="w-10 h-10 rounded-full border border-dark flex items-center justify-center hover:bg-dark hover:text-white transition-colors">
+              <Link href="/auth/register" className="btn-gold">Créer mon compte</Link>
+              <Link href="/auth/register" className="w-10 h-10 rounded-full border border-gold flex items-center justify-center hover:bg-gold hover:text-dark transition-colors">
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>

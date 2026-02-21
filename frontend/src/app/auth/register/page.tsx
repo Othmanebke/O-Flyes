@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Plane } from "lucide-react";
+import { Plane, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -28,54 +28,105 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="glass rounded-2xl p-8 w-full max-w-md">
-        <div className="flex items-center gap-2 justify-center mb-6">
-          <Plane className="w-6 h-6 text-brand-400" />
-          <span className="font-bold text-xl">O-Flyes</span>
+    <div className="min-h-screen bg-white flex">
+      {/* Left — decorative panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
+        <div className="relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
+              <Plane className="w-5 h-5 text-dark -rotate-45" />
+            </div>
+            <span className="font-serif text-2xl text-white">O-<span className="text-gold-400">Flyes</span></span>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold mb-1 text-center">Créer un compte</h1>
-        <p className="text-gray-400 text-sm text-center mb-6">Commencez votre aventure gratuite</p>
+        <div className="relative z-10">
+          <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Inscription</p>
+          <h2 className="font-serif text-5xl text-white leading-tight mb-6">
+            Votre aventure<br />vous attend.
+          </h2>
+          <p className="text-white/50 text-sm max-w-xs leading-relaxed">
+            Rejoignez des milliers de voyageurs qui font confiance à O-Flyes pour planifier leurs escapades.
+          </p>
+        </div>
+        <div className="relative z-10 flex gap-3">
+          {[
+            { label: "Santorini", sub: "Grèce", img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=120&q=70" },
+            { label: "Islande", sub: "Aurores", img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=120&q=70" },
+            { label: "Tokyo", sub: "Japon", img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=120&q=70" },
+          ].map((d) => (
+            <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1">
+              <img src={d.img} alt={d.label} className="w-full h-24 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-2 left-3">
+                <p className="text-white text-xs font-semibold">{d.label}</p>
+                <p className="text-white/50 text-[10px]">{d.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+      </div>
 
-        {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Nom</label>
-            <input
-              type="text" value={name} onChange={(e) => setName(e.target.value)} required
-              className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-              placeholder="Votre prénom"
-            />
+      {/* Right — form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
+        <div className="w-full max-w-sm">
+          <div className="flex items-center gap-2 justify-center mb-10 lg:hidden">
+            <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
+              <Plane className="w-5 h-5 text-white -rotate-45" />
+            </div>
+            <span className="font-serif text-2xl text-dark">O-<span style={{ color: "var(--gold)" }}>Flyes</span></span>
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Email</label>
-            <input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-              className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-              placeholder="vous@exemple.com"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Mot de passe</label>
-            <input
-              type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
-              className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-              placeholder="8 caractères minimum"
-            />
-          </div>
-          <button
-            type="submit" disabled={loading}
-            className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold disabled:opacity-50 transition-colors"
-          >
-            {loading ? "Création…" : "Créer mon compte"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-400 mt-6">
-          Déjà un compte ?{" "}
-          <Link href="/auth/login" className="text-brand-400 hover:underline">Se connecter</Link>
-        </p>
+          <p className="section-label mb-3">Inscription</p>
+          <h1 className="font-serif text-4xl text-dark mb-2">Créer un compte</h1>
+          <p className="text-dark-400 text-sm mb-10">
+            Déjà inscrit ?{" "}
+            <Link href="/auth/login" className="font-medium hover:underline" style={{ color: "var(--gold)" }}>Se connecter</Link>
+          </p>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Prénom</label>
+              <input
+                type="text" value={name} onChange={(e) => setName(e.target.value)} required
+                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                placeholder="Votre prénom"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Email</label>
+              <input
+                type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                placeholder="vous@exemple.com"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Mot de passe</label>
+              <input
+                type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
+                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                placeholder="8 caractères minimum"
+              />
+            </div>
+            <button
+              type="submit" disabled={loading}
+              className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-2"
+            >
+              {loading ? "Création…" : (
+                <><span>Créer mon compte</span><ArrowRight className="w-4 h-4" /></>
+              )}
+            </button>
+          </form>
+          <p className="text-center text-xs text-dark-300 mt-8">
+            En créant un compte, vous acceptez nos{" "}
+            <a href="#" className="underline text-dark-400">Conditions d&apos;utilisation</a>.
+          </p>
+        </div>
       </div>
     </div>
   );

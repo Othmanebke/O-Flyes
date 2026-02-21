@@ -106,8 +106,8 @@ export default function BlogPage() {
               Planifiez votre voyage en quelques minutes avec notre IA.
             </p>
             <div className="flex items-center gap-3">
-              <Link href="/explore" className="btn-dark">Planifier mon voyage</Link>
-              <Link href="/explore" className="w-10 h-10 rounded-full border border-dark flex items-center justify-center hover:bg-dark hover:text-white transition-colors">
+              <Link href="/explore" className="btn-gold">Planifier mon voyage</Link>
+              <Link href="/explore" className="w-10 h-10 rounded-full border border-gold flex items-center justify-center hover:bg-gold hover:text-dark transition-colors">
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
