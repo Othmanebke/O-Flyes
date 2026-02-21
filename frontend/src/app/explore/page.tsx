@@ -339,7 +339,7 @@ export default function ExplorePage() {
             {[{ v:"22+",l:"Destinations"},{v:"5",l:"Continents"},{v:"650€",l:"À partir de"},{v:"14k€",l:"Luxe absolu"}].map(s => (
               <div key={s.l}>
                 <p className="text-2xl md:text-3xl font-bold text-gold-200">{s.v}</p>
-                <p className="text-white/60 text-xs uppercase tracking-widest">{s.l}</p>
+                <p className="text-dark text-xs uppercase tracking-widest font-semibold">{s.l}</p>
               </div>
             ))}
           </div>
