@@ -2,12 +2,12 @@
 
 const planes = [
   { cls: "shoot-1", size: 10 },
-  { cls: "shoot-2", size: 7 },
+  { cls: "shoot-2", size: 7  },
   { cls: "shoot-3", size: 13 },
-  { cls: "shoot-4", size: 8 },
+  { cls: "shoot-4", size: 8  },
   { cls: "shoot-5", size: 11 },
-  { cls: "shoot-6", size: 6 },
-  { cls: "shoot-7", size: 9 },
+  { cls: "shoot-6", size: 6  },
+  { cls: "shoot-7", size: 9  },
   { cls: "shoot-8", size: 14 },
 ];
 
