@@ -28,7 +28,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-sand-50 flex">
       {/* Left — decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
         <div className="relative z-10">
@@ -41,9 +41,7 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10">
           <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Bienvenue</p>
-          <h2 className="font-serif text-5xl text-white leading-tight mb-6">
-            Chaque voyage<br />commence ici.
-          </h2>
+          <h2 className="font-serif text-5xl text-white leading-tight mb-6">Chaque voyage<br />commence ici.</h2>
           <p className="text-white/50 text-sm max-w-xs leading-relaxed">
             Décrivez vos envies, laissez notre IA vous guider vers la destination parfaite.
           </p>
@@ -75,13 +73,13 @@ export default function LoginPage() {
             <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-white -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-dark">O-<span style={{ color: "var(--gold)" }}>Flyes</span></span>
+            <span className="font-serif text-2xl text-dark">O-<span className="text-gold">Flyes</span></span>
           </div>
           <p className="section-label mb-3">Connexion</p>
           <h1 className="font-serif text-4xl text-dark mb-2">Content de vous revoir</h1>
           <p className="text-dark-400 text-sm mb-10">
             Pas encore de compte ?{" "}
-            <Link href="/auth/register" className="font-medium hover:underline" style={{ color: "var(--gold)" }}>S&apos;inscrire</Link>
+            <Link href="/auth/register" className="font-medium hover:underline text-gold">S&apos;inscrire</Link>
           </p>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
@@ -91,30 +89,22 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Email</label>
-              <input
-                type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                 className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
-                placeholder="vous@exemple.com"
-              />
+                placeholder="vous@exemple.com" />
             </div>
             <div>
               <div className="flex justify-between mb-2">
                 <label className="text-xs font-medium text-dark-400 uppercase tracking-widest">Mot de passe</label>
-                <a href="#" className="text-xs hover:underline" style={{ color: "var(--gold)" }}>Oublié ?</a>
+                <a href="#" className="text-xs text-gold hover:underline">Oublié ?</a>
               </div>
-              <input
-                type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
                 className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
-                placeholder="••••••••"
-              />
+                placeholder="••••••••" />
             </div>
-            <button
-              type="submit" disabled={loading}
-              className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-2"
-            >
-              {loading ? "Connexion…" : (
-                <><span>Se connecter</span><ArrowRight className="w-4 h-4" /></>
-              )}
+            <button type="submit" disabled={loading}
+              className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-2">
+              {loading ? "Connexion…" : (<><span>Se connecter</span><ArrowRight className="w-4 h-4" /></>)}
             </button>
           </form>
           <div className="my-6 flex items-center gap-3">
@@ -122,10 +112,8 @@ export default function LoginPage() {
             <span className="text-dark-300 text-xs">ou</span>
             <hr className="flex-1 border-sand-200" />
           </div>
-          <a
-            href="/api/auth/auth/google"
-            className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors"
-          >
+          <a href="/api/auth/auth/google"
+            className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
