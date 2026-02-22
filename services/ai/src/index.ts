@@ -36,10 +36,10 @@ interface EnrichedDestination {
 // ── Gemini model ─────────────────────────────────────────────────────────────
 function getModel() {
   return genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     safetySettings: [
-      { category: HarmCategory.HARM_CATEGORY_HARASSMENT,        threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,       threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
       { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
       { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
     ],
@@ -91,7 +91,13 @@ app.post("/chat", async (req, res) => {
   try {
     const model = getModel();
 
-    const history = messages.slice(0, -1).map(m => ({
+    // Build history: Gemini requires it starts with 'user'.
+    // Drop the welcome assistant message and any other leading assistant messages.
+    const allMessages = messages.slice(0, -1);
+    const firstUserIdx = allMessages.findIndex(m => m.role === "user");
+    const trimmedHistory = firstUserIdx >= 0 ? allMessages.slice(firstUserIdx) : [];
+
+    const history = trimmedHistory.map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.role === "assistant" ? m.content.split("<<<ENRICHED>>>")[0].trim() : m.content }],
     }));
@@ -127,7 +133,7 @@ app.post("/chat", async (req, res) => {
         user_id: userId,
         role: "assistant",
         content: reply,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     res.json({ reply, enriched });
