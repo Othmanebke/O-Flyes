@@ -81,7 +81,7 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
 
       {dest.activities?.length > 0 && (
         <div className="px-4 pb-3">
-          <p className="text-[10px] text-white/50 uppercase tracking-wider mb-2">✨ Guide d activités</p>
+          <p className="text-[10px] text-white/50 uppercase tracking-wider mb-2">✨ Guide d&apos;activités</p>
           <div className="space-y-1.5">
             {dest.activities.map((act, i) => (
               <div key={i} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-1.5">
@@ -126,7 +126,7 @@ export default function Chatbot() {
     setLoading(true);
     try {
       const history = [...messages, userMsg].map(({ role, content }) => ({ role, content }));
-      const res = await axios.post("/api/ai/chat", { messages: history });
+      const res = await axios.post("http://localhost:3002/api/ai/chat", { messages: history });
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: res.data.reply, enriched: res.data.enriched },
@@ -136,7 +136,7 @@ export default function Chatbot() {
         ...prev,
         {
           role: "assistant",
-          content: "Désolé, une erreur s est produite. Le service IA est peut-être hors ligne.",
+          content: "Désolé, une erreur s'est produite. Le service IA est peut-être hors ligne.",
         },
       ]);
     } finally {

@@ -1,4 +1,5 @@
 import { Plane } from "lucide-react";
+import Chatbot from "@/components/Chatbot";
 
 export default function ChatPage() {
   return (
@@ -35,6 +36,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <Chatbot />
     </div>
   );
 }
