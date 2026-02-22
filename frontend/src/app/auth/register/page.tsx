@@ -19,9 +19,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await axios.post("/api/auth/auth/register", { name, email, password });
-      router.push("/auth/login");
-    } catch {
-      setError("Une erreur s'est produite. Veuillez réessayer.");
+      router.push("/auth/verify-email"); // ← redirige vers la page "vérifiez votre email"
+    } catch (err: any) {
+      const msg = err?.response?.data?.error;
+      setError(msg || "Une erreur s'est produite. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
