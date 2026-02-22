@@ -2,6 +2,7 @@ import { MapPin, Star, Plane, Hotel, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import type { Destination } from "@/app/explore/page";
 
+// On définit les couleurs des badges selon le type de budget
 const BUDGET_BADGE: Record<string, string> = {
   petit:   "bg-emerald-100 text-emerald-700",
   moyen:   "bg-blue-100 text-blue-700",
@@ -9,37 +10,65 @@ const BUDGET_BADGE: Record<string, string> = {
   luxe:    "bg-yellow-100 text-yellow-700",
 };
 
+interface DestinationCardProps {
+  d: Destination;
+}
+
+export default function DestinationCard({ d }: DestinationCardProps) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden card-hover group border border-sand-100 shadow-md relative transition-all duration-300"
-      style={{ border: '2px solid #FFD700' }} // Contour doré
+    <div 
+      className="bg-white rounded-2xl overflow-hidden card-hover group border border-sand-100 shadow-md relative transition-all duration-300 h-full"
+      style={{ border: '2px solid #FFD700' }} // Ton contour doré personnalisé
     >
+      {/* IMAGE & BADGES */}
       <div className="relative h-44 overflow-hidden">
-        <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        <img 
+          src={d.img} 
+          alt={d.name} 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
+        
+        {/* Badge Budget */}
+        <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier] || "bg-gray-100"}`}>
           {d.budgetTier.charAt(0).toUpperCase() + d.budgetTier.slice(1)}
         </span>
+
+        {/* Note (Rating) */}
         <div className="absolute bottom-3 left-3 flex items-center gap-1">
           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
           <span className="text-white text-xs font-semibold">{d.rating}</span>
         </div>
+
         {/* Bouton pour accéder à la page de détails */}
-        <Link href={`/destination/${d.id}`} passHref legacyBehavior>
-          <a className="absolute top-3 right-3 bg-white/80 rounded-full p-2 shadow hover:bg-yellow-100 transition-colors border border-yellow-400">
+        <Link href={`/destination/${d.id}`} className="absolute top-3 right-3 bg-white/80 rounded-full p-2 shadow hover:bg-yellow-100 transition-colors border border-yellow-400 z-10">
             <ArrowUpRight className="w-5 h-5 text-yellow-600" />
-          </a>
         </Link>
       </div>
+
+      {/* CONTENU TEXTE */}
       <div className="p-4">
         <h3 className="font-serif text-lg text-dark leading-tight mb-0.5">{d.name}</h3>
-        <p className="text-dark-400 text-xs flex items-center gap-1 mb-3"><MapPin className="w-3 h-3" />{d.country}</p>
+        <p className="text-dark-400 text-xs flex items-center gap-1 mb-3">
+          <MapPin className="w-3 h-3" />{d.country}
+        </p>
         <p className="text-dark-400 text-xs mb-3 line-clamp-2">{d.description}</p>
+        
+        {/* BLOC BUDGET DÉTAILLÉ */}
         <div className="bg-sand-50 rounded-lg p-2.5">
-          <p className="text-[10px] text-dark-300 mb-1">Budget 2 pers / 2 semaines</p>
-          <p className="text-dark font-bold text-sm">{d.tripBudget.min.toLocaleString()}€ <span className="text-dark-300 font-normal">— {d.tripBudget.max.toLocaleString()}€</span></p>
+          <p className="text-[10px] text-dark-300 mb-1 uppercase font-bold">Budget 2 pers / 2 semaines</p>
+          <p className="text-dark font-bold text-sm">
+            {d.tripBudget.min.toLocaleString()}€ 
+            <span className="text-dark-300 font-normal"> — {d.tripBudget.max.toLocaleString()}€</span>
+          </p>
+          
           <div className="flex gap-3 mt-1">
-            <span className="text-dark-400 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5" /> ~{d.flightFrom}€/pers</span>
-            <span className="text-dark-400 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5" /> ~{d.hotelPerNight}€/nuit</span>
+            <span className="text-dark-400 text-[10px] flex items-center gap-1">
+              <Plane className="w-2.5 h-2.5" /> ~{d.flightFrom}€/pers
+            </span>
+            <span className="text-dark-400 text-[10px] flex items-center gap-1">
+              <Hotel className="w-2.5 h-2.5" /> ~{d.hotelPerNight}€/nuit
+            </span>
           </div>
         </div>
       </div>

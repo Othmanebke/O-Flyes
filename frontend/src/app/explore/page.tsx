@@ -455,7 +455,7 @@ export default function ExplorePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filtered.map(d => (
-              <div key={d.id} className="bg-white rounded-3xl overflow-hidden card-hover group border border-sand-100">
+              <Link key={d.id} href={`/destination/${d.id}`} className="bg-white rounded-3xl overflow-hidden card-hover group border border-sand-100 block hover:shadow-lg transition-shadow">
                 <div className="relative h-48 overflow-hidden">
                   <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -475,9 +475,9 @@ export default function ExplorePage() {
                       <h3 className="font-serif text-xl text-dark leading-tight">{d.name}</h3>
                       <p className="text-dark-400 text-xs flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{d.country}</p>
                     </div>
-                    <Link href="/chat" className="w-8 h-8 rounded-full border border-sand-200 flex items-center justify-center hover:bg-dark hover:text-white hover:border-dark transition-all flex-shrink-0">
+                    <span className="w-8 h-8 rounded-full border border-sand-200 flex items-center justify-center bg-sand-50 group-hover:bg-dark group-hover:text-white group-hover:border-dark transition-all flex-shrink-0">
                       <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
+                    </span>
                   </div>
                   <p className="text-dark-400 text-xs leading-relaxed mb-4 line-clamp-2">{d.description}</p>
                   <div className="bg-sand-50 rounded-xl p-3 mb-4">
@@ -496,7 +496,7 @@ export default function ExplorePage() {
                     {d.style.slice(0, 3).map(s => <span key={s} className="tag capitalize text-[10px]">{s}</span>)}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
