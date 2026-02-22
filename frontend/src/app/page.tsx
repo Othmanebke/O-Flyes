@@ -1,67 +1,124 @@
 "use client";
 import Link from "next/link";
-import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+
+const HERO_SLIDES = [
+  {
+    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1800&q=90",
+    location: "Nouvelle-Zélande",
+    title: "Explorez les\nPlus Beaux\nEndroits du Monde",
+    sub: "Laissez l'IA trouver votre destination idéale",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1800&q=90",
+    location: "Bali, Indonésie",
+    title: "Rizières, Temples\net Plages de Rêve",
+    sub: "L'Asie du Sud-Est à partir de 890€ tout compris",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=1800&q=90",
+    location: "Marrakech, Maroc",
+    title: "Souks, Épices\nRiads et Désert",
+    sub: "La magie de l'Afrique du Nord dès 490€",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=1800&q=90",
+    location: "Islande",
+    title: "Aurores Boréales\nGlaciers et\nGeysers",
+    sub: "L'aventure arctique à 3h de Paris",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=1800&q=90",
+    location: "Kyoto, Japon",
+    title: "Sakura, Temples\nZen et Ramen",
+    sub: "Le Japon, une expérience totale et inoubliable",
+  },
+];
 
 const destinations = [
-  { name: "Bali, Indonésie",    tag: "Farniente",  price: "À partir de 890€", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80", temp: "☀️ 30°C", period: "Avr – Oct" },
-  { name: "Islande",            tag: "Aventure",   price: "À partir de 1290€", img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=600&q=80", temp: "❄️ -5°C", period: "Déc – Mar" },
-  { name: "Marrakech, Maroc",   tag: "Culture",    price: "À partir de 490€", img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80", temp: "🌤 22°C", period: "Mar – Mai" },
-  { name: "Kyoto, Japon",       tag: "Dépaysement", price: "À partir de 1490€", img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=600&q=80", temp: "🌸 18°C", period: "Mar – Avr" },
+  { name: "Bali, Indonésie", tag: "Farniente", price: "À partir de 890€", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80", temp: "☀️ 30°C", period: "Avr – Oct" },
+  { name: "Islande", tag: "Aventure", price: "À partir de 1290€", img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=600&q=80", temp: "❄️ -5°C", period: "Déc – Mar" },
+  { name: "Marrakech, Maroc", tag: "Culture", price: "À partir de 490€", img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80", temp: "🌤 22°C", period: "Mar – Mai" },
+  { name: "Kyoto, Japon", tag: "Dépaysement", price: "À partir de 1490€", img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=600&q=80", temp: "🌸 18°C", period: "Mar – Avr" },
 ];
 
 const faqs = [
-  { q: "Comment fonctionne l'IA ?",          a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
+  { q: "Comment fonctionne l'IA ?", a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
   { q: "Le chatbot est-il disponible 24h/24 ?", a: "Oui, le chatbot IA est disponible à toute heure pour répondre à vos questions et affiner vos recommandations de voyage." },
-  { q: "Peut-on réserver directement ?",      a: "Pour l'instant, O-Flyes vous propose des recommandations détaillées avec toutes les infos pratiques. La réservation directe arrive bientôt." },
+  { q: "Peut-on réserver directement ?", a: "Pour l'instant, O-Flyes vous propose des recommandations détaillées avec toutes les infos pratiques. La réservation directe arrive bientôt." },
   { q: "Les estimations de prix sont-elles fiables ?", a: "Les prix affichés sont des estimations basées sur les moyennes de marché. Ils varient selon la saison et le délai de réservation." },
 ];
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [slide, setSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(-1);
+  const [transitioning, setTransitioning] = useState(false);
+
+  const goTo = useCallback((idx: number) => {
+    if (transitioning) return;
+    setTransitioning(true);
+    setPrevSlide(slide);
+    setSlide(idx);
+    setTimeout(() => { setPrevSlide(-1); setTransitioning(false); }, 900);
+  }, [slide, transitioning]);
+
+  const next = useCallback(() => goTo((slide + 1) % HERO_SLIDES.length), [slide, goTo]);
+  const prev = useCallback(() => goTo((slide - 1 + HERO_SLIDES.length) % HERO_SLIDES.length), [slide, goTo]);
+
+  useEffect(() => {
+    const timer = setInterval(next, 5000);
+    return () => clearInterval(timer);
+  }, [next]);
 
   return (
     <div className="bg-sand-50">
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      {/* ── HERO SLIDESHOW ──────────────────────────────────────────────── */}
       <section className="relative min-h-[88vh] flex items-end overflow-hidden -mt-20">
-        {/* Full-bleed photo */}
-        <img
-          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=90"
-          alt="Paysage montagne"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Dark gradient overlay bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        {/* Top fade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent h-48" />
+        {/* Slides — crossfade */}
+        {HERO_SLIDES.map((s, i) => (
+          <div
+            key={i}
+            className="absolute inset-0 transition-opacity duration-[900ms]"
+            style={{ opacity: i === slide ? 1 : 0, zIndex: i === slide ? 2 : i === prevSlide ? 1 : 0 }}
+          >
+            <img src={s.img} alt={s.location} className="absolute inset-0 w-full h-full object-cover" />
+          </div>
+        ))}
+
+        {/* Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent z-10" />
+        <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/15 to-transparent h-32 z-10" />
 
         {/* Content */}
-        <div className="relative z-10 w-full">
+        <div className="relative z-20 w-full">
           <div className="max-w-7xl mx-auto px-8 pb-16">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-              {/* Left – big title */}
-              <div>
-                <div className="flex items-center gap-3 mb-5">
+              {/* Left – dynamic title */}
+              <div className="max-w-lg">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-px bg-white/60" />
                   <span className="text-white/70 text-[11px] tracking-widest uppercase">O-Flyes</span>
+                  <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
+                    {HERO_SLIDES[slide].location}
+                  </span>
                 </div>
-                <h1 className="font-serif text-5xl md:text-7xl text-white leading-[1.1] max-w-lg fade-up">
-                  Explorez les<br />Plus Beaux<br />Endroits du Monde
+                <h1 className="font-serif text-5xl md:text-7xl text-white leading-[1.08] whitespace-pre-line">
+                  {HERO_SLIDES[slide].title}
                 </h1>
-                <div className="flex items-center gap-3 mt-8 fade-up-delay-2">
-                  <Link href="/explore" className="btn-gold text-sm">
-                    Découvrir les destinations
-                  </Link>
+                <p className="text-white/60 text-sm mt-4 mb-8">{HERO_SLIDES[slide].sub}</p>
+                <div className="flex items-center gap-3">
+                  <Link href="/explore" className="btn-gold text-sm">Découvrir les destinations</Link>
                   <span className="text-white/50 text-sm">ou</span>
                   <Link href="/chat" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors">
-                    <MessageCircle className="w-4 h-4" />
-                    Parler à l&apos;IA
+                    <MessageCircle className="w-4 h-4" />Parler à l&apos;IA
                   </Link>
                 </div>
               </div>
-              {/* Right – small info card */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[220px] fade-up-delay-3">
+              {/* Right – stats card */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[220px]">
                 <p className="text-white/60 text-xs mb-1">Destinations analysées</p>
                 <p className="text-white font-semibold text-2xl mb-3">500+</p>
                 <p className="text-white/60 text-xs mb-1">Voyageurs satisfaits</p>
@@ -72,6 +129,23 @@ export default function HomePage() {
                   <span className="text-white font-semibold text-lg">4.9</span>
                 </div>
               </div>
+            </div>
+
+            {/* Controls — arrows + dots */}
+            <div className="flex items-center gap-4 mt-10">
+              <button onClick={prev} className="w-9 h-9 rounded-full border border-white/30 hover:border-white/70 flex items-center justify-center text-white/70 hover:text-white transition-all">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex gap-2">
+                {HERO_SLIDES.map((_, i) => (
+                  <button key={i} onClick={() => goTo(i)}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"}`}
+                  />
+                ))}
+              </div>
+              <button onClick={next} className="w-9 h-9 rounded-full border border-white/30 hover:border-white/70 flex items-center justify-center text-white/70 hover:text-white transition-all">
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -209,7 +283,7 @@ export default function HomePage() {
               {/* Stats bubble */}
               <div className="hidden md:block bg-white rounded-2xl p-6 min-w-[160px] text-center border-b-4 border-gold">
                 <p className="font-bold text-4xl text-dark mb-1">95%</p>
-                <p className="text-dark-400 text-xs">de voyageurs<br/>pleinement satisfaits</p>
+                <p className="text-dark-400 text-xs">de voyageurs<br />pleinement satisfaits</p>
               </div>
             </div>
             {/* CTA button center bottom */}
@@ -244,7 +318,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { name: "Sophie M.", loc: "Paris", text: "O-Flyes m'a trouvé Bali en 30 secondes avec mon budget exact. Le chatbot est bluffant de précision !", stars: 5 },
-              { name: "Thomas B.", loc: "Lyon",  text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },
+              { name: "Thomas B.", loc: "Lyon", text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },
               { name: "Marie L.", loc: "Bordeaux", text: "Interface top, réponses ultra rapides. J'ai planifié mon voyage au Japon en une soirée. Je recommande !", stars: 5 },
             ].map((t, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 card-hover">
