@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import axios from "axios";
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
@@ -14,7 +14,7 @@ const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 app.use(cors());
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "" });
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Activity {
@@ -31,19 +31,6 @@ interface EnrichedDestination {
   booking_url: string;
   flights_url: string;
   activities: Activity[];
-}
-
-// ── Gemini model ─────────────────────────────────────────────────────────────
-function getModel() {
-  return genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    safetySettings: [
-      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    ],
-  });
 }
 
 function stripFences(raw: string) {
@@ -77,7 +64,7 @@ RÈGLE IMPORTANTE : Dès que tu mentionnes des destinations concrètes, inclus T
 Si tu poses uniquement des questions ou tu ne recommandes pas encore de destination précise, n'inclus PAS ce bloc JSON.`;
 
 // ── Health ────────────────────────────────────────────────────────────────────
-app.get("/health", (_req, res) => res.json({ status: "ok", service: "ai", provider: "gemini" }));
+app.get("/health", (_req, res) => res.json({ status: "ok", service: "ai", provider: "groq" }));
 
 // ── POST /chat – conversational chatbot ──────────────────────────────────────
 app.post("/chat", async (req, res) => {
@@ -89,28 +76,29 @@ app.post("/chat", async (req, res) => {
   if (!messages?.length) return res.status(400).json({ error: "No messages" });
 
   try {
-    const model = getModel();
-
-    // Build history: Gemini requires it starts with 'user'.
-    // Drop the welcome assistant message and any other leading assistant messages.
     const allMessages = messages.slice(0, -1);
     const firstUserIdx = allMessages.findIndex(m => m.role === "user");
     const trimmedHistory = firstUserIdx >= 0 ? allMessages.slice(firstUserIdx) : [];
 
     const history = trimmedHistory.map(m => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.role === "assistant" ? m.content.split("<<<ENRICHED>>>")[0].trim() : m.content }],
+      role: m.role as "user" | "assistant",
+      content: m.role === "assistant" ? m.content.split("<<<ENRICHED>>>")[0].trim() : m.content,
     }));
 
     const lastMessage = messages[messages.length - 1].content;
 
-    const chat = model.startChat({
-      history,
-      systemInstruction: { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...history,
+        { role: "user", content: lastMessage }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 2048,
     });
 
-    const result = await chat.sendMessage(lastMessage);
-    const raw = result.response.text();
+    const raw = chatCompletion.choices[0]?.message?.content || "";
 
     // ── Extract enriched block if present ────────────────────────────────────
     const enrichedMatch = raw.match(/<<<ENRICHED>>>([\s\S]*?)<<<END>>>/);
@@ -138,7 +126,7 @@ app.post("/chat", async (req, res) => {
 
     res.json({ reply, enriched });
   } catch (err: any) {
-    console.error("[ai] Gemini error:", err.message);
+    console.error("[ai] Groq error:", err.message);
     res.status(500).json({ error: "AI service error", detail: err.message });
   }
 });
@@ -170,15 +158,22 @@ Réponds UNIQUEMENT en JSON valide (pas de texte autour) avec ce format :
 }`;
 
   try {
-    const model = getModel();
-    const result = await model.generateContent(prompt);
-    const raw = result.response.text().trim();
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 2048,
+    });
+
+    const raw = chatCompletion.choices[0]?.message?.content || "";
     const parsed = JSON.parse(stripFences(raw.replace(/<<<ENRICHED>>>[\s\S]*?<<<END>>>/, "")));
     res.json(parsed);
   } catch (err: any) {
-    console.error("[ai] Gemini recommend error:", err.message);
+    console.error("[ai] Groq recommend error:", err.message);
     res.status(500).json({ error: "AI service error", detail: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`[ai-service] Gemini 1.5 Flash running on port ${PORT}`));
+app.listen(PORT, () => console.log(`[ai-service] Groq Llama 3 running on port ${PORT}`));
