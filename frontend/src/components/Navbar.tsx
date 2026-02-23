@@ -42,10 +42,25 @@ export default function Navbar() {
     <nav
       className={clsx(
         "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl px-5 h-14 flex items-center justify-between",
-        "rounded-2xl border transition-all duration-300",
+        "rounded-2xl transition-all duration-500 ease-out",
         scrolled
-          ? "bg-white/90 backdrop-blur-md border-gold-100 shadow-lg shadow-black/5"
-          : "bg-white/60 backdrop-blur-sm border-white/80 shadow-md shadow-black/5"
+          ? [
+              // Glass pill — iOS style
+              "bg-white/70 backdrop-blur-2xl",
+              // Outer border — clean side edges
+              "border border-white/40",
+              // Soft inner highlight (ring = inset border)
+              "ring-1 ring-inset ring-white/60",
+              // Elevation shadow
+              "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_2px_rgba(255,255,255,0.6)_inset]",
+            ].join(" ")
+          : [
+              // Transparent at top
+              "bg-white/20 backdrop-blur-sm",
+              "border border-white/20",
+              "ring-1 ring-inset ring-white/30",
+              "shadow-sm",
+            ].join(" ")
       )}
     >
       {/* Logo */}
