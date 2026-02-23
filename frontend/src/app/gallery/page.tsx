@@ -36,22 +36,22 @@ export default function GalleryPage() {
       <div className="relative min-h-[580px] md:min-h-[70vh] overflow-hidden mb-16">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1480004902249-cdb28d6a01a4?q=80&w=1011&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            src="https://plus.unsplash.com/premium_photo-1697730034915-1a8b88f57257?q=80&w=1814&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             alt="Coucher de soleil majestueux sur le désert (4K)"
             className="w-full h-full object-cover"
           />
-          {/* Subtle overlay for legibility and theme consistency */}
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/60 via-dark/40 to-sand-50" />
+          {/* Stronger overlay for better legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-dark/70 via-dark/50 to-sand-50" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-8 pt-40 pb-0">
-          <div className="inline-flex items-center gap-2 bg-sand-50/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
+          <div className="inline-flex items-center gap-2 bg-dark/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-1.5 mb-6">
             <Plane className="w-3.5 h-3.5 text-gold" />
-            <span className="text-white/90 text-xs font-medium tracking-wide">AIVANA Vision</span>
+            <span className="text-white text-xs font-medium tracking-wide">AIVANA Vision</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl">
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-lg">
             L'Évasion<br /><span className="italic text-gold">en images.</span>
           </h1>
-          <p className="text-white/80 text-sm md:text-base max-w-lg mb-8">
+          <p className="text-white text-sm md:text-base max-w-lg mb-8 drop-shadow-md font-medium">
             Une curation d'images saisissantes pour inspirer vos prochains voyages. La beauté du monde se trouve dans les détails.
           </p>
           <div className="flex flex-wrap gap-6 pb-32">
@@ -60,9 +60,9 @@ export default function GalleryPage() {
               { v: "120", l: "Destinations" },
               { v: "100%", l: "Inspiration" }
             ].map(s => (
-              <div key={s.l}>
+              <div key={s.l} className="drop-shadow-md">
                 <p className="text-2xl md:text-3xl font-bold text-gold">{s.v}</p>
-                <p className="text-sand-50 text-xs uppercase tracking-widest font-semibold">{s.l}</p>
+                <p className="text-white text-xs uppercase tracking-widest font-bold">{s.l}</p>
               </div>
             ))}
           </div>
