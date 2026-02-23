@@ -40,18 +40,18 @@ export default function GalleryPage() {
             alt="Coucher de soleil majestueux sur le désert (4K)"
             className="w-full h-full object-cover"
           />
-          {/* Stronger overlay for better legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/70 via-dark/50 to-sand-50" />
+          {/* Enhanced overlay: Darker transition to protect the text areas */}
+          <div className="absolute inset-0 bg-gradient-to-b from-dark/80 via-dark/40 to-sand-50/80" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-8 pt-40 pb-0">
           <div className="inline-flex items-center gap-2 bg-dark/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-1.5 mb-6">
             <Plane className="w-3.5 h-3.5 text-gold" />
             <span className="text-white text-xs font-medium tracking-wide">AIVANA Vision</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-lg">
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-xl">
             L'Évasion<br /><span className="italic text-gold">en images.</span>
           </h1>
-          <p className="text-white text-sm md:text-base max-w-lg mb-8 drop-shadow-md font-medium">
+          <p className="text-dark text-sm md:text-base max-w-lg mb-8 font-bold leading-relaxed">
             Une curation d'images saisissantes pour inspirer vos prochains voyages. La beauté du monde se trouve dans les détails.
           </p>
           <div className="flex flex-wrap gap-6 pb-32">
@@ -60,9 +60,9 @@ export default function GalleryPage() {
               { v: "120", l: "Destinations" },
               { v: "100%", l: "Inspiration" }
             ].map(s => (
-              <div key={s.l} className="drop-shadow-md">
-                <p className="text-2xl md:text-3xl font-bold text-gold">{s.v}</p>
-                <p className="text-white text-xs uppercase tracking-widest font-bold">{s.l}</p>
+              <div key={s.l}>
+                <p className="text-2xl md:text-3xl font-bold text-gold drop-shadow-sm">{s.v}</p>
+                <p className="text-dark/80 text-xs uppercase tracking-widest font-black">{s.l}</p>
               </div>
             ))}
           </div>
