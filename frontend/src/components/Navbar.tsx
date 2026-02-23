@@ -45,22 +45,22 @@ export default function Navbar() {
         "rounded-2xl transition-all duration-500 ease-out",
         scrolled
           ? [
-              // Glass pill — iOS style
-              "bg-white/70 backdrop-blur-2xl",
-              // Outer border — clean side edges
-              "border border-white/40",
-              // Soft inner highlight (ring = inset border)
-              "ring-1 ring-inset ring-white/60",
-              // Elevation shadow
-              "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_2px_rgba(255,255,255,0.6)_inset]",
-            ].join(" ")
+            // Glass pill — iOS style
+            "bg-sand-50/70 backdrop-blur-2xl",
+            // Outer border — clean side edges
+            "border border-white/40",
+            // Soft inner highlight (ring = inset border)
+            "ring-1 ring-inset ring-white/60",
+            // Elevation shadow
+            "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_2px_rgba(255,255,255,0.6)_inset]",
+          ].join(" ")
           : [
-              // Transparent at top
-              "bg-white/20 backdrop-blur-sm",
-              "border border-white/20",
-              "ring-1 ring-inset ring-white/30",
-              "shadow-sm",
-            ].join(" ")
+            // Transparent at top
+            "bg-sand-50/20 backdrop-blur-sm",
+            "border border-white/20",
+            "ring-1 ring-inset ring-white/30",
+            "shadow-sm",
+          ].join(" ")
       )}
     >
       {/* Logo */}
@@ -68,7 +68,7 @@ export default function Navbar() {
         <span className="w-7 h-7 bg-dark rounded-xl flex items-center justify-center">
           <Plane className="w-3.5 h-3.5 text-white" />
         </span>
-        <span>O&ndash;<span className="text-gold">Flyes</span></span>
+        <span>AI<span className="text-gold">VANA</span></span>
       </Link>
 
       {/* Center label */}
@@ -109,7 +109,7 @@ export default function Navbar() {
             )}
             title="Mon dashboard"
           >
-            <span className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 text-[10px] font-bold">
+            <span className="w-5 h-5 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 text-[10px] font-bold">
               {userName.charAt(0).toUpperCase() || "?"}
             </span>
             <span className="hidden sm:block">Dashboard</span>

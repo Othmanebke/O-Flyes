@@ -50,7 +50,7 @@ export default function BlogPage() {
         <div className="mb-12">
           <p className="section-label mb-2">Blog</p>
           <div className="flex items-end justify-between">
-            <h1 className="font-serif text-5xl md:text-6xl text-dark">O-Flyes Journal</h1>
+            <h1 className="font-serif text-5xl md:text-6xl text-dark">AIVANA Journal</h1>
             <p className="hidden md:block text-dark-400 text-sm max-w-xs text-right">
               Votre guide pour explorer le monde —<br />les meilleures saisons et itinéraires.
             </p>
@@ -69,7 +69,7 @@ export default function BlogPage() {
             <p className="text-white/60 text-xs mb-2">{featured.date}</p>
             <h2 className="font-serif text-3xl md:text-4xl text-white leading-tight">{featured.title}</h2>
           </div>
-          <div className="absolute top-5 right-5 w-9 h-9 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-5 right-5 w-9 h-9 bg-sand-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <ArrowUpRight className="w-4 h-4 text-dark" />
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function BlogPage() {
                 <p className="text-white/60 text-[10px] mb-1">{post.date}</p>
                 <h3 className="font-semibold text-white text-sm leading-snug">{post.title}</h3>
               </div>
-              <div className="absolute top-3 right-3 w-7 h-7 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-3 right-3 w-7 h-7 bg-sand-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <ArrowUpRight className="w-3.5 h-3.5 text-dark" />
               </div>
             </div>

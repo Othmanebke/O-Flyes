@@ -46,7 +46,7 @@ const destinations = [
 const faqs = [
   { q: "Comment fonctionne l'IA ?", a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
   { q: "Le chatbot est-il disponible 24h/24 ?", a: "Oui, le chatbot IA est disponible à toute heure pour répondre à vos questions et affiner vos recommandations de voyage." },
-  { q: "Peut-on réserver directement ?", a: "Pour l'instant, O-Flyes vous propose des recommandations détaillées avec toutes les infos pratiques. La réservation directe arrive bientôt." },
+  { q: "Peut-on réserver directement ?", a: "Pour l'instant, AIVANA vous propose des recommandations détaillées avec toutes les infos pratiques. La réservation directe arrive bientôt." },
   { q: "Les estimations de prix sont-elles fiables ?", a: "Les prix affichés sont des estimations basées sur les moyennes de marché. Ils varient selon la saison et le délai de réservation." },
 ];
 
@@ -99,8 +99,8 @@ export default function HomePage() {
               {/* Left – dynamic title */}
               <div className="max-w-lg">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-px bg-white/60" />
-                  <span className="text-white/70 text-[11px] tracking-widest uppercase">O-Flyes</span>
+                  <div className="w-8 h-px bg-sand-50/60" />
+                  <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
                   <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
                     {HERO_SLIDES[slide].location}
                   </span>
@@ -118,7 +118,7 @@ export default function HomePage() {
                 </div>
               </div>
               {/* Right – stats card */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[220px]">
+              <div className="bg-sand-50/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[220px]">
                 <p className="text-white/60 text-xs mb-1">Destinations analysées</p>
                 <p className="text-white font-semibold text-2xl mb-3">500+</p>
                 <p className="text-white/60 text-xs mb-1">Voyageurs satisfaits</p>
@@ -139,7 +139,7 @@ export default function HomePage() {
               <div className="flex gap-2">
                 {HERO_SLIDES.map((_, i) => (
                   <button key={i} onClick={() => goTo(i)}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"}`}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? "w-8 bg-sand-50" : "w-2 bg-sand-50/40 hover:bg-sand-50/60"}`}
                   />
                 ))}
               </div>
@@ -202,7 +202,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   {/* Arrow */}
-                  <div className="absolute top-3 right-3 w-7 h-7 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-3 right-3 w-7 h-7 bg-sand-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <ArrowUpRight className="w-3.5 h-3.5 text-dark" />
                   </div>
                 </div>
@@ -281,7 +281,7 @@ export default function HomePage() {
                 </p>
               </div>
               {/* Stats bubble */}
-              <div className="hidden md:block bg-white rounded-2xl p-6 min-w-[160px] text-center border-b-4 border-gold">
+              <div className="hidden md:block bg-sand-50 rounded-2xl p-6 min-w-[160px] text-center border-b-4 border-gold">
                 <p className="font-bold text-4xl text-dark mb-1">95%</p>
                 <p className="text-dark-400 text-xs">de voyageurs<br />pleinement satisfaits</p>
               </div>
@@ -317,11 +317,11 @@ export default function HomePage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: "Sophie M.", loc: "Paris", text: "O-Flyes m'a trouvé Bali en 30 secondes avec mon budget exact. Le chatbot est bluffant de précision !", stars: 5 },
+              { name: "Sophie M.", loc: "Paris", text: "AIVANA m'a trouvé Bali en 30 secondes avec mon budget exact. Le chatbot est bluffant de précision !", stars: 5 },
               { name: "Thomas B.", loc: "Lyon", text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },
               { name: "Marie L.", loc: "Bordeaux", text: "Interface top, réponses ultra rapides. J'ai planifié mon voyage au Japon en une soirée. Je recommande !", stars: 5 },
             ].map((t, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 card-hover">
+              <div key={i} className="bg-sand-50 rounded-2xl p-6 card-hover">
                 <div className="flex gap-0.5 mb-4">
                   {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
                 </div>

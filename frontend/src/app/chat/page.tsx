@@ -19,7 +19,7 @@ export default function ChatPage() {
           <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center shadow-lg">
             <Plane className="w-7 h-7 text-white" />
           </div>
-          <p className="text-dark font-semibold text-lg">O-Flyes IA est prête !</p>
+          <p className="text-dark font-semibold text-lg">AIVANA IA est prête !</p>
           <p className="text-dark-400 text-sm text-center">
             Cliquez sur le bouton <span className="font-semibold text-dark">✈</span> en bas à droite
             pour démarrer une conversation.

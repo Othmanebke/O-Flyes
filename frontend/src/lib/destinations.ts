@@ -222,11 +222,11 @@ export const BUDGET_BADGE: Record<string, string> = {
 };
 
 export const BUDGET_TIERS = [
-    { id: "tous", label: "Tous", color: "bg-gray-900 text-white", emoji: "" },
+    { id: "tous", label: "Tous", color: "bg-dark-900 text-white", emoji: "" },
     { id: "petit", label: "Essentiel", color: "bg-emerald-700 text-white", emoji: "✦", range: "< 1 500€" },
     { id: "moyen", label: "Confort", color: "bg-sky-700 text-white", emoji: "✦✦", range: "1 500 — 3 500€" },
     { id: "confort", label: "Premium", color: "bg-violet-700 text-white", emoji: "✦✦✦", range: "3 500 — 6 000€" },
-    { id: "luxe", label: "Prestige", color: "bg-yellow-500 text-gray-900", emoji: "✦✦✦✦", range: "6 000€+" },
+    { id: "luxe", label: "Prestige", color: "bg-gold-500 text-dark-900", emoji: "✦✦✦✦", range: "6 000€+" },
 ];
 
 export const ALL_MONTHS = ["Jan", "Fév", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];

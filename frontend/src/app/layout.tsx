@@ -6,14 +6,14 @@ import Chatbot from "@/components/Chatbot";
 import PlaneBackground from "@/components/PlaneBackground";
 
 export const metadata: Metadata = {
-  title: "O-Flyes – Votre assistant voyage intelligent",
+  title: "AIVANA – Votre assistant voyage intelligent",
   description: "Trouvez la destination parfaite selon votre budget, vos envies et votre période de voyage grâce à l'IA.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="min-h-screen flex flex-col bg-white text-dark">
+      <body className="min-h-screen flex flex-col bg-sand-50 text-dark">
         <PlaneBackground />
         <Navbar />
         <main className="flex-1 pt-20">{children}</main>

@@ -60,9 +60,9 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white mt-24">
+    <footer className="bg-dark-900 text-white mt-24">
       {/* Top strip — golden */}
-      <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-gold-500/50 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-8 pt-16 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
@@ -70,25 +70,25 @@ export default function Footer() {
           {/* ── Brand col ─────────────────────────────────────────── */}
           <div className="md:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-sand-50/10 rounded-xl flex items-center justify-center">
                 <Plane className="w-4 h-4 text-white -rotate-45" />
               </div>
-              <span className="font-serif text-xl">O-<span className="text-yellow-400">Flyes</span></span>
+              <span className="font-serif text-xl">AI<span className="text-gold-400">VANA</span></span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
               Votre assistant voyage intelligent. Décrivez vos envies, notre IA trouve la destination parfaite — vols, hôtels, activités inclus.
             </p>
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
+            <div className="flex items-center gap-2 text-sand-500 text-xs mb-2">
               <MapPin className="w-3.5 h-3.5" /> Paris, France
             </div>
-            <div className="flex items-center gap-2 text-gray-500 text-xs">
-              <Mail className="w-3.5 h-3.5" /> contact@o-flyes.com
+            <div className="flex items-center gap-2 text-sand-500 text-xs">
+              <Mail className="w-3.5 h-3.5" /> contact@aivana.com
             </div>
           </div>
 
           {/* ── Navigation ─────────────────────────────────────────── */}
           <div className="md:col-span-2">
-            <p className="text-gray-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
+            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
             <ul className="space-y-3">
               {NAV.map(({ href, label }) => (
                 <li key={href}>
@@ -102,7 +102,7 @@ export default function Footer() {
 
           {/* ── Legal ──────────────────────────────────────────────── */}
           <div className="md:col-span-2">
-            <p className="text-gray-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
+            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
             <ul className="space-y-3">
               {LEGAL.map(({ href, label }) => (
                 <li key={label}>
@@ -114,7 +114,7 @@ export default function Footer() {
 
           {/* ── Newsletter ─────────────────────────────────────────── */}
           <div className="md:col-span-4">
-            <p className="text-gray-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
+            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">
               Recevez chaque semaine les meilleures offres de voyage et les conseils de notre IA.
             </p>
@@ -125,11 +125,11 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="votre@email.com"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:bg-white/8 transition-all"
+                className="flex-1 bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 focus:bg-sand-50/8 transition-all"
               />
               <button
                 type="submit"
-                className="flex-shrink-0 w-10 h-10 bg-yellow-400 hover:bg-yellow-300 rounded-xl flex items-center justify-center text-gray-900 transition-all hover:scale-105"
+                className="flex-shrink-0 w-10 h-10 bg-gold-400 hover:bg-gold-300 rounded-xl flex items-center justify-center text-dark-900 transition-all hover:scale-105"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -143,7 +143,7 @@ export default function Footer() {
                   key={s.name}
                   href={s.href}
                   title={s.name}
-                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-yellow-400/20 hover:text-yellow-400 text-gray-400 border border-white/10 hover:border-yellow-400/30 flex items-center justify-center transition-all"
+                  className="w-9 h-9 rounded-xl bg-sand-50/5 hover:bg-gold-400/20 hover:text-gold-400 text-gray-400 border border-white/10 hover:border-gold-400/30 flex items-center justify-center transition-all"
                 >
                   {s.icon}
                 </Link>
@@ -158,7 +158,7 @@ export default function Footer() {
           <div className="flex flex-wrap gap-2">
             {["Bali", "Marrakech", "Kyoto", "Islande", "Lisbonne", "Maldives", "Istanbul", "Buenos Aires", "Queenstown", "Dubaï", "New York", "Thaïlande"].map((d) => (
               <Link key={d} href="/explore"
-                className="text-xs text-gray-500 hover:text-yellow-400 transition-colors border border-white/5 hover:border-yellow-400/20 px-3 py-1 rounded-full">
+                className="text-xs text-sand-500 hover:text-gold-400 transition-colors border border-white/5 hover:border-gold-400/20 px-3 py-1 rounded-full">
                 {d}
               </Link>
             ))}
@@ -168,14 +168,14 @@ export default function Footer() {
         {/* ── Bottom bar ─────────────────────────────────────────── */}
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-gray-600 text-xs">
-            © {new Date().getFullYear()} O-Flyes — Tous droits réservés.
+            © {new Date().getFullYear()} AIVANA — Tous droits réservés.
           </p>
           <div className="flex items-center gap-2 text-gray-600 text-xs">
             <span>Fait avec</span>
-            <span className="text-yellow-500">✦</span>
+            <span className="text-gold-500">✦</span>
             <span>et beaucoup d&apos;IA</span>
-            <span className="mx-1 text-gray-800">·</span>
-            <Link href="/auth/register" className="text-yellow-500/70 hover:text-yellow-400 transition-colors flex items-center gap-1">
+            <span className="mx-1 text-dark-800">·</span>
+            <Link href="/auth/register" className="text-gold-500/70 hover:text-gold-400 transition-colors flex items-center gap-1">
               Créer un compte <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>

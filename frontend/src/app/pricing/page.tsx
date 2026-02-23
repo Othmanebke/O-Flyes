@@ -6,7 +6,7 @@ const plans = [
     name: "Gratuit",
     price: "0",
     period: "/mois",
-    description: "Pour découvrir O-Flyes",
+    description: "Pour découvrir AIVANA",
     features: [
       "5 conversations chatbot / mois",
       "Recherche de destinations",
@@ -62,7 +62,7 @@ export default function PricingPage() {
               className={`rounded-3xl p-8 flex flex-col border card-hover ${
                 plan.highlight
                   ? "bg-dark border-dark text-white"
-                  : "bg-white border-dark-100"
+                  : "bg-sand-50 border-dark-100"
               }`}
             >
               {plan.highlight && (
@@ -86,12 +86,12 @@ export default function PricingPage() {
               </p>
 
               {/* Divider */}
-              <div className={`h-px mb-8 ${plan.highlight ? "bg-white/10" : "bg-dark-100"}`} />
+              <div className={`h-px mb-8 ${plan.highlight ? "bg-sand-50/10" : "bg-dark-100"}`} />
 
               <ul className="space-y-3 mb-10 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className={`flex items-center gap-3 text-sm ${plan.highlight ? "text-white/80" : "text-dark"}`}>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${plan.highlight ? "bg-white/10" : "bg-sand-100"}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${plan.highlight ? "bg-sand-50/10" : "bg-sand-100"}`}>
                       <Check className={`w-3 h-3 ${plan.highlight ? "text-white" : "text-sand-400"}`} />
                     </div>
                     {f}
@@ -103,7 +103,7 @@ export default function PricingPage() {
                 href={plan.href}
                 className={`rounded-full py-3.5 text-center text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:gap-3 ${
                   plan.highlight
-                    ? "bg-white text-dark hover:bg-sand-100"
+                    ? "bg-sand-50 text-dark hover:bg-sand-100"
                     : "bg-dark text-white hover:bg-dark-600"
                 }`}
               >

@@ -69,7 +69,7 @@ export default function SearchForm({ onSearch }: Props) {
             title="Climat"
             value={climate}
             onChange={(e) => setClimate(e.target.value)}
-            className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-dark-800/60 border border-dark-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
           >
             {CLIMATES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -85,7 +85,7 @@ export default function SearchForm({ onSearch }: Props) {
             value={minBudget}
             onChange={(e) => setMinBudget(e.target.value)}
             placeholder="0"
-            className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-dark-800/60 border border-dark-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-sand-500 focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
 
@@ -97,7 +97,7 @@ export default function SearchForm({ onSearch }: Props) {
             value={maxBudget}
             onChange={(e) => setMaxBudget(e.target.value)}
             placeholder="500"
-            className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-dark-800/60 border border-dark-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-sand-500 focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
 
@@ -108,7 +108,7 @@ export default function SearchForm({ onSearch }: Props) {
             title="Période"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="w-full bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-dark-800/60 border border-dark-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value}>{p.label}</option>

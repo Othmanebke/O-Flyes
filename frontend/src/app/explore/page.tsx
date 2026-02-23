@@ -284,11 +284,11 @@ const DESTINATIONS: Destination[] = [
 // ─── Config filtres ────────────────────────────────────────────────────────────
 const CONTINENTS = ["Tous", "Europe", "Asie", "Afrique", "Amérique", "Océanie"];
 const BUDGET_TIERS = [
-  { id: "tous", label: "Tous", color: "bg-gray-900 text-white", emoji: "" },
+  { id: "tous", label: "Tous", color: "bg-dark-900 text-white", emoji: "" },
   { id: "petit", label: "Essentiel", color: "bg-emerald-700 text-white", emoji: "✦", range: "< 1 500€" },
   { id: "moyen", label: "Confort", color: "bg-sky-700 text-white", emoji: "✦✦", range: "1 500 — 3 500€" },
   { id: "confort", label: "Premium", color: "bg-violet-700 text-white", emoji: "✦✦✦", range: "3 500 — 6 000€" },
-  { id: "luxe", label: "Prestige", color: "bg-yellow-500 text-gray-900", emoji: "✦✦✦✦", range: "6 000€+" },
+  { id: "luxe", label: "Prestige", color: "bg-gold-500 text-dark-900", emoji: "✦✦✦✦", range: "6 000€+" },
 ];
 const BUDGET_BADGE: Record<string, string> = {
   petit: "bg-emerald-50 text-emerald-800 border border-emerald-200",
@@ -325,12 +325,12 @@ export default function ExplorePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-dark/50 via-dark/20 to-sand-50" />
         </div>
         <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0">
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
-            <Plane className="w-3.5 h-3.5 text-yellow-300" />
-            <span className="text-white/90 text-xs font-medium tracking-wide">O-Flyes Destinations</span>
+          <div className="inline-flex items-center gap-2 bg-sand-50/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
+            <Plane className="w-3.5 h-3.5 text-gold-300" />
+            <span className="text-white/90 text-xs font-medium tracking-wide">AIVANA Destinations</span>
           </div>
           <h1 className="font-serif text-5xl md:text-7xl text-white leading-tight mb-4 max-w-2xl">
-            Le monde entier<br /><span className="italic text-yellow-200">à votre portée.</span>
+            Le monde entier<br /><span className="italic text-gold-200">à votre portée.</span>
           </h1>
           <p className="text-white/70 text-sm md:text-base max-w-lg mb-8">
             De Marrakech à la Polynésie — des destinations pour tous les budgets, toutes les envies.
@@ -363,7 +363,7 @@ export default function ExplorePage() {
               <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute top-3 left-3">
-                <span className="text-[10px] font-semibold bg-white/90 text-dark px-2.5 py-1 rounded-full">{d.continentRank}</span>
+                <span className="text-[10px] font-semibold bg-sand-50/90 text-dark px-2.5 py-1 rounded-full">{d.continentRank}</span>
               </div>
               <div className="absolute top-3 right-3">
                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
@@ -373,13 +373,13 @@ export default function ExplorePage() {
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-1 mb-2">
                   {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-yellow-400 text-yellow-400" : "text-white/30"}`} />
+                    <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-gold-400 text-gold-400" : "text-white/30"}`} />
                   ))}
                   <span className="text-white/60 text-[10px] ml-1">{d.rating}</span>
                 </div>
                 <h3 className="font-serif text-2xl text-white leading-tight mb-1">{d.name}</h3>
                 <p className="text-white/60 text-xs mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" />{d.country}</p>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-3">
+                <div className="bg-sand-50/10 backdrop-blur-sm rounded-xl p-3 mb-3">
                   <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 sem</p>
                   <p className="text-white font-bold text-lg">{d.tripBudget.min.toLocaleString()}€ <span className="text-white/50 text-sm font-normal">— {d.tripBudget.max.toLocaleString()}€</span></p>
                   <div className="flex gap-3 mt-1.5">
@@ -396,7 +396,7 @@ export default function ExplorePage() {
 
       {/* ═══ FILTRES ═════════════════════════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-8 mb-10 sticky top-20 z-40">
-        <div className="bg-white/90 backdrop-blur-md border border-sand-200 rounded-2xl p-4 shadow-sm">
+        <div className="bg-sand-50/90 backdrop-blur-md border border-sand-200 rounded-2xl p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="text-xs text-dark-400 font-medium uppercase tracking-widest mr-2">Budget</span>
             {BUDGET_TIERS.map(b => (
@@ -407,7 +407,7 @@ export default function ExplorePage() {
             ))}
             <button onClick={() => setShowFilters(!showFilters)}
               className={`ml-auto flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-all ${showFilters ? "bg-dark text-white border-dark" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-dark"}`}>
-              <Filter className="w-3 h-3" /> Filtres {activeCount > 0 && <span className="bg-yellow-400 text-dark rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">{activeCount}</span>}
+              <Filter className="w-3 h-3" /> Filtres {activeCount > 0 && <span className="bg-gold-400 text-dark rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">{activeCount}</span>}
               <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
             </button>
           </div>
@@ -427,7 +427,7 @@ export default function ExplorePage() {
                 <div className="flex flex-wrap gap-1.5">
                   {STYLES.map(s => (
                     <button key={s} onClick={() => setStyle(s)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${style === s ? "bg-yellow-400 text-dark border-yellow-400" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-yellow-300"}`}>{s}</button>
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${style === s ? "bg-gold-400 text-dark border-gold-400" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-gold-300"}`}>{s}</button>
                   ))}
                 </div>
               </div>
@@ -455,19 +455,19 @@ export default function ExplorePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filtered.map(d => (
-              <Link key={d.id} href={`/destination/${d.id}`} className="bg-white rounded-3xl overflow-hidden card-hover group block transition-all hover:shadow-2xl" style={{ border: '1.5px solid #C9A84C', boxShadow: '0 2px 12px 0 rgba(201,168,76,0.10)' }}>
+              <Link key={d.id} href={`/destination/${d.id}`} className="bg-sand-50 rounded-3xl overflow-hidden card-hover group block transition-all hover:shadow-2xl" style={{ border: '1.5px solid #C9A84C', boxShadow: '0 2px 12px 0 rgba(201,168,76,0.10)' }}>
                 <div className="relative h-48 overflow-hidden">
                   <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
                     {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.emoji} {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
                   </span>
-                  <span className="absolute top-3 right-3 text-[10px] bg-white/90 text-dark font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
+                  <span className="absolute top-3 right-3 text-[10px] bg-sand-50/90 text-dark font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
                   <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    <Star className="w-3 h-3 fill-gold-400 text-gold-400" />
                     <span className="text-white text-xs font-semibold">{d.rating}</span>
                   </div>
-                  {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-yellow-400 text-dark font-bold px-2 py-0.5 rounded-full">⭐ Top 5</span>}
+                  {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-gold-400 text-dark font-bold px-2 py-0.5 rounded-full">⭐ Top 5</span>}
                 </div>
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
@@ -484,8 +484,8 @@ export default function ExplorePage() {
                     <p className="text-[10px] text-dark-300 uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 semaines</p>
                     <p className="text-dark font-bold text-base">{d.tripBudget.min.toLocaleString()}€<span className="text-dark-300 font-normal text-sm"> — {d.tripBudget.max.toLocaleString()}€</span></p>
                     <div className="flex gap-4 mt-1.5">
-                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-yellow-500" /> ~{d.flightFrom}€ <span className="text-dark-300">A/R/pers</span></span>
-                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-yellow-500" /> ~{d.hotelPerNight}€ <span className="text-dark-300">/nuit</span></span>
+                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-gold-500" /> ~{d.flightFrom}€ <span className="text-dark-300">A/R/pers</span></span>
+                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-gold-500" /> ~{d.hotelPerNight}€ <span className="text-dark-300">/nuit</span></span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mb-4">
@@ -505,13 +505,13 @@ export default function ExplorePage() {
       {/* ═══ IA CTA ══════════════════════════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-8 pb-16">
         <div className="relative bg-dark rounded-3xl p-10 md:p-14 overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full -translate-y-1/3 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/3" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gold-400/10 rounded-full -translate-y-1/3 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-sand-50/5 rounded-full translate-y-1/3 -translate-x-1/3" />
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1">
-              <p className="section-label mb-3 text-yellow-400/80">IA Voyage</p>
+              <p className="section-label mb-3 text-gold-400/80">IA Voyage</p>
               <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-4">
-                Pas trouvé votre<br /><span className="text-yellow-200 italic">destination idéale ?</span>
+                Pas trouvé votre<br /><span className="text-gold-200 italic">destination idéale ?</span>
               </h2>
               <p className="text-white/60 text-sm mb-8 max-w-md leading-relaxed">
                 Décrivez vos envies, votre budget, vos dates — notre IA trouve la destination parfaite,
@@ -519,7 +519,7 @@ export default function ExplorePage() {
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/chat" className="btn-gold">Demander à l&apos;IA ✈</Link>
-                <Link href="/chat" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
+                <Link href="/chat" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-sand-50/10 transition-colors">
                   <ArrowUpRight className="w-4 h-4 text-white" />
                 </Link>
               </div>
@@ -531,7 +531,7 @@ export default function ExplorePage() {
                 "\"Famille avec ados, nature, 3 000€\"",
                 "\"Plage tropicale, moins de 1 200€\"",
               ].map(p => (
-                <div key={p} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic">{p}</div>
+                <div key={p} className="bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic">{p}</div>
               ))}
             </div>
           </div>

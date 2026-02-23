@@ -34,17 +34,17 @@ export default function RegisterPage() {
       <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
         <div className="relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-sand-50 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-dark -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-white">O-<span className="text-gold-400">Flyes</span></span>
+            <span className="font-serif text-2xl text-white">AI<span className="text-gold-400">VANA</span></span>
           </div>
         </div>
         <div className="relative z-10">
           <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Inscription</p>
           <h2 className="font-serif text-5xl text-white leading-tight mb-6">Votre aventure<br />vous attend.</h2>
           <p className="text-white/50 text-sm max-w-xs leading-relaxed">
-            Rejoignez des milliers de voyageurs qui font confiance à O-Flyes pour planifier leurs escapades.
+            Rejoignez des milliers de voyageurs qui font confiance à AIVANA pour planifier leurs escapades.
           </p>
         </div>
         <div className="relative z-10 flex gap-3">
@@ -63,7 +63,7 @@ export default function RegisterPage() {
             </div>
           ))}
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-sand-50/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2" />
       </div>
 
@@ -74,7 +74,7 @@ export default function RegisterPage() {
             <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-white -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-dark">O-<span className="text-gold">Flyes</span></span>
+            <span className="font-serif text-2xl text-dark">AI<span className="text-gold">VANA</span></span>
           </div>
           <p className="section-label mb-3">Inscription</p>
           <h1 className="font-serif text-4xl text-dark mb-2">Créer un compte</h1>

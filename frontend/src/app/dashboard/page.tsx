@@ -34,14 +34,14 @@ const MOCK_CONVS = [
 const PLAN_FEATURES = {
     free: {
         label: "Free",
-        color: "bg-gray-100 text-gray-700",
+        color: "bg-gray-100 text-dark-700",
         icon: <Zap className="w-4 h-4" />,
         features: ["3 recherches IA / mois", "Accès aux destinations", "Comparateur de vols"],
         limits: ["Historique limité à 7 jours", "Pas d'itinéraire personnalisé"],
     },
     premium: {
         label: "Premium ✦✦",
-        color: "bg-yellow-100 text-yellow-800",
+        color: "bg-gold-100 text-gold-800",
         icon: <Crown className="w-4 h-4" />,
         features: ["Recherches IA illimitées", "Itinéraires personnalisés", "Historique complet", "Alertes prix vols", "Support prioritaire"],
         limits: [],
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
     if (!user) return (
         <div className="min-h-screen bg-[#f9f7f4] flex items-center justify-center">
-            <Plane className="w-6 h-6 text-yellow-500 animate-pulse" />
+            <Plane className="w-6 h-6 text-gold-500 animate-pulse" />
         </div>
     );
 
@@ -100,10 +100,10 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-[#f9f7f4]">
 
             {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-            <div className="bg-gray-900 pt-24 pb-12 px-6 md:px-12">
+            <div className="bg-dark-900 pt-24 pb-12 px-6 md:px-12">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center text-2xl font-bold text-gray-900 flex-shrink-0">
+                        <div className="w-16 h-16 rounded-2xl bg-gold-400 flex items-center justify-center text-2xl font-bold text-dark-900 flex-shrink-0">
                             {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -117,14 +117,14 @@ export default function DashboardPage() {
                             {planInfo.icon} {planInfo.label}
                         </span>
                         <button onClick={handleLogout}
-                            className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-2 transition-all">
+                            className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm border border-dark-700 hover:border-sand-500 rounded-xl px-4 py-2 transition-all">
                             <LogOut className="w-4 h-4" /> Déconnexion
                         </button>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="max-w-6xl mx-auto mt-8 flex gap-1 bg-gray-800/50 rounded-xl p-1 w-fit">
+                <div className="max-w-6xl mx-auto mt-8 flex gap-1 bg-dark-800/50 rounded-xl p-1 w-fit">
                     {[
                         { id: "overview", label: "Vue d'ensemble", icon: <TrendingUp className="w-3.5 h-3.5" /> },
                         { id: "trips", label: "Mes voyages", icon: <MapPin className="w-3.5 h-3.5" /> },
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                         { id: "plan", label: "Mon forfait", icon: <Crown className="w-3.5 h-3.5" /> },
                     ].map(tab => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg transition-all ${activeTab === tab.id ? "bg-gray-900 text-white" : "text-gray-400 hover:text-white"
+                            className={`flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg transition-all ${activeTab === tab.id ? "bg-dark-900 text-white" : "text-gray-400 hover:text-white"
                                 }`}>
                             {tab.icon} {tab.label}
                         </button>
@@ -149,13 +149,13 @@ export default function DashboardPage() {
                         <div className="grid sm:grid-cols-3 gap-4">
                             {[
                                 { label: "Voyages planifiés", value: trips.filter(t => t.status === "planned").length, icon: <Calendar className="w-5 h-5 text-blue-500" />, color: "bg-blue-50" },
-                                { label: "Voyages effectués", value: trips.filter(t => t.status === "completed").length, icon: <Star className="w-5 h-5 text-yellow-500" />, color: "bg-yellow-50" },
+                                { label: "Voyages effectués", value: trips.filter(t => t.status === "completed").length, icon: <Star className="w-5 h-5 text-gold-500" />, color: "bg-gold-50" },
                                 { label: "Conversations IA", value: convs.length, icon: <Sparkles className="w-5 h-5 text-violet-500" />, color: "bg-violet-50" },
                             ].map(s => (
-                                <div key={s.label} className="bg-white rounded-2xl p-6 border border-gray-100 flex items-center gap-4">
+                                <div key={s.label} className="bg-sand-50 rounded-2xl p-6 border border-gray-100 flex items-center gap-4">
                                     <div className={`w-12 h-12 rounded-xl ${s.color} flex items-center justify-center flex-shrink-0`}>{s.icon}</div>
                                     <div>
-                                        <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+                                        <p className="text-3xl font-bold text-dark-900">{s.value}</p>
                                         <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
                                     </div>
                                 </div>
@@ -165,13 +165,13 @@ export default function DashboardPage() {
                         {/* Voyages récents */}
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-serif text-2xl text-gray-900">Mes voyages</h2>
-                                <button onClick={() => setActiveTab("trips")} className="text-xs text-gray-400 hover:text-gray-900 flex items-center gap-1">Voir tout <ChevronRight className="w-3 h-3" /></button>
+                                <h2 className="font-serif text-2xl text-dark-900">Mes voyages</h2>
+                                <button onClick={() => setActiveTab("trips")} className="text-xs text-gray-400 hover:text-dark-900 flex items-center gap-1">Voir tout <ChevronRight className="w-3 h-3" /></button>
                             </div>
                             <div className="grid sm:grid-cols-3 gap-4">
                                 {trips.slice(0, 3).map(t => t.dest && (
                                     <Link key={t.id} href={`/destination/${t.id}`}
-                                        className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-yellow-300 hover:shadow-md transition-all group"
+                                        className="bg-sand-50 rounded-2xl overflow-hidden border border-gray-100 hover:border-gold-300 hover:shadow-md transition-all group"
                                         style={{ borderColor: '#C9A84C20' }}>
                                         <div className="relative h-32 overflow-hidden">
                                             <img src={t.dest.img} alt={t.dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -180,9 +180,9 @@ export default function DashboardPage() {
                                                 }`}>{t.status === "completed" ? "✓ Effectué" : "📅 Planifié"}</span>
                                         </div>
                                         <div className="p-4">
-                                            <h3 className="font-semibold text-gray-900">{t.dest.name}</h3>
+                                            <h3 className="font-semibold text-dark-900">{t.dest.name}</h3>
                                             <p className="text-gray-400 text-xs flex items-center gap-1"><MapPin className="w-3 h-3" />{t.dest.country} · {t.date}</p>
-                                            {t.notes && <p className="text-gray-500 text-xs mt-2 italic">&ldquo;{t.notes}&rdquo;</p>}
+                                            {t.notes && <p className="text-sand-500 text-xs mt-2 italic">&ldquo;{t.notes}&rdquo;</p>}
                                         </div>
                                     </Link>
                                 ))}
@@ -192,17 +192,17 @@ export default function DashboardPage() {
                         {/* Dernières conversations IA */}
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-serif text-2xl text-gray-900">Historique IA</h2>
-                                <button onClick={() => setActiveTab("conversations")} className="text-xs text-gray-400 hover:text-gray-900 flex items-center gap-1">Voir tout <ChevronRight className="w-3 h-3" /></button>
+                                <h2 className="font-serif text-2xl text-dark-900">Historique IA</h2>
+                                <button onClick={() => setActiveTab("conversations")} className="text-xs text-gray-400 hover:text-dark-900 flex items-center gap-1">Voir tout <ChevronRight className="w-3 h-3" /></button>
                             </div>
-                            <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+                            <div className="bg-sand-50 rounded-2xl border border-gray-100 divide-y divide-sand-50">
                                 {convs.slice(0, 3).map(c => (
-                                    <Link key={c.id} href="/chat" className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group">
+                                    <Link key={c.id} href="/chat" className="flex items-center gap-4 p-4 hover:bg-sand-50 transition-colors group">
                                         <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
                                             <Sparkles className="w-4 h-4 text-violet-500" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">{c.summary}</p>
+                                            <p className="text-sm font-medium text-dark-900 truncate">{c.summary}</p>
                                             <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><Clock className="w-3 h-3" />{c.date} · {c.dest}</p>
                                         </div>
                                         <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 flex-shrink-0 transition-colors" />
@@ -213,14 +213,14 @@ export default function DashboardPage() {
 
                         {/* CTA upgrade si free */}
                         {user.plan === "free" && (
-                            <div className="bg-gray-900 rounded-2xl p-8 flex items-center justify-between gap-6">
+                            <div className="bg-dark-900 rounded-2xl p-8 flex items-center justify-between gap-6">
                                 <div>
-                                    <p className="text-yellow-400 text-xs uppercase tracking-widest font-semibold mb-2">✦✦ Premium</p>
+                                    <p className="text-gold-400 text-xs uppercase tracking-widest font-semibold mb-2">✦✦ Premium</p>
                                     <h3 className="font-serif text-2xl text-white mb-2">Passez à Premium</h3>
                                     <p className="text-gray-400 text-sm">Recherches IA illimitées, itinéraires personnalisés, alertes prix.</p>
                                 </div>
                                 <button onClick={() => setActiveTab("plan")}
-                                    className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-xl text-sm transition-all whitespace-nowrap">
+                                    className="flex-shrink-0 bg-gold-400 hover:bg-gold-300 text-dark-900 font-bold px-6 py-3 rounded-xl text-sm transition-all whitespace-nowrap">
                                     Voir les offres
                                 </button>
                             </div>
@@ -231,11 +231,11 @@ export default function DashboardPage() {
                 {/* ── MES VOYAGES ─────────────────────────────────────────────────── */}
                 {activeTab === "trips" && (
                     <div>
-                        <h2 className="font-serif text-3xl text-gray-900 mb-6">Mes voyages</h2>
+                        <h2 className="font-serif text-3xl text-dark-900 mb-6">Mes voyages</h2>
                         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             {trips.map(t => t.dest && (
                                 <Link key={t.id} href={`/destination/${t.id}`}
-                                    className="bg-white rounded-2xl overflow-hidden group hover:shadow-lg transition-all"
+                                    className="bg-sand-50 rounded-2xl overflow-hidden group hover:shadow-lg transition-all"
                                     style={{ border: '1.5px solid #C9A84C33' }}>
                                     <div className="relative h-44 overflow-hidden">
                                         <img src={t.dest.img} alt={t.dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -252,13 +252,13 @@ export default function DashboardPage() {
                                             <span className="text-xs text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" />{t.date}</span>
                                             <div className="flex items-center gap-1">
                                                 {Array.from({ length: 5 }).map((_, i) => (
-                                                    <Star key={i} className={`w-3 h-3 ${i < Math.floor(t.dest!.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-200 fill-gray-200"}`} />
+                                                    <Star key={i} className={`w-3 h-3 ${i < Math.floor(t.dest!.rating) ? "fill-gold-400 text-gold-400" : "text-gray-200 fill-gray-200"}`} />
                                                 ))}
                                             </div>
                                         </div>
-                                        {t.notes && <p className="text-gray-500 text-xs italic mb-3">&ldquo;{t.notes}&rdquo;</p>}
+                                        {t.notes && <p className="text-sand-500 text-xs italic mb-3">&ldquo;{t.notes}&rdquo;</p>}
                                         <div className="flex items-center gap-2 text-xs text-gray-400">
-                                            <Plane className="w-3 h-3 text-yellow-500" />~{t.dest.flightFrom}€/pers
+                                            <Plane className="w-3 h-3 text-gold-500" />~{t.dest.flightFrom}€/pers
                                             <span className="text-gray-200">|</span>
                                             🏨 ~{t.dest.hotelPerNight}€/nuit
                                         </div>
@@ -267,12 +267,12 @@ export default function DashboardPage() {
                             ))}
                             {/* Add trip CTA */}
                             <Link href="/explore"
-                                className="bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-yellow-300 flex flex-col items-center justify-center gap-3 p-8 min-h-[240px] text-center transition-all group">
-                                <div className="w-12 h-12 rounded-xl bg-yellow-50 group-hover:bg-yellow-100 flex items-center justify-center transition-colors">
-                                    <MapPin className="w-6 h-6 text-yellow-500" />
+                                className="bg-sand-50 rounded-2xl border-2 border-dashed border-gray-200 hover:border-gold-300 flex flex-col items-center justify-center gap-3 p-8 min-h-[240px] text-center transition-all group">
+                                <div className="w-12 h-12 rounded-xl bg-gold-50 group-hover:bg-gold-100 flex items-center justify-center transition-colors">
+                                    <MapPin className="w-6 h-6 text-gold-500" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-700">Explorer une destination</p>
+                                    <p className="font-semibold text-dark-700">Explorer une destination</p>
                                     <p className="text-gray-400 text-xs mt-1">Trouvez votre prochaine aventure</p>
                                 </div>
                             </Link>
@@ -284,8 +284,8 @@ export default function DashboardPage() {
                 {activeTab === "conversations" && (
                     <div>
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="font-serif text-3xl text-gray-900">Historique IA</h2>
-                            <Link href="/chat" className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold text-sm px-4 py-2 rounded-xl transition-all">
+                            <h2 className="font-serif text-3xl text-dark-900">Historique IA</h2>
+                            <Link href="/chat" className="inline-flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-dark-900 font-semibold text-sm px-4 py-2 rounded-xl transition-all">
                                 <Sparkles className="w-4 h-4" /> Nouvelle conversation
                             </Link>
                         </div>
@@ -296,15 +296,15 @@ export default function DashboardPage() {
                                 <button onClick={() => setActiveTab("plan")} className="ml-auto text-xs underline whitespace-nowrap">Passer Premium</button>
                             </div>
                         )}
-                        <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+                        <div className="bg-sand-50 rounded-2xl border border-gray-100 divide-y divide-sand-50">
                             {convs.map(c => (
                                 <Link key={c.id} href="/chat"
-                                    className="flex items-start gap-4 p-5 hover:bg-gray-50 transition-colors group">
+                                    className="flex items-start gap-4 p-5 hover:bg-sand-50 transition-colors group">
                                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                                         <Sparkles className="w-5 h-5 text-violet-500" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="font-medium text-gray-900 mb-1">{c.summary}</p>
+                                        <p className="font-medium text-dark-900 mb-1">{c.summary}</p>
                                         <p className="text-xs text-gray-400 flex items-center gap-2">
                                             <Clock className="w-3 h-3" /> {c.date}
                                             <span className="text-gray-200">·</span>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
-                                        <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">Reprendre</span>
+                                        <span className="text-xs bg-gray-100 text-sand-500 px-2.5 py-0.5 rounded-full">Reprendre</span>
                                         <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition-colors" />
                                     </div>
                                 </Link>
@@ -324,25 +324,25 @@ export default function DashboardPage() {
                 {/* ── MON FORFAIT ─────────────────────────────────────────────────── */}
                 {activeTab === "plan" && (
                     <div>
-                        <h2 className="font-serif text-3xl text-gray-900 mb-2">Mon forfait</h2>
+                        <h2 className="font-serif text-3xl text-dark-900 mb-2">Mon forfait</h2>
                         <p className="text-gray-400 text-sm mb-8">Choisissez la formule adaptée à vos aventures.</p>
                         <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
                             {/* Free */}
-                            <div className={`bg-white rounded-2xl p-8 border-2 transition-all ${user.plan === "free" ? "border-gray-900" : "border-gray-100"}`}>
+                            <div className={`bg-sand-50 rounded-2xl p-8 border-2 transition-all ${user.plan === "free" ? "border-dark-900" : "border-gray-100"}`}>
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-1">Forfait</p>
-                                        <h3 className="font-serif text-3xl text-gray-900">Free</h3>
+                                        <h3 className="font-serif text-3xl text-dark-900">Free</h3>
                                     </div>
                                     <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
                                         <Zap className="w-6 h-6 text-gray-600" />
                                     </div>
                                 </div>
-                                <p className="text-4xl font-bold text-gray-900 mb-1">0€<span className="text-base font-normal text-gray-400">/mois</span></p>
-                                <p className="text-gray-400 text-sm mb-6">Pour découvrir O-Flyes</p>
+                                <p className="text-4xl font-bold text-dark-900 mb-1">0€<span className="text-base font-normal text-gray-400">/mois</span></p>
+                                <p className="text-gray-400 text-sm mb-6">Pour découvrir AIVANA</p>
                                 <div className="space-y-2 mb-8">
                                     {PLAN_FEATURES.free.features.map(f => (
-                                        <p key={f} className="text-sm text-gray-700 flex items-center gap-2">
+                                        <p key={f} className="text-sm text-dark-700 flex items-center gap-2">
                                             <span className="text-emerald-500">✓</span>{f}
                                         </p>
                                     ))}
@@ -354,21 +354,21 @@ export default function DashboardPage() {
                                 </div>
                                 {user.plan === "free"
                                     ? <div className="w-full text-center text-sm font-semibold bg-gray-100 text-gray-600 py-3 rounded-xl">Forfait actuel</div>
-                                    : <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl text-sm transition-all">Rétrograder</button>
+                                    : <button className="w-full bg-gray-100 hover:bg-gray-200 text-dark-700 font-semibold py-3 rounded-xl text-sm transition-all">Rétrograder</button>
                                 }
                             </div>
 
                             {/* Premium */}
-                            <div className={`bg-gray-900 rounded-2xl p-8 border-2 transition-all relative overflow-hidden ${user.plan === "premium" ? "border-yellow-400" : "border-gray-800"}`}>
-                                <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                            <div className={`bg-dark-900 rounded-2xl p-8 border-2 transition-all relative overflow-hidden ${user.plan === "premium" ? "border-gold-400" : "border-dark-800"}`}>
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-gold-400/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                                 <div className="relative z-10">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <p className="text-xs uppercase tracking-widest text-yellow-400/70 font-semibold mb-1">Forfait</p>
+                                            <p className="text-xs uppercase tracking-widest text-gold-400/70 font-semibold mb-1">Forfait</p>
                                             <h3 className="font-serif text-3xl text-white">Premium ✦✦</h3>
                                         </div>
-                                        <div className="w-12 h-12 rounded-xl bg-yellow-400/20 flex items-center justify-center">
-                                            <Crown className="w-6 h-6 text-yellow-400" />
+                                        <div className="w-12 h-12 rounded-xl bg-gold-400/20 flex items-center justify-center">
+                                            <Crown className="w-6 h-6 text-gold-400" />
                                         </div>
                                     </div>
                                     <p className="text-4xl font-bold text-white mb-1">9,90€<span className="text-base font-normal text-gray-400">/mois</span></p>
@@ -376,13 +376,13 @@ export default function DashboardPage() {
                                     <div className="space-y-2 mb-8">
                                         {PLAN_FEATURES.premium.features.map(f => (
                                             <p key={f} className="text-sm text-gray-200 flex items-center gap-2">
-                                                <span className="text-yellow-400">✦</span>{f}
+                                                <span className="text-gold-400">✦</span>{f}
                                             </p>
                                         ))}
                                     </div>
                                     {user.plan === "premium"
-                                        ? <div className="w-full text-center text-sm font-semibold bg-yellow-400/20 text-yellow-400 py-3 rounded-xl">Forfait actuel</div>
-                                        : <Link href="/pricing" className="block w-full text-center bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 rounded-xl text-sm transition-all">
+                                        ? <div className="w-full text-center text-sm font-semibold bg-gold-400/20 text-gold-400 py-3 rounded-xl">Forfait actuel</div>
+                                        : <Link href="/pricing" className="block w-full text-center bg-gold-400 hover:bg-gold-300 text-dark-900 font-bold py-3 rounded-xl text-sm transition-all">
                                             Passer Premium →
                                         </Link>
                                     }
