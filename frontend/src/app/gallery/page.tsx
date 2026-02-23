@@ -32,12 +32,12 @@ export default function GalleryPage() {
         <Plane className="w-64 h-64 text-dark" />
       </div>
 
-      {/* ═══ HERO GIF ════════════════════════════════════════════════════════════ */}
+      {/* ═══ HERO IMAGE ════════════════════════════════════════════════════════════ */}
       <div className="relative min-h-[580px] md:min-h-[70vh] overflow-hidden mb-16">
         <div className="absolute inset-0">
           <img
-            src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMTI1ZTVmMWU1MzZlNGMxNGRiYWEzMTdkMjQ5NjBkNjM1NGJmMDMyNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26BkNyE0n71q2P1U4/giphy.gif"
-            alt="Coucher de soleil sur le désert"
+            src="https://images.unsplash.com/photo-1547234935-802c61ce63f6?q=80&w=2600&auto=format&fit=crop"
+            alt="Coucher de soleil majestueux sur le désert (4K)"
             className="w-full h-full object-cover"
           />
           {/* Subtle overlay for legibility and theme consistency */}
