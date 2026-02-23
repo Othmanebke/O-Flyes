@@ -8,6 +8,7 @@ import {
     TrendingUp, Heart, Settings, ArrowUpRight, Sparkles
 } from "lucide-react";
 import { DESTINATIONS } from "@/lib/destinations";
+import axios from "axios";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface UserData {
@@ -50,8 +51,10 @@ const PLAN_FEATURES = {
 // ── Component ────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
     const router = useRouter();
-    const [user, setUser] = useState<UserData | null>(null);
+    const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<"overview" | "trips" | "conversations" | "plan">("overview");
+    const [realTrips, setRealTrips] = useState<any[]>([]);
+    const [realConvs, setRealConvs] = useState<any[]>([]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -60,11 +63,19 @@ export default function DashboardPage() {
             // Decode JWT payload (no verify on client — just for display)
             const payload = JSON.parse(atob(token.split(".")[1]));
             setUser({
+                id: payload.id,
                 name: payload.name || "Voyageur",
                 email: payload.email || "",
                 plan: "free", // TODO: fetch from backend
                 joinedAt: payload.iat,
             });
+
+            // Fetch real data
+            if (payload.id) {
+                axios.get(`/api/db/trips/user/${payload.id}`).then(res => setRealTrips(res.data)).catch(console.error);
+                axios.get(`/api/db/chat/user/${payload.id}`).then(res => setRealConvs(res.data)).catch(console.error);
+            }
+
         } catch {
             router.replace("/auth/login");
         }
@@ -81,8 +92,9 @@ export default function DashboardPage() {
         </div>
     );
 
-    const planInfo = PLAN_FEATURES[user.plan];
-    const trips = MOCK_TRIPS.map(t => ({ ...t, dest: DESTINATIONS.find(d => d.id === t.id) })).filter(t => t.dest);
+    const planInfo = PLAN_FEATURES[user.plan as "free" | "premium"];
+    const trips = realTrips.length > 0 ? realTrips.map(t => ({ ...t, date: new Date(t.start_date).toLocaleDateString('fr-FR'), dest: { name: t.destination_name, country: t.country, img: t.img, flightFrom: 100, hotelPerNight: 50, rating: 4, id: t.destination_id } })) : MOCK_TRIPS.map(t => ({ ...t, dest: DESTINATIONS.find(d => d.id === t.id) })).filter(t => t.dest);
+    const convs = realConvs.length > 0 ? realConvs.map(c => ({ id: c.id, summary: c.content.substring(0, 50) + "...", date: new Date(c.created_at).toLocaleDateString('fr-FR'), dest: "Assistant" })) : MOCK_CONVS;
 
     return (
         <div className="min-h-screen bg-[#f9f7f4]">
@@ -138,7 +150,7 @@ export default function DashboardPage() {
                             {[
                                 { label: "Voyages planifiés", value: trips.filter(t => t.status === "planned").length, icon: <Calendar className="w-5 h-5 text-blue-500" />, color: "bg-blue-50" },
                                 { label: "Voyages effectués", value: trips.filter(t => t.status === "completed").length, icon: <Star className="w-5 h-5 text-yellow-500" />, color: "bg-yellow-50" },
-                                { label: "Conversations IA", value: MOCK_CONVS.length, icon: <Sparkles className="w-5 h-5 text-violet-500" />, color: "bg-violet-50" },
+                                { label: "Conversations IA", value: convs.length, icon: <Sparkles className="w-5 h-5 text-violet-500" />, color: "bg-violet-50" },
                             ].map(s => (
                                 <div key={s.label} className="bg-white rounded-2xl p-6 border border-gray-100 flex items-center gap-4">
                                     <div className={`w-12 h-12 rounded-xl ${s.color} flex items-center justify-center flex-shrink-0`}>{s.icon}</div>
@@ -184,7 +196,7 @@ export default function DashboardPage() {
                                 <button onClick={() => setActiveTab("conversations")} className="text-xs text-gray-400 hover:text-gray-900 flex items-center gap-1">Voir tout <ChevronRight className="w-3 h-3" /></button>
                             </div>
                             <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
-                                {MOCK_CONVS.slice(0, 3).map(c => (
+                                {convs.slice(0, 3).map(c => (
                                     <Link key={c.id} href="/chat" className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group">
                                         <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
                                             <Sparkles className="w-4 h-4 text-violet-500" />
@@ -285,7 +297,7 @@ export default function DashboardPage() {
                             </div>
                         )}
                         <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
-                            {MOCK_CONVS.map(c => (
+                            {convs.map(c => (
                                 <Link key={c.id} href="/chat"
                                     className="flex items-start gap-4 p-5 hover:bg-gray-50 transition-colors group">
                                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0 mt-0.5">

@@ -30,10 +30,43 @@ const SUGGESTIONS = [
 
 // ── Destination card ─────────────────────────────────────────────────────
 function DestinationCard({ dest }: { dest: EnrichedDestination }) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
   const localDest = DESTINATIONS.find(d =>
     d.name.toLowerCase().includes(dest.name.toLowerCase().split(",")[0]) ||
     dest.name.toLowerCase().includes(d.name.toLowerCase().split(",")[0])
   );
+
+  const handleSave = async () => {
+    if (!localDest) return;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Vous devez être connecté pour enregistrer un voyage.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const userId = payload.id;
+
+      await axios.post("/api/db/trips", {
+        user_id: userId,
+        destination_id: localDest.id,
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 days
+        budget: dest.price_estimate
+      });
+      setSaved(true);
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde du voyage:", err);
+      alert("Erreur lors de la sauvegarde du voyage.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="mt-2 rounded-2xl overflow-hidden border border-[#C9A84C]/20 bg-[#faf8f4]">
       {/* Top */}
@@ -76,10 +109,10 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
       {/* Buttons */}
       <div className="px-4 pb-3 flex gap-2">
         {localDest && (
-          <Link href={`/destination/${localDest.id}`}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium py-2 rounded-xl transition-colors">
-            <Sparkles className="w-3 h-3" /> Voir la fiche
-          </Link>
+          <button onClick={handleSave} disabled={saving || saved}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-gray-900 text-white text-xs font-medium py-2 rounded-xl transition-colors">
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : (saved ? "✓ Enregistré" : <><Sparkles className="w-3 h-3" /> Enregistrer</>)}
+          </button>
         )}
         <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-1.5 bg-[#C9A84C]/10 hover:bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/20 text-xs font-medium py-2 rounded-xl transition-colors">
@@ -129,7 +162,14 @@ export default function Chatbot() {
       const history = firstUserIdx >= 0
         ? allMsgs.slice(firstUserIdx).map(({ role, content }) => ({ role, content }))
         : [{ role: "user" as const, content: text }];
-      const res = await axios.post("/api/ai/chat", { messages: history });
+
+      let userId: string | undefined;
+      const token = localStorage.getItem("token");
+      if (token) {
+        try { userId = JSON.parse(atob(token.split(".")[1])).id; } catch (e) { }
+      }
+
+      const res = await axios.post("/api/ai/chat", { messages: history, userId });
       setMessages(prev => [...prev, { role: "assistant", content: res.data.reply, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
     } catch {
@@ -176,8 +216,8 @@ export default function Chatbot() {
               )}
               <div className="max-w-[85%] flex flex-col gap-2">
                 <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "assistant"
-                    ? "bg-white border border-gray-100 text-gray-800 shadow-sm"
-                    : "bg-gray-900 text-white"
+                  ? "bg-white border border-gray-100 text-gray-800 shadow-sm"
+                  : "bg-gray-900 text-white"
                   }`}>
                   {msg.content}
                 </div>

@@ -119,9 +119,15 @@ app.post("/chat", async (req, res) => {
     if (userId) {
       await axios.post(`${DB_URL}/chat`, {
         user_id: userId,
+        role: "user",
+        content: lastMessage,
+      }).catch((e) => console.error("Error saving user msg", e));
+
+      await axios.post(`${DB_URL}/chat`, {
+        user_id: userId,
         role: "assistant",
         content: reply,
-      }).catch(() => { });
+      }).catch((e) => console.error("Error saving assistant msg", e));
     }
 
     res.json({ reply, enriched });

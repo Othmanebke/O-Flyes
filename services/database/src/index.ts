@@ -98,7 +98,31 @@ app.post("/trips", async (req, res) => {
 
 app.get("/trips/user/:userId", async (req, res) => {
   const result = await pool.query(
-    "SELECT t.*, d.name as destination_name, d.country FROM trips t JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
+    "SELECT t.*, d.name as destination_name, d.country, d.image_url as img FROM trips t JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
+    [req.params.userId]
+  );
+  res.json(result.rows);
+});
+
+// ── Chat (saved conversations) ───────────────────────────────────────────────
+app.post("/chat", async (req, res) => {
+  const { user_id, role, content } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO chat_messages (user_id, role, content, created_at)
+         VALUES ($1, $2, $3, NOW()) RETURNING *`,
+      [user_id, role, content]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/chat/user/:userId", async (req, res) => {
+  const result = await pool.query(
+    "SELECT * FROM chat_messages WHERE user_id = $1 ORDER BY created_at DESC",
     [req.params.userId]
   );
   res.json(result.rows);

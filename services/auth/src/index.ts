@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { createClient } from "redis";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import axios from "axios";
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
@@ -16,6 +17,7 @@ const app = express();
 const PORT = process.env.AUTH_PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
@@ -110,14 +112,26 @@ app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "em
 app.get(
   "/auth/callback",
   passport.authenticate("google", { session: false, failureRedirect: `${FRONTEND_URL}/auth/login?error=google` }),
-  (req, res) => {
-    const user = req.user as any;
-    const token = jwt.sign(
-      { email: user.emails?.[0]?.value, name: user.displayName },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-    res.redirect(`${FRONTEND_URL}/auth/success?token=${token}`);
+  async (req, res) => {
+    try {
+      const user = req.user as any;
+      const email = user.emails?.[0]?.value;
+      const name = user.displayName;
+
+      // Sync with Postgres to get the UUID
+      const dbRes = await axios.post(`${DB_URL}/users`, { email, name, password_hash: "", provider: "google" });
+      const dbId = dbRes.data.id;
+
+      const token = jwt.sign(
+        { id: dbId, email, name },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      res.redirect(`${FRONTEND_URL}/auth/success?token=${token}`);
+    } catch (err) {
+      console.error("[auth/callback] Postgres sync error:", err);
+      res.redirect(`${FRONTEND_URL}/auth/login?error=server`);
+    }
   }
 );
 
@@ -228,8 +242,18 @@ app.post("/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Email ou mot de passe incorrect." });
     }
 
+    // Sync with Postgres to get the UUID
+    let dbId: string;
+    try {
+      const dbRes = await axios.post(`${DB_URL}/users`, { email: user.email, name: user.name, password_hash: user.passwordHash, provider: user.provider });
+      dbId = dbRes.data.id;
+    } catch (err) {
+      console.error("[auth/login] Postgres sync error:", err);
+      return res.status(500).json({ error: "Erreur serveur lors de la synchronisation BDD." });
+    }
+
     const token = jwt.sign(
-      { email: user.email, name: user.name },
+      { id: dbId, email: user.email, name: user.name },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
