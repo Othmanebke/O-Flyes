@@ -51,7 +51,7 @@ export default function GalleryPage() {
           <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-xl">
             L'Évasion<br /><span className="italic text-gold">en images.</span>
           </h1>
-          <p className="text-dark text-sm md:text-base max-w-lg mb-8 font-bold leading-relaxed">
+          <p className="text-white text-sm md:text-base max-w-lg mb-8 font-bold leading-relaxed drop-shadow-md">
             Une curation d'images saisissantes pour inspirer vos prochains voyages. La beauté du monde se trouve dans les détails.
           </p>
           <div className="flex flex-wrap gap-6 pb-32">
