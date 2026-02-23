@@ -36,7 +36,7 @@ export default function GalleryPage() {
       <div className="relative min-h-[580px] md:min-h-[70vh] overflow-hidden mb-16">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1480004902249-cdb28d6a01a4?q=80&w=1011&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             alt="Coucher de soleil majestueux sur le désert (4K)"
             className="w-full h-full object-cover"
           />
