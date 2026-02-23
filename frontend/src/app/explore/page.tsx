@@ -330,7 +330,7 @@ export default function ExplorePage() {
             <span className="text-white/90 text-xs font-medium tracking-wide">AIVANA Destinations</span>
           </div>
           <h1 className="font-serif text-5xl md:text-7xl text-white leading-tight mb-4 max-w-2xl">
-            Le monde entier<br /><span className="italic text-gold-200">à votre portée.</span>
+            Le monde entier<br /><span className="italic text-gold">à votre portée.</span>
           </h1>
           <p className="text-white/70 text-sm md:text-base max-w-lg mb-8">
             De Marrakech à la Polynésie — des destinations pour tous les budgets, toutes les envies.
@@ -338,7 +338,7 @@ export default function ExplorePage() {
           <div className="flex flex-wrap gap-6 pb-36">
             {[{ v: "22+", l: "Destinations" }, { v: "5", l: "Continents" }, { v: "650€", l: "À partir de" }, { v: "14k€", l: "Luxe absolu" }].map(s => (
               <div key={s.l}>
-                <p className="text-2xl md:text-3xl font-bold text-gold-200">{s.v}</p>
+                <p className="text-2xl md:text-3xl font-bold text-gold">{s.v}</p>
                 <p className="text-dark text-xs uppercase tracking-widest font-semibold">{s.l}</p>
               </div>
             ))}
