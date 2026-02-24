@@ -16,6 +16,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || process.env.AUTH_PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
 console.log(`[auth-service] Starting with:`);
