@@ -196,8 +196,9 @@ export default function Chatbot() {
       const res = await axios.post("/api/ai/chat", { messages: history, userId });
       setMessages(prev => [...prev, { role: "assistant", content: res.data.reply, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Une erreur est survenue. Réessayez dans quelques instants." }]);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || "Le service AI est injoignable. Vérifiez que le service ai-service est lancé.";
+      setMessages(prev => [...prev, { role: "assistant", content: msg }]);
     } finally {
       setLoading(false);
     }

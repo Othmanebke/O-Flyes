@@ -32,7 +32,7 @@ function LoginContent() {
         setError("Votre email n'a pas encore été vérifié.");
         setShowResend(true);
       } else {
-        setError(data?.error || "Email ou mot de passe incorrect.");
+        setError(data?.error || "Connexion au serveur impossible. Vérifiez que les services (Auth & DB) sont lancés.");
       }
     } finally {
       setLoading(false);

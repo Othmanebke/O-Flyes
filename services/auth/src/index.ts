@@ -25,7 +25,11 @@ app.use(passport.initialize());
 
 // ── Redis ───────────────────────────────────────────────────────────────────
 const redis = createClient({ url: process.env.REDIS_URL || "redis://localhost:6379" });
-redis.connect().catch((err) => console.warn("[auth] Redis not connected:", err.message));
+redis.on("error", (err) => console.error("[auth] Redis Error:", err));
+redis.connect().catch((err) => {
+  console.error("[auth] Redis connection failed! Auth will not work without Redis.");
+  console.error("[auth] Error details:", err.message);
+});
 
 // ── Nodemailer ───────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -155,16 +159,22 @@ app.post("/auth/register", async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Store user (not verified yet)
+    // Store user
+    const isDev = process.env.NODE_ENV === "development" || !process.env.SMTP_USER;
     const user = {
       email,
       name,
       passwordHash,
-      emailVerified: false,
+      emailVerified: isDev, // Auto-verify in dev or if no SMTP
       provider: "local",
       createdAt: Date.now(),
     };
     await redis.set(userKey(email), JSON.stringify(user));
+
+    if (isDev) {
+      console.log(`[auth] Dev mode: Auto-verified user ${email}`);
+      return res.status(201).json({ message: "Compte créé et auto-vérifié (mode dev)." });
+    }
 
     // Generate verification token (expires 24h)
     const token = crypto.randomBytes(32).toString("hex");
@@ -247,8 +257,11 @@ app.post("/auth/login", async (req, res) => {
     try {
       const dbRes = await axios.post(`${DB_URL}/users`, { email: user.email, name: user.name, password_hash: user.passwordHash, provider: user.provider });
       dbId = dbRes.data.id;
-    } catch (err) {
-      console.error("[auth/login] Postgres sync error:", err);
+    } catch (err: any) {
+      console.error("[auth/login] Postgres sync error:", err.message);
+      if (err.code === 'ECONNREFUSED') {
+        return res.status(503).json({ error: "Le service de base de données est injoignable (Postgres)." });
+      }
       return res.status(500).json({ error: "Erreur serveur lors de la synchronisation BDD." });
     }
 

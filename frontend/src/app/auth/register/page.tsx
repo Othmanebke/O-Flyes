@@ -18,11 +18,15 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      await axios.post("/api/auth/auth/register", { name, email, password });
-      router.push("/auth/verify-email"); // ← redirige vers la page "vérifiez votre email"
+      const res = await axios.post("/api/auth/auth/register", { name, email, password });
+      if (res.data.message.includes("auto-vérifié")) {
+        router.push("/auth/login?verified=1");
+      } else {
+        router.push("/auth/verify-email");
+      }
     } catch (err: any) {
-      const msg = err?.response?.data?.error;
-      setError(msg || "Une erreur s'est produite. Veuillez réessayer.");
+      const msg = err?.response?.data?.error || "Connexion au serveur impossible. Vérifiez que les services (Auth & DB) sont lancés.";
+      setError(msg);
     } finally {
       setLoading(false);
     }

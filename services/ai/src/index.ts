@@ -133,6 +133,9 @@ app.post("/chat", async (req, res) => {
     res.json({ reply, enriched });
   } catch (err: any) {
     console.error("[ai] Groq error:", err.message);
+    if (err.code === 'ECONNREFUSED') {
+      return res.status(503).json({ error: "Le service AI est incapable de contacter l'API Groq ou la base de données." });
+    }
     res.status(500).json({ error: "AI service error", detail: err.message });
   }
 });
