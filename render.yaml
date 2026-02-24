@@ -1,5 +1,6 @@
 databases:
   - name: oflyes-db-instance
+    plan: free
     databaseName: oflyes_db
     user: oflyes
 
@@ -8,11 +9,13 @@ services:
   # ── Redis ──────────────────────────────────────────────────────────────────
   - type: redis
     name: oflyes-redis-instance
+    plan: free
     ipAllowList: [] # Only allow access from within Render
 
   # ── Database Service ────────────────────────────────────────────────────────
   - type: web
     name: database-service
+    plan: free
     env: docker
     dockerContext: .
     dockerfilePath: services/database/Dockerfile
@@ -27,6 +30,7 @@ services:
   # ── Auth Service ───────────────────────────────────────────────────────────
   - type: web
     name: auth-service
+    plan: free
     env: docker
     dockerContext: .
     dockerfilePath: services/auth/Dockerfile
@@ -45,6 +49,7 @@ services:
   # ── AI Service ─────────────────────────────────────────────────────────────
   - type: web
     name: ai-service
+    plan: free
     env: docker
     dockerContext: .
     dockerfilePath: services/ai/Dockerfile
