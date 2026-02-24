@@ -38,10 +38,7 @@ services:
           name: oflyes-redis-instance
           property: connectionString
       - key: NEXT_PUBLIC_API_DB
-        fromService:
-          name: database-service
-          type: web
-          property: host
+        value: http://database-service:3002
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV
