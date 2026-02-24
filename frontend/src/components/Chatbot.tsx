@@ -203,7 +203,17 @@ export default function Chatbot() {
       setMessages(prev => [...prev, { role: "assistant", content: res.data.reply, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
     } catch (err: any) {
-      const msg = err?.response?.data?.error || "Le service AI est injoignable. Vérifiez que le service ai-service est lancé.";
+      console.error("Chat Error Details:", {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message,
+        config: err?.config?.url
+      });
+      const debugInfo = err?.response
+        ? `Status: ${err.response.status} - ${JSON.stringify(err.response.data)}`
+        : `Network Error: ${err.message}`;
+
+      const msg = err?.response?.data?.error || `Erreur IA: ${debugInfo}`;
       setMessages(prev => [...prev, { role: "assistant", content: msg }]);
     } finally {
       setLoading(false);

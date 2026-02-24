@@ -23,7 +23,17 @@ export default function RegisterPage() {
       // Pour ce MVP, on considère que l'onboarding est la prochaine étape logique
       router.push("/onboarding");
     } catch (err: any) {
-      const msg = err?.response?.data?.error || "Connexion au serveur impossible. Vérifiez que les services (Auth & DB) sont lancés.";
+      console.error("Register Error Details:", {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message,
+        config: err?.config?.url
+      });
+      const debugInfo = err?.response
+        ? `Status: ${err.response.status} - ${JSON.stringify(err.response.data)}`
+        : `Network Error: ${err.message}`;
+
+      const msg = err?.response?.data?.error || `Erreur technique: ${debugInfo}`;
       setError(msg);
     } finally {
       setLoading(false);
