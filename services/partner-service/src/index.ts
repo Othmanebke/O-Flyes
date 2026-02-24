@@ -68,6 +68,48 @@ const MOCK_ACTIVITIES = [
     }
 ];
 
+const MOCK_HOTELS = [
+    {
+        id: "hotel-1",
+        name: "La Mamounia Marrakech",
+        city: "Marrakech",
+        country: "Maroc",
+        price_per_night: 650,
+        currency: "EUR",
+        rating: 4.9,
+        stars: 5,
+        image_url: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=800&q=80",
+        description: "Un palace légendaire au cœur de la ville ocre, alliant luxe et tradition.",
+        booking_url: "https://www.booking.com/hotel/ma/la-mamounia.fr.html"
+    },
+    {
+        id: "hotel-2",
+        name: "Royal Mansour Marrakech",
+        city: "Marrakech",
+        country: "Maroc",
+        price_per_night: 1200,
+        currency: "EUR",
+        rating: 5.0,
+        stars: 5,
+        image_url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80",
+        description: "Une expérience royale unique dans des riads privés d'exception.",
+        booking_url: "https://www.booking.com/hotel/ma/royal-mansour-marrakech.fr.html"
+    },
+    {
+        id: "hotel-3",
+        name: "Riad Kniza",
+        city: "Marrakech",
+        country: "Maroc",
+        price_per_night: 220,
+        currency: "EUR",
+        rating: 4.8,
+        stars: 4,
+        image_url: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80",
+        description: "Un riad de charme restauré avec passion, offrant une hospitalité marocaine authentique.",
+        booking_url: "https://www.booking.com/hotel/ma/kniza.fr.html"
+    }
+];
+
 // ── Endpoints ────────────────────────────────────────────────────────────────
 
 app.get("/activities/search", (req, res) => {
@@ -80,6 +122,21 @@ app.get("/activities/search", (req, res) => {
 
     const results = MOCK_ACTIVITIES.filter(a =>
         a.city.toLowerCase() === (city as string).toLowerCase()
+    );
+
+    res.json(results);
+});
+
+app.get("/hotels/search", (req, res) => {
+    const { city } = req.query;
+    console.log(`[partner-service] Searching hotels for city: ${city}`);
+
+    if (!city) {
+        return res.json(MOCK_HOTELS);
+    }
+
+    const results = MOCK_HOTELS.filter(h =>
+        h.city.toLowerCase() === (city as string).toLowerCase()
     );
 
     res.json(results);
