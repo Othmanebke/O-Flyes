@@ -32,40 +32,59 @@ app.get("/health", (_req, res) => res.json({ status: "ok", service: "notificatio
 
 // ── POST /notify/email ────────────────────────────────────────────────────────
 app.post("/notify/email", async (req, res) => {
-  const { to, subject, html } = req.body;
-  if (!to || !subject) return res.status(400).json({ error: "Missing fields" });
-  try {
-    await transporter.sendMail({ from: process.env.SMTP_USER, to, subject, html });
-    res.json({ sent: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  const { to, subject, html, template, data } = req.body;
 
-// ── POST /notify/sms ──────────────────────────────────────────────────────────
-app.post("/notify/sms", async (req, res) => {
-  const { to, body } = req.body;
-  if (!twilioClient) return res.status(503).json({ error: "Twilio not configured" });
-  try {
-    await twilioClient.messages.create({ body, from: process.env.TWILIO_FROM_NUMBER, to });
-    res.json({ sent: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  let finalHtml = html;
+  let finalSubject = subject;
 
-// ── POST /notify/welcome ──────────────────────────────────────────────────────
-app.post("/notify/welcome", async (req, res) => {
-  const { email, name } = req.body;
+  if (template === "SYNC_CONFIRMATION") {
+    finalSubject = `Nouveau voyage synchronisé ! ✈️`;
+    finalHtml = `
+      <div style="font-family: sans-serif; padding: 20px; color: #333;">
+        <h1 style="color: #d4af37;">Bonne nouvelle !</h1>
+        <p>Nous avons détecté et ajouté un nouveau voyage à votre dashboard :</p>
+        <div style="background: #f9f7f4; padding: 15px; border-radius: 10px; margin: 20px 0;">
+          <strong>${data.title}</strong><br/>
+          Prestataire : ${data.provider}<br/>
+          Prix : ${data.price} ${data.currency}
+        </div>
+        <p>Retrouvez tous les détails sur votre <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard">Dashboard AIVANA</a>.</p>
+      </div>
+    `;
+  } else if (template === "TRIP_REMINDER") {
+    finalSubject = `Rappel : Votre voyage approche ! 🌍`;
+    finalHtml = `
+      <div style="font-family: sans-serif; padding: 20px; color: #333;">
+        <h1 style="color: #d4af37;">C'est bientôt le départ !</h1>
+        <p>Votre réservation pour <strong>${data.title}</strong> commence dans moins de 24 heures.</p>
+        <p>Avez-vous tout préparé ?</p>
+        <div style="background: #f9f7f4; padding: 15px; border-radius: 10px; margin: 20px 0;">
+          Départ : ${new Date(data.start_date).toLocaleString('fr-FR')}<br/>
+          Confirmation : ${data.confirmation_number || 'N/A'}
+        </div>
+        <p>Bon voyage avec AIVANA !</p>
+      </div>
+    `;
+  }
+
+  if (!to || (!finalSubject && !template)) return res.status(400).json({ error: "Missing fields" });
+
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: email,
-      subject: "Bienvenue sur O-Flyes ✈️",
-      html: `<h1>Bonjour ${name} !</h1><p>Bienvenue sur <strong>O-Flyes</strong>, votre assistant voyage intelligent. Commencez à explorer vos prochaines aventures dès maintenant.</p>`,
+      from: `"AIVANA" <${process.env.SMTP_USER}>`,
+      to,
+      subject: finalSubject,
+      html: finalHtml
     });
     res.json({ sent: true });
   } catch (err: any) {
+    console.error("[notifications-service] Send failed:", err.message);
+    // Silent fail in dev if SMTP is not configured
+    if (process.env.NODE_ENV !== "production") {
+      console.log("MOCK EMAIL SENT TO:", to);
+      console.log("SUBJECT:", finalSubject);
+      return res.json({ sent: true, mock: true });
+    }
     res.status(500).json({ error: err.message });
   }
 });

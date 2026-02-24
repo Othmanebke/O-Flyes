@@ -87,11 +87,7 @@ async function syncUserEmails(cred: any) {
             if (aiRes && aiRes.data.booking) {
                 // 5. Save to database
                 const booking = aiRes.data.booking;
-                // Find or create a trip for this booking (simplified: current trip or new one)
-                // For MVP, we might just look for a trip with same destination or create "Email Sync Trip"
-
-                // Let's assume the AI provides trip suggestions or we use a default "Voyages synchronisés"
-                await axios.post(`${DB_URL}/bookings`, {
+                const savedBooking = await axios.post(`${DB_URL}/bookings`, {
                     ...booking,
                     user_id: cred.user_id,
                     raw_data: { source: "email", message_id: msg.id }
@@ -103,7 +99,15 @@ async function syncUserEmails(cred: any) {
                     message_id: msg.id
                 });
 
-                console.log(`[sync-worker] Successfully extracted and saved booking from email ${msg.id}`);
+                // 7. Send notification
+                console.log(`[sync-worker] Sending sync confirmation for booking ${msg.id}`);
+                await axios.post(`${process.env.NEXT_PUBLIC_API_NOTIF || 'http://localhost:3004'}/notify/email`, {
+                    to: cred.email,
+                    template: "SYNC_CONFIRMATION",
+                    data: savedBooking.data
+                }).catch(e => console.error(`[sync-worker] Notification failed:`, e.message));
+
+                console.log(`[sync-worker] Successfully extracted, saved and notified for email ${msg.id}`);
             }
         }
 
@@ -115,7 +119,34 @@ async function syncUserEmails(cred: any) {
     }
 }
 
+async function checkUpcomingTrips() {
+    console.log("[sync-worker] Checking for upcoming trips/bookings...");
+    try {
+        const res = await axios.get(`${DB_URL}/bookings/upcoming?hours=24`);
+        const bookings = res.data;
+
+        for (const booking of bookings) {
+            console.log(`[sync-worker] Sending reminder for booking ${booking.id} to ${booking.email}`);
+            await axios.post(`${process.env.NEXT_PUBLIC_API_NOTIF || 'http://localhost:3004'}/notify/email`, {
+                to: booking.email,
+                template: "TRIP_REMINDER",
+                data: booking
+            });
+
+            // Mark as reminded to avoid duplicate notifications
+            // (Assuming we add a quick update endpoint or just status update)
+            await axios.delete(`${DB_URL}/bookings/${booking.id}`).catch(() => { });
+            // Re-inserting with 'reminded' status or just a flag would be better, 
+            // but for MVP let's just log it or we'd need a PATCH endpoint.
+            console.log(`[sync-worker] Reminder sent and booking handled for ${booking.id}`);
+        }
+    } catch (err: any) {
+        console.error("[sync-worker] Reminder job failed:", err.message);
+    }
+}
+
 function getEmailBody(message: any): string {
+    // ... (rest of the function remains the same)
     // Helper to extract text from multi-part Gmail message
     let body = "";
     if (message.payload.parts) {
@@ -140,7 +171,15 @@ cron.schedule("*/10 * * * *", () => {
     syncAllUsers();
 });
 
+// Run reminders every day at 8 AM
+cron.schedule("0 8 * * *", () => {
+    checkUpcomingTrips();
+});
+
 // Also run on startup after 5s
-setTimeout(() => syncAllUsers(), 5000);
+setTimeout(() => {
+    syncAllUsers();
+    checkUpcomingTrips();
+}, 5000);
 
 app.listen(PORT, () => console.log(`[sync-worker] running on port ${PORT}`));

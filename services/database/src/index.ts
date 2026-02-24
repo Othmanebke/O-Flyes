@@ -140,6 +140,26 @@ app.get("/bookings/trip/:tripId", async (req, res) => {
   res.json(result.rows);
 });
 
+app.get("/bookings/upcoming", async (req, res) => {
+  const { hours } = req.query;
+  const interval = hours ? `${hours} hours` : '24 hours';
+  try {
+    const result = await pool.query(
+      `SELECT b.*, u.email, u.name as user_name 
+       FROM bookings b
+       JOIN trips t ON t.id = b.trip_id
+       JOIN users u ON u.id = t.user_id
+       WHERE b.start_date BETWEEN NOW() AND NOW() + $1::interval
+       AND b.status != 'reminded'`,
+      [interval]
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete("/bookings/:id", async (req, res) => {
   await pool.query("DELETE FROM bookings WHERE id = $1", [req.params.id]);
   res.status(204).end();
