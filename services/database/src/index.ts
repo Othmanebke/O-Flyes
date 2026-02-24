@@ -24,6 +24,10 @@ export const pool = process.env.DATABASE_URL
     database: process.env.POSTGRES_DB || "oflyes_db",
   });
 
+console.log(`[database-service] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+console.log(` - DATABASE_URL: ${process.env.DATABASE_URL ? '(secret)' : 'using separate fields'}`);
+
 // ── Auto-initialisation du schéma ────────────────────────────────────────────
 async function initSchema() {
   try {

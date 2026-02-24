@@ -10,6 +10,10 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 const app = express();
 const PORT = process.env.NOTIF_PORT || 3004;
 
+console.log(`[notifications-service] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+console.log(` - SMTP_HOST: ${process.env.SMTP_HOST || 'Missing'}`);
+
 app.use(cors());
 app.use(express.json());
 

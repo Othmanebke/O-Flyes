@@ -9,6 +9,9 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 const app = express();
 const PORT = process.env.METRICS_PORT || 3006;
 
+console.log(`[metrics-service] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+
 app.use(cors());
 app.use(express.json());
 

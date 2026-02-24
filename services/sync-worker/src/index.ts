@@ -12,6 +12,11 @@ const PORT = process.env.PORT || process.env.SYNC_PORT || 3004;
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 const AI_URL = process.env.NEXT_PUBLIC_API_AI || "http://localhost:3003";
 
+console.log(`[sync-worker] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+console.log(` - DB_URL: ${DB_URL}`);
+console.log(` - AI_URL: ${AI_URL}`);
+
 app.use(cors());
 app.use(express.json());
 

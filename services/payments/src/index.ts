@@ -10,6 +10,10 @@ const app = express();
 const PORT = process.env.PAYMENT_PORT || 3005;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2023-10-16" });
 
+console.log(`[payments-service] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+console.log(` - STRIPE_SECRET_KEY: ${process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing'}`);
+
 // Raw body needed for Stripe webhook
 app.use("/payments/webhook", express.raw({ type: "application/json" }));
 app.use(cors());

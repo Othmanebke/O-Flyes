@@ -8,8 +8,11 @@ import axios from "axios";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || process.env.AI_PORT || 3003;
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
+
+console.log(`[ai-service] Starting with:`);
+console.log(` - PORT: ${PORT}`);
+console.log(` - DB_URL: ${DB_URL}`);
 
 app.use(cors());
 app.use(express.json());
