@@ -1,6 +1,6 @@
 services:
   # ── PostgreSQL ─────────────────────────────────────────────────────────────
-  - type: database
+  - type: postgres
     name: oflyes-db-instance
     databaseName: oflyes_db
     user: oflyes
