@@ -145,6 +145,62 @@ app.delete("/bookings/:id", async (req, res) => {
   res.status(204).end();
 });
 
+// ── Email Credentials ────────────────────────────────────────────────────────
+app.post("/email-credentials", async (req, res) => {
+  const { user_id, email, provider, access_token, refresh_token, expires_at, scope } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO email_credentials (user_id, email, provider, access_token, refresh_token, expires_at, scope, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+       ON CONFLICT (user_id, email) DO UPDATE SET
+         access_token = EXCLUDED.access_token,
+         refresh_token = EXCLUDED.refresh_token,
+         expires_at = EXCLUDED.expires_at,
+         updated_at = NOW()
+       RETURNING *`,
+      [user_id, email, provider, access_token, refresh_token, expires_at, scope]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not save email credentials" });
+  }
+});
+
+app.get("/email-credentials/user/:userId", async (req, res) => {
+  const result = await pool.query("SELECT id, user_id, email, provider, scope, updated_at FROM email_credentials WHERE user_id = $1", [req.params.userId]);
+  res.json(result.rows);
+});
+
+app.get("/email-credentials/all", async (_req, res) => {
+  // Used by sync-worker (internal only ideally)
+  const result = await pool.query("SELECT * FROM email_credentials");
+  res.json(result.rows);
+});
+
+// ── Processed Emails ────────────────────────────────────────────────────────
+app.post("/processed-emails", async (req, res) => {
+  const { user_id, message_id } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO processed_emails (user_id, message_id, sync_date)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id, message_id) DO NOTHING
+       RETURNING *`,
+      [user_id, message_id]
+    );
+    res.status(201).json(result.rows[0] || { message: "Already exists" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not track processed email" });
+  }
+});
+
+app.get("/processed-emails/user/:userId", async (req, res) => {
+  const result = await pool.query("SELECT message_id FROM processed_emails WHERE user_id = $1", [req.params.userId]);
+  res.json(result.rows.map((r: any) => r.message_id));
+});
+
 // ── Chat (saved conversations) ───────────────────────────────────────────────
 app.post("/chat", async (req, res) => {
   const { user_id, role, content } = req.body;

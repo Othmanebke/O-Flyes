@@ -146,6 +146,48 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+// ── POST /extract – extract booking from email ─────────────────────────────
+app.post("/extract", async (req, res) => {
+  const { emailBody } = req.body;
+  if (!emailBody) return res.status(400).json({ error: "No email body" });
+
+  const prompt = `Extraction de données de voyage de cet email. 
+Réponds UNIQUEMENT en JSON valide suivant ce format :
+{
+  "booking": {
+    "type": "flight" | "hotel" | "activity" | "transport",
+    "title": "Nom du vol ou de l'hôtel",
+    "provider": "Compagnie ou plateforme",
+    "confirmation_number": "Code de confirmation",
+    "start_date": "ISO-8601 date",
+    "end_date": "ISO-8601 date (optionnel)",
+    "price": 123.45,
+    "currency": "EUR"
+  }
+}
+
+EMAIL CONTENT :
+${emailBody}`;
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.1, // low temp for extraction
+      max_tokens: 1024,
+    });
+
+    const raw = chatCompletion.choices[0]?.message?.content || "";
+    const cleaned = stripFences(raw);
+    const parsed = JSON.parse(cleaned);
+
+    res.json(parsed);
+  } catch (err: any) {
+    console.error("[ai] Extraction error:", err.message);
+    res.status(500).json({ error: "Extraction failed" });
+  }
+});
+
 // ── POST /recommend – structured recommendation ───────────────────────────────
 app.post("/recommend", async (req, res) => {
   const { budget, climate, period, interests, duration_days } = req.body;

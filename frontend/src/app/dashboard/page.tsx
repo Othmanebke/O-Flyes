@@ -49,6 +49,8 @@ export default function DashboardPage() {
         end_date: ''
     });
 
+    const [emailConnected, setEmailConnected] = useState(false);
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -59,12 +61,27 @@ export default function DashboardPage() {
                 setUserId(payload.id);
                 setUserName(payload.name || "Voyageur");
                 fetchTrips(payload.id);
+                checkEmailSync(payload.id);
             } catch (e) {
                 console.error("Invalid token", e);
                 router.push("/auth/login");
             }
         }
     }, [router]);
+
+    const checkEmailSync = async (uid: string) => {
+        try {
+            const res = await axios.get(`/api/db/email-credentials/user/${uid}`);
+            setEmailConnected(res.data && res.data.length > 0);
+        } catch (err) {
+            console.error("Failed to check email sync", err);
+        }
+    };
+
+    const handleConnectEmail = () => {
+        // Redirect to auth-service sync route
+        window.location.href = `${process.env.NEXT_PUBLIC_API_AUTH || 'http://localhost:3001'}/auth/google/sync`;
+    };
 
     const fetchTrips = async (uid: string) => {
         try {
@@ -171,18 +188,18 @@ export default function DashboardPage() {
 
                 <nav className="flex-1 px-4 space-y-2">
                     {[
-                        { icon: LayoutDashboard, label: "Dashboard", active: !selectedTrip },
-                        { icon: Calendar, label: "Mes Voyages", active: !!selectedTrip },
-                        { icon: Mail, label: "Sync Email", active: false },
-                        { icon: Settings, label: "Paramètres", active: false },
+                        { icon: LayoutDashboard, label: "Dashboard", active: !selectedTrip, onClick: () => setSelectedTrip(null) },
+                        { icon: Calendar, label: "Mes Voyages", active: !!selectedTrip, onClick: () => { } },
+                        { icon: Mail, label: emailConnected ? "Email Connecté" : "Sync Email", active: false, onClick: handleConnectEmail, color: emailConnected ? "text-green-500" : "" },
+                        { icon: Settings, label: "Paramètres", active: false, onClick: () => { } },
                     ].map((item) => (
                         <button
                             key={item.label}
-                            onClick={() => { if (item.label === "Dashboard") setSelectedTrip(null); }}
+                            onClick={item.onClick}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${item.active ? "bg-gold text-dark font-bold" : "text-white/60 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
-                            <item.icon className="w-4 h-4" />
+                            <item.icon className={`w-4 h-4 ${item.color || ""}`} />
                             <span className="text-sm">{item.label}</span>
                         </button>
                     ))}
@@ -207,6 +224,12 @@ export default function DashboardPage() {
                         {selectedTrip ? selectedTrip.title : "Mon Dashboard"}
                     </h1>
                     <div className="flex items-center gap-4">
+                        {emailConnected && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-100 rounded-lg">
+                                <Mail className="w-3 h-3 text-green-500" />
+                                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider text-muted">Sync Email Actif</span>
+                            </div>
+                        )}
                         {!selectedTrip && (
                             <button
                                 onClick={() => setShowCreateModal(true)}
@@ -258,9 +281,12 @@ export default function DashboardPage() {
                                             Connectez votre email ou ajoutez un voyage manuellement pour commencer à organiser vos escapades.
                                         </p>
                                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                            <Link href="/onboarding" className="btn-gold px-8 py-3 w-full sm:w-auto">
+                                            <button
+                                                onClick={handleConnectEmail}
+                                                className="btn-gold px-8 py-3 w-full sm:w-auto"
+                                            >
                                                 Connecter mon email
-                                            </Link>
+                                            </button>
                                             <button
                                                 onClick={() => setShowCreateModal(true)}
                                                 className="flex items-center gap-2 text-sm font-bold text-dark-400 hover:text-dark transition-colors px-6"

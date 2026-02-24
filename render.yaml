@@ -64,3 +64,26 @@ services:
         value: http://database-service:3002
       - key: GROQ_API_KEY
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+
+  # ── Sync Worker Service ──────────────────────────────────────────────────
+  - type: web
+    name: sync-worker
+    plan: free
+    env: docker
+    dockerContext: services/sync-worker
+    dockerfilePath: services/sync-worker/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3004
+      - key: SYNC_PORT
+        value: 3004
+      - key: NEXT_PUBLIC_API_DB
+        value: http://database-service:3002
+      - key: NEXT_PUBLIC_API_AI
+        value: http://ai-service:3003
+      - key: OAUTH_GOOGLE_CLIENT_ID
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+      - key: OAUTH_GOOGLE_CLIENT_SECRET
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+      - key: OAUTH_CALLBACK_URL
+        value: "https://auth-service.onrender.com/auth/callback"

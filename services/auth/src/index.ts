@@ -98,7 +98,7 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
         clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
         callbackURL: process.env.OAUTH_CALLBACK_URL || "",
       },
-      async (_accessToken: string, _refreshToken: string, profile: Profile, done: VerifyCallback) => {
+      async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
         try {
           const email = profile.emails?.[0]?.value || "";
           const existing = await redis.get(userKey(email));
@@ -114,7 +114,8 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
             };
             await redis.set(userKey(email), JSON.stringify(user));
           }
-          return done(null, profile);
+          // Pass tokens in the info object
+          return done(null, profile, { accessToken, refreshToken });
         } catch (err) {
           return done(err as Error);
         }
@@ -129,8 +130,15 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "auth" }));
 
-/** GET /auth/google */
+/** GET /auth/google - Normal login */
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+/** GET /auth/google/sync - Specific for email sync permissions */
+app.get("/auth/google/sync", passport.authenticate("google", {
+  scope: ["profile", "email", "https://www.googleapis.com/auth/gmail.readonly"],
+  accessType: "offline",
+  prompt: "consent"
+}));
 
 /** GET /auth/callback */
 app.get(
@@ -142,9 +150,29 @@ app.get(
       const email = user.emails?.[0]?.value;
       const name = user.displayName;
 
+      // Extract tokens (passed by passport-google-oauth20 if requested)
+      // Note: we need to modify the strategy to capture these or use a custom callback
+      const tokens = (req as any).authInfo || {};
+
       // Sync with Postgres to get the UUID
       const dbRes = await axios.post(`${DB_URL}/users`, { email, name, password_hash: "", provider: "google" });
       const dbId = dbRes.data.id;
+
+      // Persist email sync tokens if present
+      if (tokens.refreshToken) {
+        console.log(`[auth/callback] Saving email credentials for user ${dbId} and email ${email}`);
+        await axios.post(`${DB_URL}/email-credentials`, {
+          user_id: dbId,
+          email,
+          provider: "google",
+          access_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken,
+          expires_at: new Date(Date.now() + 3600 * 1000).toISOString(), // Roughly 1h
+          scope: "https://www.googleapis.com/auth/gmail.readonly"
+        }).catch(err => {
+          console.error("[auth/callback] Failed to save email-credentials:", err.message);
+        });
+      }
 
       const token = jwt.sign(
         { id: dbId, email, name },

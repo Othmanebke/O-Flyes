@@ -68,6 +68,30 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Email credentials for background sync
+CREATE TABLE IF NOT EXISTS email_credentials (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  email         TEXT NOT NULL, -- The connected gmail/outlook address
+  provider      TEXT NOT NULL, -- 'google' | 'microsoft'
+  access_token  TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at    TIMESTAMPTZ NOT NULL,
+  scope         TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, email)
+);
+
+-- Tracking processed emails to avoid duplicate parsing
+CREATE TABLE IF NOT EXISTS processed_emails (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+  message_id  TEXT NOT NULL, -- External ID from Gmail/Outlook
+  sync_date   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, message_id)
+);
+
 -- Seed a few sample destinations
 INSERT INTO destinations (name, country, continent, climate, avg_daily_budget, best_periods, tags, description)
 VALUES
