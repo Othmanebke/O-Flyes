@@ -11,10 +11,10 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import axios from "axios";
 
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+dotenv.config();
 
 const app = express();
-const PORT = process.env.AUTH_PORT || 3001;
+const PORT = process.env.PORT || process.env.AUTH_PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
@@ -74,36 +74,40 @@ const verifyKey = (token: string) => `verify:${token}`;
 const resetKey = (token: string) => `reset:${token}`;
 
 // ── Google OAuth ─────────────────────────────────────────────────────────────
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.OAUTH_GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET || "",
-      callbackURL: process.env.OAUTH_CALLBACK_URL || "",
-    },
-    async (_accessToken: string, _refreshToken: string, profile: Profile, done: VerifyCallback) => {
-      try {
-        const email = profile.emails?.[0]?.value || "";
-        const existing = await redis.get(userKey(email));
-        if (!existing) {
-          // Auto-create user from Google (already verified)
-          const user = {
-            email,
-            name: profile.displayName,
-            passwordHash: "",
-            emailVerified: true,
-            provider: "google",
-            createdAt: Date.now(),
-          };
-          await redis.set(userKey(email), JSON.stringify(user));
+if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.OAUTH_GOOGLE_CLIENT_ID,
+        clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.OAUTH_CALLBACK_URL || "",
+      },
+      async (_accessToken: string, _refreshToken: string, profile: Profile, done: VerifyCallback) => {
+        try {
+          const email = profile.emails?.[0]?.value || "";
+          const existing = await redis.get(userKey(email));
+          if (!existing) {
+            // Auto-create user from Google (already verified)
+            const user = {
+              email,
+              name: profile.displayName,
+              passwordHash: "",
+              emailVerified: true,
+              provider: "google",
+              createdAt: Date.now(),
+            };
+            await redis.set(userKey(email), JSON.stringify(user));
+          }
+          return done(null, profile);
+        } catch (err) {
+          return done(err as Error);
         }
-        return done(null, profile);
-      } catch (err) {
-        return done(err as Error);
       }
-    }
-  )
-);
+    )
+  );
+} else {
+  console.warn("[auth] Google OAuth credentials missing. Google login will be disabled.");
+}
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 

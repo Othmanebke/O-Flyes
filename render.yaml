@@ -40,7 +40,7 @@ services:
       - key: AUTH_PORT
         value: 3001
       - key: REDIS_URL
-        value: redis://red-d6egai88tnhs738m6mig:6379
+        value: redis://oflyes-redis-instance:6379
       - key: NEXT_PUBLIC_API_DB
         value: http://database-service:3002
       - key: JWT_SECRET
