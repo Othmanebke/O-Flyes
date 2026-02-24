@@ -14,13 +14,15 @@ app.use(cors());
 app.use(express.json());
 
 // ── PostgreSQL connection ────────────────────────────────────────────────────
-export const pool = new Pool({
-  host: process.env.POSTGRES_HOST || "localhost",
-  port: Number(process.env.POSTGRES_PORT) || 5432,
-  user: process.env.POSTGRES_USER || "oflyes",
-  password: process.env.POSTGRES_PASSWORD || "oflyes_password",
-  database: process.env.POSTGRES_DB || "oflyes_db",
-});
+export const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : new Pool({
+    host: process.env.POSTGRES_HOST || "localhost",
+    port: Number(process.env.POSTGRES_PORT) || 5432,
+    user: process.env.POSTGRES_USER || "oflyes",
+    password: process.env.POSTGRES_PASSWORD || "oflyes_password",
+    database: process.env.POSTGRES_DB || "oflyes_db",
+  });
 
 // ── Auto-initialisation du schéma ────────────────────────────────────────────
 async function initSchema() {

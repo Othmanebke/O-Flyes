@@ -1,0 +1,65 @@
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  - type: database
+    name: oflyes-db-instance
+    databaseName: oflyes_db
+    user: oflyes
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  - type: redis
+    name: oflyes-redis-instance
+    ipAllowList: [] # Only allow access from within Render
+
+  # ── Database Service ────────────────────────────────────────────────────────
+  - type: web
+    name: database-service
+    env: docker
+    dockerContext: .
+    dockerfilePath: services/database/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oflyes-db-instance
+          property: connectionString
+
+  # ── Auth Service ───────────────────────────────────────────────────────────
+  - type: web
+    name: auth-service
+    env: docker
+    dockerContext: .
+    dockerfilePath: services/auth/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: REDIS_URL
+        fromPagination: # This is a placeholder, Render uses 'redis://' + host
+          name: oflyes-redis-instance
+          property: connectionString
+      - key: NEXT_PUBLIC_API_DB
+        fromService:
+          name: database-service
+          type: web
+          property: host
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+
+  # ── AI Service ─────────────────────────────────────────────────────────────
+  - type: web
+    name: ai-service
+    env: docker
+    dockerContext: .
+    dockerfilePath: services/ai/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3003
+      - key: NEXT_PUBLIC_API_DB
+        fromService:
+          name: database-service
+          type: web
+          property: host
+      - key: GROQ_API_KEY
+        sync: false # Must be set manually in Render dashboard
