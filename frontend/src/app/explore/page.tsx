@@ -395,7 +395,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ FILTRES ═════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-8 mb-10 sticky top-20 z-40">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10 sticky top-[72px] z-40">
         <div className="bg-sand-50/90 backdrop-blur-md border border-sand-200 rounded-2xl p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="text-xs text-dark-400 font-medium uppercase tracking-widest mr-2">Budget</span>
