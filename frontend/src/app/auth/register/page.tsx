@@ -19,11 +19,9 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await axios.post("/api/auth/auth/register", { name, email, password });
-      if (res.data.message.includes("auto-vérifié")) {
-        router.push("/auth/login?verified=1");
-      } else {
-        router.push("/auth/verify-email");
-      }
+      // On connecte l'utilisateur si possible ou on le redirige vers l'onboarding directement
+      // Pour ce MVP, on considère que l'onboarding est la prochaine étape logique
+      router.push("/onboarding");
     } catch (err: any) {
       const msg = err?.response?.data?.error || "Connexion au serveur impossible. Vérifiez que les services (Auth & DB) sont lancés.";
       setError(msg);

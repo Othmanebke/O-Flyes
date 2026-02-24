@@ -6,33 +6,15 @@ import { useState, useEffect, useCallback } from "react";
 const HERO_SLIDES = [
   {
     img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1800&q=90",
-    location: "Nouvelle-Zélande",
-    title: "Explorez les\nPlus Beaux\nEndroits du Monde",
-    sub: "Laissez l'IA trouver votre destination idéale",
+    location: "AIVANA Sync",
+    title: "Toutes vos Réservations,\nUn Seul Dashboard",
+    sub: "La synchronisation automatique de vos voyages par email. Zéro saisie, 100% visibilité.",
   },
   {
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1800&q=90",
-    location: "Bali, Indonésie",
-    title: "Rizières, Temples\net Plages de Rêve",
-    sub: "L'Asie du Sud-Est à partir de 890€ tout compris",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=1800&q=90",
-    location: "Marrakech, Maroc",
-    title: "Souks, Épices\nRiads et Désert",
-    sub: "La magie de l'Afrique du Nord dès 490€",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=1800&q=90",
-    location: "Islande",
-    title: "Aurores Boréales\nGlaciers et\nGeysers",
-    sub: "L'aventure arctique à 3h de Paris",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=1800&q=90",
-    location: "Kyoto, Japon",
-    title: "Sakura, Temples\nZen et Ramen",
-    sub: "Le Japon, une expérience totale et inoubliable",
+    img: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1800&q=90",
+    location: "Zéro Effort",
+    title: "Connectez votre Email,\nAdmirez la Magie",
+    sub: "Notre IA extrait vos vols, hôtels et activités directement de vos confirmations.",
   },
 ];
 
@@ -111,10 +93,10 @@ export default function HomePage() {
                 </h1>
                 <p className="text-white/70 text-sm mt-4 mb-8 max-w-sm">{HERO_SLIDES[slide].sub}</p>
                 <div className="flex flex-wrap items-center gap-4">
-                  <Link href="/explore" className="btn-gold text-sm whitespace-nowrap">Découvrir les destinations</Link>
-                  <Link href="/chat" className="inline-flex items-center gap-2 text-white hover:text-gold transition-colors text-sm font-medium">
-                    <MessageCircle className="w-4 h-4" />Parler à l&apos;IA
-                  </Link>
+                  <Link href="/auth/register" className="btn-gold text-sm whitespace-nowrap px-8">Créer mon espace</Link>
+                  <a href="#how-it-works" className="inline-flex items-center gap-2 text-white hover:text-gold transition-colors text-sm font-medium">
+                    <ChevronDown className="w-4 h-4 animate-bounce" />Voir comment ça marche
+                  </a>
                 </div>
               </div>
               {/* Right – stats card */}
@@ -159,63 +141,113 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TOP PICKS ─────────────────────────────────────────────────────── */}
-      <section className="py-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <p className="section-label mb-2">Nos Coups de Cœur</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-dark">
-                Trouvez votre<br />expérience parfaite
-              </h2>
-            </div>
-            <Link href="/explore" className="flex items-center gap-2 text-sm font-medium text-dark/60 hover:text-dark transition-colors">
-              Voir tout
-              <span className="w-7 h-7 rounded-full bg-dark-100 flex items-center justify-center">
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </span>
-            </Link>
-          </div>
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
+      <section id="how-it-works" className="py-24 px-8 bg-white">
+        <div className="max-w-7xl mx-auto text-center mb-16">
+          <p className="section-label mb-4">Fonctionnement</p>
+          <h2 className="font-serif text-4xl md:text-5xl text-dark">Votre voyage se planifie seul</h2>
+          <p className="text-dark-400 mt-4 max-w-2xl mx-auto">
+            AIVANA se connecte à vos confirmations de réservation pour créer automatiquement votre itinéraire centralisé.
+          </p>
+        </div>
 
-          {/* Card row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {destinations.map((d, i) => (
-              <Link
-                href="/explore"
-                key={d.name}
-                className={`group relative rounded-2xl overflow-hidden card-hover cursor-pointer col-span-2 ${i === 0 ? "md:col-span-2" : "sm:col-span-1"}`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className={`relative overflow-hidden ${i === 0 ? "h-64 md:h-80" : "h-56"}`}>
-                  <img
-                    src={d.img}
-                    alt={d.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {/* Info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex justify-between items-end">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+          {[
+            { step: "01", title: "Inscription", desc: "Créez votre compte AIVANA en quelques secondes pour accéder à votre espace personnel." },
+            { step: "02", title: "Connexion Email", desc: "Connectez votre boîte Gmail ou Outlook en toute sécurité. Notre IA fait le reste." },
+            { step: "03", title: "Dashboard Magique", desc: "Vos vols, hôtels et activités s'affichent automatiquement. Zéro saisie manuelle." },
+          ].map((s, i) => (
+            <div key={i} className="p-10 rounded-3xl bg-sand-50 border border-sand-200 hover:border-gold/30 transition-all group">
+              <span className="text-5xl font-serif text-gold/20 group-hover:text-gold/40 transition-colors">{s.step}</span>
+              <h3 className="text-xl font-bold text-dark mt-4 mb-3">{s.title}</h3>
+              <p className="text-dark-400 text-sm leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────── */}
+      <section className="py-24 px-8 bg-sand-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="section-label mb-4">L&apos;Expérience AIVANA</p>
+              <h2 className="font-serif text-4xl md:text-5xl text-dark leading-tight mb-6">
+                Le Dashboard qui prend<br />soin de votre voyage
+              </h2>
+              <div className="space-y-6">
+                {[
+                  { t: "Centralisation Totale", d: "Plus besoin de chercher vos PDFs. Tout est au même endroit, trié par voyage." },
+                  { t: "Synchronisation Temps Réel", d: "Dès que vous recevez une confirmation, elle apparaît dans votre Dashboard." },
+                  { t: "Zéro Effort", d: "L&apos;IA extrait les dates, lieux et numéros de dossier pour vous." },
+                ].map((f, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0 mt-1">
+                      <div className="w-2 h-2 rounded-full bg-gold" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-dark text-sm">{f.t}</h4>
+                      <p className="text-dark-400 text-xs mt-1 leading-relaxed">{f.d}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/auth/register" className="btn-dark mt-10">Créer mon espace gratuit</Link>
+            </div>
+
+            {/* Visual Mockup */}
+            <div className="relative">
+              <div className="bg-white rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.1)] border border-dark-100 p-8 transform lg:rotate-2 lg:scale-105">
+                <div className="flex items-center justify-between mb-8 border-b border-sand-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">🏝️</div>
+                    <div>
+                      <p className="text-xs font-bold text-dark">Voyage à Bali</p>
+                      <p className="text-[10px] text-dark-300">12 Mai — 24 Mai 2024</p>
+                    </div>
+                  </div>
+                  <div className="flex -space-x-2">
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-sand-200" />
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gold" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-sand-50 border border-sand-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white shadow-sm">✈️</div>
                       <div>
-                        <span className="inline-block bg-gold/80 backdrop-blur-sm text-dark text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full mb-1">
-                          {d.tag}
-                        </span>
-                        <p className="text-white font-semibold text-sm leading-tight">{d.name}</p>
-                        <p className="text-white/70 text-xs mt-0.5">{d.period} · {d.temp}</p>
+                        <p className="text-xs font-bold text-dark">Vol AF256</p>
+                        <p className="text-[10px] text-dark-300">Départ 10:45 Paris CDG</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-white/70 text-[10px]">dès</p>
-                        <p className="text-white font-bold text-sm">{d.price.replace("À partir de ", "")}</p>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Confirmé</span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-sand-50 border border-sand-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white shadow-sm">🏨</div>
+                      <div>
+                        <p className="text-xs font-bold text-dark">Alila Villas Uluwatu</p>
+                        <p className="text-[10px] text-dark-300">Check-in 14:00</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Confirmé</span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-gold text-dark border border-gold/20 flex items-center justify-between shadow-lg shadow-gold/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/20">🏄</div>
+                      <div>
+                        <p className="text-xs font-bold">Session Surf Kuta</p>
+                        <p className="text-[10px] text-dark/60">Demain 09:00</p>
                       </div>
                     </div>
                   </div>
-                  {/* Arrow */}
-                  <div className="absolute top-3 right-3 w-7 h-7 bg-sand-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowUpRight className="w-3.5 h-3.5 text-dark" />
-                  </div>
                 </div>
-              </Link>
-            ))}
+              </div>
+              {/* Decorative bubbles */}
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-gold/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-dark/5 rounded-full blur-3xl" />
+            </div>
           </div>
         </div>
       </section>
