@@ -23,9 +23,7 @@ services:
       - key: PORT
         value: 3002
       - key: DATABASE_URL
-        fromDatabase:
-          name: oflyes-db-instance
-          property: connectionString
+        value: postgresql://oflyes:R5WjzwxqPs35QBIdlLnaGAev1QnUALro@dpg-d6egaig8tnhs738m6mkg-a/oflyes_db
 
   # ── Auth Service ───────────────────────────────────────────────────────────
   - type: web
@@ -38,7 +36,7 @@ services:
       - key: PORT
         value: 3001
       - key: REDIS_URL
-        value: redis://oflyes-redis-instance:6379
+        value: redis://red-d6egai88tnhs738m6mig:6379
       - key: NEXT_PUBLIC_API_DB
         value: http://database-service:3002
       - key: JWT_SECRET
@@ -59,4 +57,4 @@ services:
       - key: NEXT_PUBLIC_API_DB
         value: http://database-service:3002
       - key: GROQ_API_KEY
-        sync: false # Must be set manually in Render dashboard
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
