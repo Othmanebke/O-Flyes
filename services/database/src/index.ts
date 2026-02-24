@@ -5,10 +5,10 @@ import { Pool } from "pg";
 import fs from "fs";
 import path from "path";
 
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+dotenv.config();
 
 const app = express();
-const PORT = process.env.DB_PORT || 3002;
+const PORT = process.env.PORT || process.env.DB_PORT || 3002;
 
 app.use(cors());
 app.use(express.json());

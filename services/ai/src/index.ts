@@ -5,10 +5,10 @@ import path from "path";
 import Groq from "groq-sdk";
 import axios from "axios";
 
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+dotenv.config();
 
 const app = express();
-const PORT = process.env.AI_PORT || 3003;
+const PORT = process.env.PORT || process.env.AI_PORT || 3003;
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
 app.use(cors());
