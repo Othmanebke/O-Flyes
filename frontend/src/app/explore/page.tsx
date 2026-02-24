@@ -322,7 +322,8 @@ export default function ExplorePage() {
       <div className="relative min-h-[580px] overflow-hidden">
         <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=90" alt="Voyage" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/50 via-dark/20 to-sand-50" />
+          <div className="absolute inset-0 bg-black/15" />
+          <div className="absolute inset-0 bg-gradient-to-b from-dark/60 via-dark/30 to-sand-50" />
         </div>
         <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0">
           <div className="inline-flex items-center gap-2 bg-sand-50/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">

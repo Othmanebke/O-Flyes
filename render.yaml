@@ -17,10 +17,12 @@ services:
     name: database-service
     plan: free
     env: docker
-    dockerContext: .
+    dockerContext: services/database
     dockerfilePath: services/database/Dockerfile
     envVars:
       - key: PORT
+        value: 3002
+      - key: DB_PORT
         value: 3002
       - key: DATABASE_URL
         value: postgresql://oflyes:R5WjzwxqPs35QBIdlLnaGAev1QnUALro@dpg-d6egaig8tnhs738m6mkg-a/oflyes_db
@@ -30,10 +32,12 @@ services:
     name: auth-service
     plan: free
     env: docker
-    dockerContext: .
+    dockerContext: services/auth
     dockerfilePath: services/auth/Dockerfile
     envVars:
       - key: PORT
+        value: 3001
+      - key: AUTH_PORT
         value: 3001
       - key: REDIS_URL
         value: redis://red-d6egai88tnhs738m6mig:6379
@@ -49,10 +53,12 @@ services:
     name: ai-service
     plan: free
     env: docker
-    dockerContext: .
+    dockerContext: services/ai
     dockerfilePath: services/ai/Dockerfile
     envVars:
       - key: PORT
+        value: 3003
+      - key: AI_PORT
         value: 3003
       - key: NEXT_PUBLIC_API_DB
         value: http://database-service:3002

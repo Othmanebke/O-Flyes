@@ -89,8 +89,9 @@ export default function HomePage() {
         ))}
 
         {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent z-10" />
-        <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/15 to-transparent h-32 z-10" />
+        <div className="absolute inset-0 bg-black/20 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-10" />
+        <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/20 to-transparent h-32 z-10" />
 
         {/* Content */}
         <div className="relative z-20 w-full">

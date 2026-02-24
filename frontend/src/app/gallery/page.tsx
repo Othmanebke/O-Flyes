@@ -41,7 +41,8 @@ export default function GalleryPage() {
             className="w-full h-full object-cover"
           />
           {/* Enhanced overlay: Darker transition to protect the text areas */}
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/80 via-dark/40 to-sand-50/80" />
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-dark/80 via-dark/50 to-sand-50/80" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-8 pt-40 pb-0">
           <div className="inline-flex items-center gap-2 bg-dark/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-1.5 mb-6">
