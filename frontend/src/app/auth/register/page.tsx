@@ -18,7 +18,7 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/auth/register", { name, email, password });
+      const res = await axios.post("/api/auth/register", { name, email, password });
       // On connecte l'utilisateur si possible ou on le redirige vers l'onboarding directement
       // Pour ce MVP, on considère que l'onboarding est la prochaine étape logique
       router.push("/onboarding");

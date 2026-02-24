@@ -23,7 +23,7 @@ function LoginContent() {
     setShowResend(false);
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/auth/login", { email, password });
+      const res = await axios.post("/api/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       router.push("/dashboard");
     } catch (err: any) {
