@@ -110,6 +110,45 @@ const MOCK_HOTELS = [
     }
 ];
 
+const MOCK_FLIGHTS = [
+    {
+        id: "flt-1",
+        airline: "Air France",
+        origin: "Paris (CDG)",
+        destination: "Marrakech (RAK)",
+        departure: "2024-05-15T10:30:00",
+        arrival: "2024-05-15T13:45:00",
+        price: 185,
+        currency: "EUR",
+        type: "Direct",
+        booking_url: "https://www.airfrance.fr/search-flights?from=CDG&to=RAK&date=2024-05-15"
+    },
+    {
+        id: "flt-2",
+        airline: "Royal Air Maroc",
+        origin: "Paris (ORY)",
+        destination: "Marrakech (RAK)",
+        departure: "2024-05-15T14:20:00",
+        arrival: "2024-05-15T17:35:00",
+        price: 210,
+        currency: "EUR",
+        type: "Direct",
+        booking_url: "https://www.royalairmaroc.com/fr-fr/reserver/vols#from=ORY&to=RAK&date=2024-05-15"
+    },
+    {
+        id: "flt-3",
+        airline: "EasyJet",
+        origin: "Paris (CDG)",
+        destination: "Marrakech (RAK)",
+        departure: "2024-05-15T06:15:00",
+        arrival: "2024-05-15T09:30:00",
+        price: 89,
+        currency: "EUR",
+        type: "Direct",
+        booking_url: "https://www.easyjet.com/en/cheap-flights/paris-charles-de-gaulle/marrakech"
+    }
+];
+
 // ── Endpoints ────────────────────────────────────────────────────────────────
 
 app.get("/activities/search", (req, res) => {
@@ -137,6 +176,22 @@ app.get("/hotels/search", (req, res) => {
 
     const results = MOCK_HOTELS.filter(h =>
         h.city.toLowerCase() === (city as string).toLowerCase()
+    );
+
+    res.json(results);
+});
+
+app.get("/flights/search", (req, res) => {
+    const { origin, destination } = req.query;
+    console.log(`[partner-service] Searching flights from ${origin} to ${destination}`);
+
+    // For MVP, we'll return all mock flights if destination matches or all if no query
+    if (!destination) {
+        return res.json(MOCK_FLIGHTS);
+    }
+
+    const results = MOCK_FLIGHTS.filter(f =>
+        f.destination.toLowerCase().includes((destination as string).toLowerCase())
     );
 
     res.json(results);
