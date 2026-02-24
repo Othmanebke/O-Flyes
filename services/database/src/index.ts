@@ -89,21 +89,60 @@ app.get("/destinations/:id", async (req, res) => {
 
 // ── Trips (saved trips per user) ─────────────────────────────────────────────
 app.post("/trips", async (req, res) => {
-  const { user_id, destination_id, start_date, end_date, budget } = req.body;
-  const result = await pool.query(
-    `INSERT INTO trips (user_id, destination_id, start_date, end_date, budget, created_at)
-     VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-    [user_id, destination_id, start_date, end_date, budget]
-  );
-  res.status(201).json(result.rows[0]);
+  const { user_id, destination_id, title, start_date, end_date, budget, status } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO trips (user_id, destination_id, title, start_date, end_date, budget, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
+      [user_id, destination_id || null, title, start_date, end_date, budget, status || 'planned']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not create trip" });
+  }
 });
 
 app.get("/trips/user/:userId", async (req, res) => {
   const result = await pool.query(
-    "SELECT t.*, d.name as destination_name, d.country, d.image_url as img FROM trips t JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
+    "SELECT t.*, d.name as destination_name, d.country, d.image_url as img FROM trips t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
     [req.params.userId]
   );
   res.json(result.rows);
+});
+
+app.delete("/trips/:id", async (req, res) => {
+  await pool.query("DELETE FROM trips WHERE id = $1", [req.params.id]);
+  res.status(204).end();
+});
+
+// ── Bookings ─────────────────────────────────────────────────────────────────
+app.post("/bookings", async (req, res) => {
+  const { trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, raw_data } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, raw_data, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()) RETURNING *`,
+      [trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency || 'EUR', status || 'confirmed', raw_data || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not create booking" });
+  }
+});
+
+app.get("/bookings/trip/:tripId", async (req, res) => {
+  const result = await pool.query(
+    "SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_date ASC",
+    [req.params.tripId]
+  );
+  res.json(result.rows);
+});
+
+app.delete("/bookings/:id", async (req, res) => {
+  await pool.query("DELETE FROM bookings WHERE id = $1", [req.params.id]);
+  res.status(204).end();
 });
 
 // ── Chat (saved conversations) ───────────────────────────────────────────────

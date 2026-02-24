@@ -33,12 +33,30 @@ CREATE TABLE IF NOT EXISTS destinations (
 CREATE TABLE IF NOT EXISTS trips (
   id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id        UUID REFERENCES users(id) ON DELETE CASCADE,
-  destination_id UUID REFERENCES destinations(id),
+  destination_id UUID REFERENCES destinations(id), -- Optional now
+  title          TEXT,                             -- e.g. 'Vacances été Bali'
   start_date     DATE,
   end_date       DATE,
   budget         NUMERIC(10,2),
   status         TEXT NOT NULL DEFAULT 'planned', -- 'planned' | 'booked' | 'completed'
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Bookings (flights, hotels, activities)
+CREATE TABLE IF NOT EXISTS bookings (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  trip_id             UUID REFERENCES trips(id) ON DELETE CASCADE,
+  type                TEXT NOT NULL, -- 'flight' | 'hotel' | 'activity' | 'transport'
+  title               TEXT NOT NULL,
+  provider            TEXT,          -- e.g. 'Air France', 'Marriott'
+  confirmation_number TEXT,
+  start_date          TIMESTAMPTZ,
+  end_date            TIMESTAMPTZ,
+  price               NUMERIC(10,2),
+  currency            TEXT DEFAULT 'EUR',
+  status              TEXT NOT NULL DEFAULT 'confirmed', -- 'pending' | 'confirmed' | 'cancelled'
+  raw_data            JSONB,         -- original data from email parsing
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Chat history
