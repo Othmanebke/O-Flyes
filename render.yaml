@@ -87,3 +87,16 @@ services:
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: OAUTH_CALLBACK_URL
         value: "https://auth-service.onrender.com/auth/callback"
+
+  # ── Partner Service ────────────────────────────────────────────────────────
+  - type: web
+    name: partner-service
+    plan: free
+    env: docker
+    dockerContext: services/partner-service
+    dockerfilePath: services/partner-service/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3005
+      - key: PARTNER_PORT
+        value: 3005

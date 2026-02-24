@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   price               NUMERIC(10,2),
   currency            TEXT DEFAULT 'EUR',
   status              TEXT NOT NULL DEFAULT 'confirmed', -- 'pending' | 'confirmed' | 'cancelled'
+  external_url        TEXT,          -- Link to affiliate/provider site
   raw_data            JSONB,         -- original data from email parsing
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

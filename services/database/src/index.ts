@@ -118,12 +118,12 @@ app.delete("/trips/:id", async (req, res) => {
 
 // ── Bookings ─────────────────────────────────────────────────────────────────
 app.post("/bookings", async (req, res) => {
-  const { trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, raw_data } = req.body;
+  const { trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, raw_data, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()) RETURNING *`,
-      [trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency || 'EUR', status || 'confirmed', raw_data || null]
+      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING *`,
+      [trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency || 'EUR', status || 'confirmed', external_url || null, raw_data || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
