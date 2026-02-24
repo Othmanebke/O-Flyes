@@ -105,28 +105,35 @@ export default function HomePage() {
                     {HERO_SLIDES[slide].location}
                   </span>
                 </div>
-                <h1 className="font-serif text-5xl md:text-7xl text-white leading-[1.08] whitespace-pre-line">
+                <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl text-white leading-[1.1] whitespace-pre-line drop-shadow-lg">
                   {HERO_SLIDES[slide].title}
                 </h1>
-                <p className="text-white/60 text-sm mt-4 mb-8">{HERO_SLIDES[slide].sub}</p>
-                <div className="flex items-center gap-3">
-                  <Link href="/explore" className="btn-gold text-sm">Découvrir les destinations</Link>
-                  <span className="text-white/50 text-sm">ou</span>
-                  <Link href="/chat" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors">
+                <p className="text-white/70 text-sm mt-4 mb-8 max-w-sm">{HERO_SLIDES[slide].sub}</p>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link href="/explore" className="btn-gold text-sm whitespace-nowrap">Découvrir les destinations</Link>
+                  <Link href="/chat" className="inline-flex items-center gap-2 text-white hover:text-gold transition-colors text-sm font-medium">
                     <MessageCircle className="w-4 h-4" />Parler à l&apos;IA
                   </Link>
                 </div>
               </div>
               {/* Right – stats card */}
-              <div className="bg-sand-50/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[220px]">
-                <p className="text-white/60 text-xs mb-1">Destinations analysées</p>
-                <p className="text-white font-semibold text-2xl mb-3">500+</p>
-                <p className="text-white/60 text-xs mb-1">Voyageurs satisfaits</p>
-                <p className="text-white font-semibold text-2xl mb-3">12 000+</p>
-                <p className="text-white/60 text-xs mb-1">Note moyenne</p>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-gold text-gold" />
-                  <span className="text-white font-semibold text-lg">4.9</span>
+              <div className="bg-sand-50/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[200px] flex md:flex-col items-center md:items-start justify-between md:justify-start gap-4 md:gap-0">
+                <div className="flex md:block items-center md:items-start gap-4 md:gap-0">
+                  <div className="md:mb-3">
+                    <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Analysées</p>
+                    <p className="text-white font-semibold text-lg md:text-2xl">500+</p>
+                  </div>
+                  <div className="md:mb-3">
+                    <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Voyageurs</p>
+                    <p className="text-white font-semibold text-lg md:text-2xl">12k+</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Note moy.</p>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-gold text-gold" />
+                    <span className="text-white font-semibold text-base md:text-lg">4.9</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -161,7 +168,7 @@ export default function HomePage() {
                 Trouvez votre<br />expérience parfaite
               </h2>
             </div>
-            <Link href="/explore" className="hidden md:flex items-center gap-2 text-sm font-medium text-dark/60 hover:text-dark transition-colors">
+            <Link href="/explore" className="flex items-center gap-2 text-sm font-medium text-dark/60 hover:text-dark transition-colors">
               Voir tout
               <span className="w-7 h-7 rounded-full bg-dark-100 flex items-center justify-center">
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -175,7 +182,7 @@ export default function HomePage() {
               <Link
                 href="/explore"
                 key={d.name}
-                className={`group relative rounded-2xl overflow-hidden card-hover cursor-pointer ${i === 0 ? "md:col-span-2 row-span-1" : ""}`}
+                className={`group relative rounded-2xl overflow-hidden card-hover cursor-pointer col-span-2 ${i === 0 ? "md:col-span-2" : "sm:col-span-1"}`}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <div className={`relative overflow-hidden ${i === 0 ? "h-64 md:h-80" : "h-56"}`}>
@@ -248,11 +255,11 @@ export default function HomePage() {
               </Link>
             </div>
             {/* Photo grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=80" alt="" className="rounded-2xl h-52 w-full object-cover" />
-              <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80" alt="" className="rounded-2xl h-52 w-full object-cover mt-8" />
-              <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=80" alt="" className="rounded-2xl h-52 w-full object-cover -mt-4" />
-              <img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&q=80" alt="" className="rounded-2xl h-52 w-full object-cover mt-4" />
+            <div className="grid grid-cols-2 gap-3 mt-10 md:mt-0">
+              <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=80" alt="" className="rounded-2xl h-40 md:h-52 w-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80" alt="" className="rounded-2xl h-40 md:h-52 w-full object-cover mt-4 md:mt-8" />
+              <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&q=80" alt="" className="rounded-2xl h-40 md:h-52 w-full object-cover -mt-4" />
+              <img src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&q=80" alt="" className="rounded-2xl h-40 md:h-52 w-full object-cover mt-4" />
             </div>
           </div>
         </div>
@@ -270,20 +277,20 @@ export default function HomePage() {
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/40" />
-            <div className="relative z-10 h-full flex items-end justify-between p-10">
-              <div>
-                <h2 className="font-serif text-4xl md:text-5xl text-white mb-3 max-w-md leading-tight">
+            <div className="relative z-10 h-full flex flex-col md:flex-row items-center md:items-end justify-center md:justify-between p-6 md:p-10 text-center md:text-left">
+              <div className="mb-8 md:mb-0">
+                <h2 className="font-serif text-3xl md:text-5xl text-white mb-3 max-w-md leading-tight">
                   Planifiez votre voyage<br />en toute confiance
                 </h2>
-                <p className="text-white/60 max-w-sm text-sm">
+                <p className="text-white/60 max-w-sm mx-auto md:mx-0 text-sm">
                   De la météo au budget, en passant par les meilleures périodes —
                   notre IA vous guide à chaque étape.
                 </p>
               </div>
               {/* Stats bubble */}
-              <div className="hidden md:block bg-sand-50 rounded-2xl p-6 min-w-[160px] text-center border-b-4 border-gold">
-                <p className="font-bold text-4xl text-dark mb-1">95%</p>
-                <p className="text-dark-400 text-xs">de voyageurs<br />pleinement satisfaits</p>
+              <div className="bg-sand-50 rounded-2xl p-4 md:p-6 min-w-[140px] md:min-w-[160px] text-center border-b-4 border-gold">
+                <p className="font-bold text-3xl md:text-4xl text-dark mb-1">95%</p>
+                <p className="text-dark-400 text-[10px] md:text-xs">de voyageurs<br />pleinement satisfaits</p>
               </div>
             </div>
             {/* CTA button center bottom */}
@@ -315,7 +322,7 @@ export default function HomePage() {
               <p className="text-dark-400 text-xs">856 avis vérifiés</p>
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[
               { name: "Sophie M.", loc: "Paris", text: "AIVANA m'a trouvé Bali en 30 secondes avec mon budget exact. Le chatbot est bluffant de précision !", stars: 5 },
               { name: "Thomas B.", loc: "Lyon", text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },

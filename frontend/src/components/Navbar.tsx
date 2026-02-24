@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plane, UserCircle, LayoutDashboard } from "lucide-react";
+import { Plane, UserCircle, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 
@@ -18,6 +18,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -37,6 +38,20 @@ export default function Navbar() {
       }
     }
   }, [pathname]); // re-check on route change
+
+  // Close menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [mobileMenuOpen]);
 
   return (
     <nav
@@ -76,8 +91,8 @@ export default function Navbar() {
         Basé sur l&rsquo;IA Voyage
       </span>
 
-      {/* Nav links */}
-      <div className="flex items-center gap-5">
+      {/* Nav links - Desktop */}
+      <div className="hidden md:flex items-center gap-5">
         {links.map(({ href, label }) => (
           <Link
             key={href}
@@ -98,7 +113,6 @@ export default function Navbar() {
         ))}
 
         {isLoggedIn ? (
-          // Utilisateur connecté → bouton Dashboard avec initiale
           <Link
             href="/dashboard"
             className={clsx(
@@ -112,10 +126,9 @@ export default function Navbar() {
             <span className="w-5 h-5 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 text-[10px] font-bold">
               {userName.charAt(0).toUpperCase() || "?"}
             </span>
-            <span className="hidden sm:block">Dashboard</span>
+            <span>Dashboard</span>
           </Link>
         ) : (
-          // Non connecté → icône connexion
           <Link
             href="/auth/login"
             className={clsx(
@@ -129,6 +142,61 @@ export default function Navbar() {
             <UserCircle className="w-4 h-4" />
           </Link>
         )}
+      </div>
+
+      {/* Mobile Menu Controls */}
+      <div className="flex md:hidden items-center gap-3">
+        {isLoggedIn ? (
+          <Link href="/dashboard" className="w-8 h-8 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 text-[10px] font-bold">
+            {userName.charAt(0).toUpperCase() || "?"}
+          </Link>
+        ) : (
+          <Link href="/auth/login" className="text-dark-400">
+            <UserCircle className="w-5 h-5" />
+          </Link>
+        )}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="w-10 h-10 flex items-center justify-center text-dark"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <div
+        className={clsx(
+          "fixed inset-0 z-50 bg-sand-50/95 backdrop-blur-xl transition-all duration-500 ease-in-out md:hidden flex flex-col items-center justify-center gap-8",
+          mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        style={{ top: "0", left: "0", width: "100%", height: "100vh" }}
+      >
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="absolute top-6 right-8 text-dark"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        {links.map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className={clsx(
+              "text-2xl font-serif transition-colors",
+              pathname === href ? "text-gold" : "text-dark hover:text-gold"
+            )}
+          >
+            {label}
+          </Link>
+        ))}
+
+        <Link
+          href="/auth/login"
+          className="mt-4 btn-dark py-3 px-10 text-base"
+        >
+          {isLoggedIn ? "Mon Dashboard" : "Se connecter"}
+        </Link>
       </div>
     </nav>
   );

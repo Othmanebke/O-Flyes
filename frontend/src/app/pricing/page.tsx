@@ -44,11 +44,11 @@ export default function PricingPage() {
         {/* Header */}
         <div className="mb-16">
           <p className="section-label mb-3">Tarifs</p>
-          <div className="flex items-end justify-between">
-            <h1 className="font-serif text-5xl md:text-6xl text-dark leading-tight">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl text-dark leading-tight">
               Simple &<br />transparent
             </h1>
-            <p className="hidden md:block text-dark-400 text-sm max-w-xs text-right">
+            <p className="text-dark-400 text-sm max-w-xs md:text-right">
               Commencez gratuitement,<br />passez Pro quand vous êtes prêt.
             </p>
           </div>
@@ -59,11 +59,10 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-3xl p-8 flex flex-col border card-hover ${
-                plan.highlight
+              className={`rounded-3xl p-8 flex flex-col border card-hover ${plan.highlight
                   ? "bg-dark border-dark text-white"
                   : "bg-sand-50 border-dark-100"
-              }`}
+                }`}
             >
               {plan.highlight && (
                 <span className="text-[10px] font-semibold tracking-widest uppercase text-white/50 mb-6">
@@ -101,11 +100,10 @@ export default function PricingPage() {
 
               <Link
                 href={plan.href}
-                className={`rounded-full py-3.5 text-center text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:gap-3 ${
-                  plan.highlight
+                className={`rounded-full py-3.5 text-center text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:gap-3 ${plan.highlight
                     ? "bg-sand-50 text-dark hover:bg-sand-100"
                     : "bg-dark text-white hover:bg-dark-600"
-                }`}
+                  }`}
               >
                 {plan.cta}
                 <ArrowUpRight className="w-4 h-4" />
@@ -117,8 +115,8 @@ export default function PricingPage() {
         {/* Feature comparison */}
         <div className="mb-24">
           <h2 className="font-serif text-3xl text-dark mb-8 text-center">Comparez les formules</h2>
-          <div className="border border-dark-100 rounded-3xl overflow-hidden">
-            <table className="w-full">
+          <div className="border border-dark-100 rounded-3xl overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-dark-100 bg-sand-50">
                   <th className="text-left px-6 py-4 text-sm font-medium text-dark-400">Fonctionnalité</th>
@@ -147,25 +145,25 @@ export default function PricingPage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-sand-50 rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex-1">
+        <div className="bg-sand-50 rounded-3xl p-8 md:p-14 flex flex-col md:flex-row items-center gap-10">
+          <div className="flex-1 text-center md:text-left">
             <span className="tag mb-4">Commencer maintenant</span>
-            <h2 className="font-serif text-4xl text-dark leading-tight mb-3">
+            <h2 className="font-serif text-3xl md:text-4xl text-dark leading-tight mb-3">
               Prêt pour votre<br />prochain voyage ?
             </h2>
-            <p className="text-dark-400 text-sm mb-8 max-w-sm">
+            <p className="text-dark-400 text-sm mb-8 max-w-sm mx-auto md:mx-0">
               Créez votre compte gratuit et commencez à explorer en 30 secondes.
             </p>
-            <div className="flex items-center gap-3">
-              <Link href="/auth/register" className="btn-gold">Créer mon compte</Link>
-              <Link href="/auth/register" className="w-10 h-10 rounded-full border border-gold flex items-center justify-center hover:bg-gold hover:text-dark transition-colors">
+            <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
+              <Link href="/auth/register" className="btn-gold w-full sm:w-auto text-center justify-center">Créer mon compte</Link>
+              <Link href="/auth/register" className="w-10 h-10 rounded-full border border-gold flex items-center justify-center hover:bg-gold hover:text-dark transition-colors shrink-0">
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
           <div className="flex gap-3 flex-shrink-0">
-            <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=260&q=80" alt="" className="rounded-2xl h-48 w-40 object-cover" />
-            <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=260&q=80" alt="" className="rounded-2xl h-48 w-40 object-cover mt-6" />
+            <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=260&q=80" alt="" className="rounded-2xl h-40 md:h-48 w-32 md:w-40 object-cover" />
+            <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=260&q=80" alt="" className="rounded-2xl h-40 md:h-48 w-32 md:w-40 object-cover mt-6" />
           </div>
         </div>
 

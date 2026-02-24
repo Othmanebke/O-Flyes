@@ -206,7 +206,7 @@ export default function Chatbot() {
   return (
     <>
       {/* ── Panel ──────────────────────────────────────────────────────── */}
-      <div className={`fixed bottom-24 right-6 z-50 w-[380px] max-h-[82vh] flex flex-col rounded-3xl overflow-hidden
+      <div className={`fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-[380px] max-h-[70vh] sm:max-h-[82vh] flex flex-col rounded-3xl overflow-hidden
         shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-white/10 bg-dark-900
         transition-all duration-300 origin-bottom-right
         ${open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}`}>
@@ -308,7 +308,7 @@ export default function Chatbot() {
       </div>
 
       {/* ── Pop-up Notification ────────────────────────────────────────── */}
-      <div className={`fixed bottom-[90px] right-6 z-40 transition-all duration-500 origin-bottom-right
+      <div className={`fixed bottom-[90px] right-4 sm:right-6 z-40 transition-all duration-500 origin-bottom-right max-w-[calc(100%-2rem)]
         ${showPopup && !open ? "opacity-100 scale-100 translate-y-0 translate-x-0" : "opacity-0 scale-95 translate-y-4 pointer-events-none"}`}>
         <div className="bg-dark-900/80 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/10 p-4 pr-10 relative
           after:content-[''] after:absolute after:-bottom-2 after:right-6 after:w-4 after:h-4 

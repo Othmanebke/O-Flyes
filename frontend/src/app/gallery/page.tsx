@@ -48,21 +48,21 @@ export default function GalleryPage() {
             <Plane className="w-3.5 h-3.5 text-gold" />
             <span className="text-white text-xs font-medium tracking-wide">AIVANA Vision</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-xl">
+          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-xl">
             L'Évasion<br /><span className="italic text-gold">en images.</span>
           </h1>
           <p className="text-white text-sm md:text-base max-w-lg mb-8 font-bold leading-relaxed drop-shadow-md">
             Une curation d'images saisissantes pour inspirer vos prochains voyages. La beauté du monde se trouve dans les détails.
           </p>
-          <div className="flex flex-wrap gap-6 pb-32">
+          <div className="flex flex-wrap gap-4 md:gap-8 pb-24 md:pb-32">
             {[
-              { v: "15k+", l: "Photos captives" },
+              { v: "15k+", l: "Photos" },
               { v: "120", l: "Destinations" },
               { v: "100%", l: "Inspiration" }
             ].map(s => (
               <div key={s.l}>
-                <p className="text-2xl md:text-3xl font-bold text-gold drop-shadow-sm">{s.v}</p>
-                <p className="text-dark/80 text-xs uppercase tracking-widest font-black">{s.l}</p>
+                <p className="text-xl md:text-3xl font-bold text-gold drop-shadow-sm">{s.v}</p>
+                <p className="text-dark/80 text-[10px] uppercase tracking-widest font-black">{s.l}</p>
               </div>
             ))}
           </div>
@@ -76,7 +76,7 @@ export default function GalleryPage() {
             <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-6 flex items-center gap-4">
               <span className="w-12 h-px bg-gold"></span> L'Œil AIVANA
             </p>
-            <h2 className="font-serif text-4xl md:text-6xl text-dark leading-[1.1] tracking-tight">
+            <h2 className="font-serif text-3xl md:text-6xl text-dark leading-[1.1] tracking-tight">
               Instants<br />
               <span className="italic text-dark/70">Mémorables.</span>
             </h2>
@@ -179,7 +179,7 @@ export default function GalleryPage() {
             onClick={e => e.stopPropagation()}
           >
             {/* Image display */}
-            <div className={`w-full md:w-2/3 h-[50vh] md:h-[80vh] relative transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]
+            <div className={`w-full md:w-2/3 h-[40vh] sm:h-[50vh] md:h-[80vh] relative transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]
               ${selectedPhoto ? "translate-y-0 opacity-100 scale-100" : "translate-y-12 opacity-0 scale-95"}`}>
               <img
                 src={selectedPhoto.src}

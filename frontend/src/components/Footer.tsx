@@ -68,59 +68,60 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
 
           {/* ── Brand col ─────────────────────────────────────────── */}
-          <div className="md:col-span-4">
-            <Link href="/" className="flex items-center gap-2 mb-5">
+          <div className="md:col-span-4 text-center md:text-left">
+            <Link href="/" className="flex items-center justify-center md:justify-start gap-2 mb-5">
               <div className="w-8 h-8 bg-sand-50/10 rounded-xl flex items-center justify-center">
                 <Plane className="w-4 h-4 text-white -rotate-45" />
               </div>
               <span className="font-serif text-xl">AI<span className="text-gold-400">VANA</span></span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs mx-auto md:mx-0">
               Votre assistant voyage intelligent. Décrivez vos envies, notre IA trouve la destination parfaite — vols, hôtels, activités inclus.
             </p>
-            <div className="flex items-center gap-2 text-sand-500 text-xs mb-2">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sand-500 text-xs mb-2">
               <MapPin className="w-3.5 h-3.5" /> Paris, France
             </div>
-            <div className="flex items-center gap-2 text-sand-500 text-xs">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sand-500 text-xs">
               <Mail className="w-3.5 h-3.5" /> contact@aivana.com
             </div>
           </div>
 
           {/* ── Navigation ─────────────────────────────────────────── */}
-          <div className="md:col-span-2">
-            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
-            <ul className="space-y-3">
-              {NAV.map(({ href, label }) => (
-                <li key={href}>
-                  <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors flex items-center gap-1 group">
-                    <span className="group-hover:translate-x-0.5 transition-transform">{label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="grid grid-cols-2 md:col-span-4 gap-8">
+            <div className="md:col-span-1">
+              <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
+              <ul className="space-y-3">
+                {NAV.map(({ href, label }) => (
+                  <li key={href}>
+                    <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors flex items-center gap-1 group">
+                      <span className="group-hover:translate-x-0.5 transition-transform">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* ── Legal ──────────────────────────────────────────────── */}
-          <div className="md:col-span-2">
-            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
-            <ul className="space-y-3">
-              {LEGAL.map(({ href, label }) => (
-                <li key={label}>
-                  <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</Link>
-                </li>
-              ))}
-            </ul>
+            <div className="md:col-span-1">
+              <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
+              <ul className="space-y-3">
+                {LEGAL.map(({ href, label }) => (
+                  <li key={label}>
+                    <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* ── Newsletter ─────────────────────────────────────────── */}
-          <div className="md:col-span-4">
+          <div className="md:col-span-4 text-center md:text-left">
             <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">
               Recevez chaque semaine les meilleures offres de voyage et les conseils de notre IA.
             </p>
             <form
               onSubmit={(e) => e.preventDefault()}
-              className="flex gap-2"
+              className="flex gap-2 max-w-sm mx-auto md:mx-0"
             >
               <input
                 type="email"
@@ -137,7 +138,7 @@ export default function Footer() {
             <p className="text-gray-600 text-xs mt-2">Pas de spam. Désabonnement en 1 clic.</p>
 
             {/* Réseaux */}
-            <div className="flex items-center gap-3 mt-8">
+            <div className="flex items-center justify-center md:justify-start gap-3 mt-8">
               {SOCIALS.map((s) => (
                 <Link
                   key={s.name}
