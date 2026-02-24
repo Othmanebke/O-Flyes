@@ -167,6 +167,12 @@ export default function Chatbot() {
   }, [messages, open]);
 
   useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener("open-chatbot", handleOpen);
+    return () => window.removeEventListener("open-chatbot", handleOpen);
+  }, []);
+
+  useEffect(() => {
     if (open) {
       setUnread(0);
       setShowPopup(false);

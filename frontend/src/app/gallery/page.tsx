@@ -153,9 +153,9 @@ export default function GalleryPage() {
               <Link href="/explore" className="bg-gold hover:bg-[#b58f4a] text-dark font-medium px-8 py-4 uppercase tracking-widest text-xs transition-colors">
                 Écrire mon histoire
               </Link>
-              <Link href="/chat" className="text-sand-50 hover:text-gold border-b border-sand-50/30 hover:border-gold pb-1 font-medium text-sm transition-colors flex items-center gap-2">
+              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="text-sand-50 hover:text-gold border-b border-sand-50/30 hover:border-gold pb-1 font-medium text-sm transition-colors flex items-center gap-2">
                 Consulter l'IA <ArrowUpRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
           </div>
         </div>

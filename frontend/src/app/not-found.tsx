@@ -91,10 +91,10 @@ export default function NotFoundPage() {
                         className="flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-dark-900 font-semibold text-sm px-6 py-3 rounded-xl transition-all hover:scale-105">
                         <MapPin className="w-4 h-4" /> Explorer les destinations
                     </Link>
-                    <Link href="/chat"
+                    <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
                         className="flex items-center gap-2 border border-gray-200 hover:border-gold-300 text-dark-700 hover:text-gold-600 font-semibold text-sm px-6 py-3 rounded-xl transition-all">
                         <Search className="w-4 h-4" /> Demander à l&apos;IA
-                    </Link>
+                    </button>
                 </div>
 
                 {/* Quick links */}

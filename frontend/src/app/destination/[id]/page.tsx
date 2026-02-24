@@ -116,9 +116,9 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                             </div>
                         </div>
                     </div>
-                    <Link href="/chat" className="hidden md:inline-flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-black font-semibold text-sm px-5 py-2.5 rounded-xl transition-all">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="hidden md:inline-flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-black font-semibold text-sm px-5 py-2.5 rounded-xl transition-all">
                         <Sparkles className="w-4 h-4" /> Planifier avec l&apos;IA
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -322,9 +322,9 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                 Dites-nous vos dates, votre budget et vos envies. Notre IA crée un itinéraire personnalisé pour {d.name} en quelques secondes.
                             </p>
                             <div className="flex flex-wrap gap-3">
-                                <Link href={`/chat`} className="inline-flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-black font-bold px-6 py-3 rounded-xl transition-all">
+                                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="inline-flex items-center gap-2 bg-gold-400 hover:bg-gold-300 text-black font-bold px-6 py-3 rounded-xl transition-all">
                                     <Sparkles className="w-4 h-4" /> Planifier avec l&apos;IA ✈
-                                </Link>
+                                </button>
                                 <Link href="/explore" className="inline-flex items-center gap-2 border border-white/20 text-white text-sm px-5 py-3 rounded-xl hover:bg-sand-50/10 transition-all">
                                     Voir d&apos;autres destinations
                                 </Link>
@@ -337,7 +337,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                 `"Itinéraire ${d.duration} à ${d.name} avec enfants"`,
                                 `"Hôtel pas cher + activités incontournables"`,
                             ].map(p => (
-                                <Link href="/chat" key={p} className="bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic hover:bg-sand-50/10 hover:border-white/20 transition-all">{p}</Link>
+                                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} key={p} className="bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic hover:bg-sand-50/10 hover:border-white/20 transition-all">{p}</button>
                             ))}
                         </div>
                     </div>

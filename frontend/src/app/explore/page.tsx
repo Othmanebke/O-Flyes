@@ -450,7 +450,7 @@ export default function ExplorePage() {
             <p className="text-sm mb-6">Essayez en élargissant vos filtres ou demandez à l&apos;IA !</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => { setContinent("Tous"); setBudgetTier("tous"); setStyle("Tous"); }} className="btn-dark text-sm">Tout afficher</button>
-              <Link href="/chat" className="btn-gold text-sm">Demander à l&apos;IA</Link>
+              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold text-sm">Demander à l&apos;IA</button>
             </div>
           </div>
         ) : (
@@ -519,10 +519,10 @@ export default function ExplorePage() {
                 <strong className="text-white/80"> pour n&apos;importe quel budget</strong>.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <Link href="/chat" className="btn-gold">Demander à l&apos;IA ✈</Link>
-                <Link href="/chat" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-sand-50/10 transition-colors">
+                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold">Demander à l&apos;IA ✈</button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-sand-50/10 transition-colors">
                   <ArrowUpRight className="w-4 h-4 text-white" />
-                </Link>
+                </button>
               </div>
             </div>
             <div className="flex flex-col gap-3 flex-shrink-0 max-w-xs">

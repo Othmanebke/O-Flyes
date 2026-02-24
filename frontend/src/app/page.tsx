@@ -38,6 +38,10 @@ export default function HomePage() {
   const [prevSlide, setPrevSlide] = useState(-1);
   const [transitioning, setTransitioning] = useState(false);
 
+  const triggerChatbot = () => {
+    window.dispatchEvent(new CustomEvent("open-chatbot"));
+  };
+
   const goTo = useCallback((idx: number) => {
     if (transitioning) return;
     setTransitioning(true);
@@ -282,10 +286,10 @@ export default function HomePage() {
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
               </p>
-              <Link href="/chat" className="btn-gold">
+              <button onClick={triggerChatbot} className="btn-gold">
                 Parler à notre IA
                 <ArrowUpRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
             {/* Photo grid */}
             <div className="grid grid-cols-2 gap-3 mt-10 md:mt-0">
@@ -328,10 +332,10 @@ export default function HomePage() {
             </div>
             {/* CTA button center bottom */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-              <Link href="/chat" className="btn-dark">
+              <button onClick={triggerChatbot} className="btn-dark">
                 <MessageCircle className="w-4 h-4" />
                 Essayer le chatbot
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -390,10 +394,10 @@ export default function HomePage() {
               <h2 className="font-serif text-4xl text-dark leading-tight">
                 Tout ce que vous devez<br />savoir avant de<br />commencer
               </h2>
-              <Link href="/chat" className="btn-dark mt-8">
+              <button onClick={triggerChatbot} className="btn-dark mt-8">
                 Poser une question
                 <ArrowUpRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
             <div className="space-y-3">
               {faqs.map((faq, i) => (
