@@ -43,8 +43,8 @@ app.post("/payments/checkout", async (req, res) => {
         },
       ],
       metadata: { userId },
-      success_url: successUrl || "http://localhost:3000/payment/success",
-      cancel_url: cancelUrl || "http://localhost:3000/payment/cancel",
+      success_url: successUrl || `${process.env.FRONTEND_URL || "http://localhost:3000"}/payment/success`,
+      cancel_url: cancelUrl || `${process.env.FRONTEND_URL || "http://localhost:3000"}/payment/cancel`,
     });
     res.json({ url: session.url });
   } catch (err: any) {

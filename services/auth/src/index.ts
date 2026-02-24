@@ -44,7 +44,7 @@ const transporter = nodemailer.createTransport({
 
 async function sendVerificationEmail(to: string, token: string, name: string) {
   // Link goes to the BACKEND auth service which processes the token then redirects to frontend
-  const authServiceUrl = `http://localhost:${process.env.AUTH_PORT || 3001}`;
+  const authServiceUrl = process.env.AUTH_SERVICE_URL || `http://localhost:${process.env.AUTH_PORT || 3001}`;
   const link = `${authServiceUrl}/auth/verify-email?token=${token}`;
   await transporter.sendMail({
     from: `"O-Flyes ✈" <${process.env.SMTP_USER}>`,
