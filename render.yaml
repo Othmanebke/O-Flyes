@@ -1,9 +1,9 @@
-services:
-  # ── PostgreSQL ─────────────────────────────────────────────────────────────
-  - type: postgres
-    name: oflyes-db-instance
+databases:
+  - name: oflyes-db-instance
     databaseName: oflyes_db
     user: oflyes
+
+services:
 
   # ── Redis ──────────────────────────────────────────────────────────────────
   - type: redis
