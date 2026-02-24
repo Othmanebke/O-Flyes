@@ -14,6 +14,12 @@ const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 app.use(cors());
 app.use(express.json());
 
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`[ai-service] ${req.method} ${req.path} - Origin: ${req.get('origin')}`);
+  next();
+});
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "" });
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -19,7 +19,23 @@ const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`[auth-service] ${req.method} ${req.path} - Origin: ${req.get('origin')}`);
+  next();
+});
+
+// Robust CORS
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin.includes('localhost') || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Be permissive during debug
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(passport.initialize());
 
