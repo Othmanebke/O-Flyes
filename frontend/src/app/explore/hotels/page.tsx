@@ -64,6 +64,17 @@ export default function HotelsPage() {
         }
     };
 
+    const trackClick = async (type: string) => {
+        try {
+            await axios.post("/api/metrics/event", {
+                event: "affiliate_click",
+                type: type
+            });
+        } catch (e) {
+            console.error("Failed to track click", e);
+        }
+    };
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         fetchHotels(searchTerm);
@@ -79,6 +90,7 @@ export default function HotelsPage() {
         if (trips.length > 0) {
             setShowTripSelector(true);
         } else {
+            trackClick('hotel');
             window.open(hotel.booking_url, "_blank");
         }
     };
@@ -99,6 +111,7 @@ export default function HotelsPage() {
             });
 
             setShowTripSelector(false);
+            trackClick('hotel');
             window.open(selectedHotel.booking_url, "_blank");
         } catch (err) {
             console.error("Failed to create pending hotel booking", err);

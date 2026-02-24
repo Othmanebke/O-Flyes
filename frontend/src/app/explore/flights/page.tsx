@@ -64,6 +64,17 @@ export default function FlightsPage() {
         }
     };
 
+    const trackClick = async (type: string) => {
+        try {
+            await axios.post("/api/metrics/event", {
+                event: "affiliate_click",
+                type: type
+            });
+        } catch (e) {
+            console.error("Failed to track click", e);
+        }
+    };
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         fetchFlights(destination);
@@ -79,6 +90,7 @@ export default function FlightsPage() {
         if (trips.length > 0) {
             setShowTripSelector(true);
         } else {
+            trackClick('flight');
             window.open(flight.booking_url, "_blank");
         }
     };
@@ -101,6 +113,7 @@ export default function FlightsPage() {
             });
 
             setShowTripSelector(false);
+            trackClick('flight');
             window.open(selectedFlight.booking_url, "_blank");
         } catch (err) {
             console.error("Failed to create pending flight booking", err);

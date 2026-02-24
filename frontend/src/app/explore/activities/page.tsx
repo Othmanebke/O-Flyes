@@ -64,6 +64,17 @@ export default function ActivitiesPage() {
         }
     };
 
+    const trackClick = async (type: string) => {
+        try {
+            await axios.post("/api/metrics/event", {
+                event: "affiliate_click",
+                type: type
+            });
+        } catch (e) {
+            console.error("Failed to track click", e);
+        }
+    };
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         fetchActivities(searchTerm);
@@ -80,6 +91,7 @@ export default function ActivitiesPage() {
             setShowTripSelector(true);
         } else {
             // No trips, just open the link
+            trackClick('activity');
             window.open(activity.booking_url, "_blank");
         }
     };
@@ -100,6 +112,7 @@ export default function ActivitiesPage() {
             });
 
             setShowTripSelector(false);
+            trackClick('activity');
             window.open(selectedActivity.booking_url, "_blank");
         } catch (err) {
             console.error("Failed to create pending booking", err);

@@ -108,6 +108,11 @@ async function syncUserEmails(cred: any) {
                 }).catch(e => console.error(`[sync-worker] Notification failed:`, e.message));
 
                 console.log(`[sync-worker] Successfully extracted, saved and notified for email ${msg.id}`);
+
+                // 8. Report metrics
+                await axios.post(`${process.env.NEXT_PUBLIC_API_METRICS || 'http://localhost:3006'}/metrics/event`, {
+                    event: "email_sync_success"
+                }).catch(() => { });
             }
         }
 

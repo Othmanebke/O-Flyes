@@ -36,14 +36,37 @@ const tripsSaved = new client.Counter({
   registers: [register],
 });
 
+const affiliateClicks = new client.Counter({
+  name: "oflyes_affiliate_clicks_total",
+  help: "Total affiliate link clicks",
+  labelNames: ["type"],
+  registers: [register],
+});
+
 const activeUsers = new client.Gauge({
   name: "oflyes_active_users",
   help: "Currently active users (pseudo-metric)",
   registers: [register],
 });
 
+// Cache for internal simple analytics
+const internalStats = {
+  clicks: { flight: 0, hotel: 0, activity: 0 },
+  syncs: 0
+};
+
 // ── Health ───────────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "metrics" }));
+
+// ── GET /analytics/summary ───────────────────────────────────────────────────
+app.get("/analytics/summary", (_req, res) => {
+  res.json({
+    clicks: internalStats.clicks,
+    total_clicks: internalStats.clicks.flight + internalStats.clicks.hotel + internalStats.clicks.activity,
+    successful_syncs: internalStats.syncs,
+    conversion_rate: internalStats.syncs > 0 ? (internalStats.syncs / (internalStats.clicks.flight + internalStats.clicks.hotel + internalStats.clicks.activity + 1) * 100).toFixed(2) : 0
+  });
+});
 
 // ── Prometheus scrape endpoint ────────────────────────────────────────────────
 app.get("/metrics", async (_req, res) => {
@@ -53,7 +76,7 @@ app.get("/metrics", async (_req, res) => {
 
 // ── POST /metrics/event – collect events from other services ──────────────────
 app.post("/metrics/event", (req, res) => {
-  const { event, status } = req.body;
+  const { event, type, status } = req.body;
   switch (event) {
     case "chat_request":
       chatRequests.inc({ status: status || "success" });
@@ -63,6 +86,15 @@ app.post("/metrics/event", (req, res) => {
       break;
     case "trip_saved":
       tripsSaved.inc();
+      break;
+    case "affiliate_click":
+      affiliateClicks.inc({ type: type || "unknown" });
+      if (type && internalStats.clicks[type as keyof typeof internalStats.clicks] !== undefined) {
+        internalStats.clicks[type as keyof typeof internalStats.clicks]++;
+      }
+      break;
+    case "email_sync_success":
+      internalStats.syncs++;
       break;
     case "user_active":
       activeUsers.inc();
