@@ -79,7 +79,7 @@ services:
         value: 3001
       - key: REDIS_URL
         value: redis://red-d6egai88tnhs738m6mig:6379
-      - key: NEXT_PUBLIC_API_DB
+      - key: DB_URL
         value: http://database-service:3002
       - key: JWT_SECRET
         generateValue: true
@@ -98,7 +98,7 @@ services:
         value: 3003
       - key: AI_PORT
         value: 3003
-      - key: NEXT_PUBLIC_API_DB
+      - key: DB_URL
         value: http://database-service:3002
       - key: GROQ_API_KEY
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
