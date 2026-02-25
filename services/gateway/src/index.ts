@@ -59,6 +59,12 @@ app.use('/auth', createProxyMiddleware({
     changeOrigin: true,
     pathRewrite: { '^/auth': '/auth' },
     onProxyReq: fixRequestBody,
+    proxyTimeout: 60000,
+    timeout: 60000,
+    onError: (err, req, res) => {
+        console.error(`[Gateway] Proxy Error to Auth:`, err.message);
+        res.status(504).json({ error: "Service Auth temporairement indisponible (Timeout)", details: err.message });
+    }
 }));
 
 // 🤖 CHAT
