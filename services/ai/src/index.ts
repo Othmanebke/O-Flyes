@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || process.env.AI_PORT || 3003;
-const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
+const DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
 console.log(`[ai-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);
