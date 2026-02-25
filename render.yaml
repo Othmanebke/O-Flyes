@@ -17,7 +17,7 @@ services:
       - key: PORT
         value: 3000
       - key: AUTH_SERVICE_URL
-        value: http://auth-service:3001
+        value: "https://auth-service-8x7w.onrender.com"
       - key: DB_SERVICE_URL
         value: http://database-service:3002
       - key: AI_SERVICE_URL
