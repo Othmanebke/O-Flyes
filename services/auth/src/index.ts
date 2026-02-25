@@ -16,8 +16,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || process.env.AUTH_PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
-const DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://aivanaflyes.vercel.app";
+const DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "https://database-service-uybo.onrender.com";
 
 console.log(`[auth-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);
@@ -91,7 +91,7 @@ const transporter = nodemailer.createTransport({
 
 async function sendVerificationEmail(to: string, token: string, name: string) {
   // Link goes to the BACKEND auth service which processes the token then redirects to frontend
-  const authServiceUrl = process.env.AUTH_SERVICE_URL || `http://localhost:${process.env.AUTH_PORT || 3001}`;
+  const authServiceUrl = process.env.AUTH_SERVICE_URL || "https://auth-service-8x7w.onrender.com";
   const link = `${authServiceUrl}/auth/verify-email?token=${token}`;
   await transporter.sendMail({
     from: `"O-Flyes ✈" <${process.env.SMTP_USER}>`,

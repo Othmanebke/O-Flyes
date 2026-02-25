@@ -54,7 +54,7 @@ app.post("/notify/email", async (req, res) => {
           Prestataire : ${data.provider}<br/>
           Prix : ${data.price} ${data.currency}
         </div>
-        <p>Retrouvez tous les détails sur votre <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard">Dashboard AIVANA</a>.</p>
+        <p>Retrouvez tous les détails sur votre <a href="${process.env.FRONTEND_URL || 'https://aivanaflyes.vercel.app'}/dashboard">Dashboard AIVANA</a>.</p>
       </div>
     `;
   } else if (template === "TRIP_REMINDER") {
