@@ -28,6 +28,19 @@ interface Booking {
     price?: number;
 }
 
+interface TripAnalysis {
+    budget: { total: number; used: number; percentage: number };
+    coverage: {
+        missingHotelNights: number;
+        missingOutboundFlight: boolean;
+        missingReturnFlight: boolean;
+        emptyDays: string[];
+        hasActivity: boolean;
+    };
+    warnings: string[];
+    score: number;
+}
+
 export default function DashboardPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -37,16 +50,18 @@ export default function DashboardPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newTripTitle, setNewTripTitle] = useState("");
 
-    // Booking state
+    // Booking & Analysis state
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
+    const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [newBooking, setNewBooking] = useState({
         type: 'flight',
         title: '',
         provider: '',
         start_date: '',
-        end_date: ''
+        end_date: '',
+        price: 0
     });
 
     const [emailConnected, setEmailConnected] = useState(false);
@@ -103,6 +118,16 @@ export default function DashboardPage() {
         }
     };
 
+    const fetchAnalysis = async (tripId: string) => {
+        try {
+            const res = await axios.get(`/api/trips/${tripId}/analysis`);
+            setAnalysis(res.data);
+        } catch (err) {
+            console.error("Failed to fetch analysis", err);
+            setAnalysis(null);
+        }
+    };
+
     const handleCreateTrip = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!userId || !newTripTitle) return;
@@ -136,6 +161,7 @@ export default function DashboardPage() {
     const handleSelectTrip = (trip: Trip) => {
         setSelectedTrip(trip);
         fetchBookings(trip.id);
+        fetchAnalysis(trip.id);
     };
 
     const handleAddBooking = async (e: React.FormEvent) => {
@@ -147,7 +173,7 @@ export default function DashboardPage() {
                 trip_id: selectedTrip.id,
                 ...newBooking
             });
-            setNewBooking({ type: 'flight', title: '', provider: '', start_date: '', end_date: '' });
+            setNewBooking({ type: 'flight', title: '', provider: '', start_date: '', end_date: '', price: 0 });
             setShowBookingModal(false);
             fetchBookings(selectedTrip.id);
         } catch (err) {
@@ -359,26 +385,96 @@ export default function DashboardPage() {
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <button
                                     onClick={() => setSelectedTrip(null)}
-                                    className="flex items-center gap-2 text-xs font-bold text-dark-400 hover:text-dark transition-colors mb-6 uppercase tracking-widest"
+                                    className="flex items-center gap-2 text-xs font-bold text-dark-400 hover:text-dark transition-colors mb-4 uppercase tracking-widest"
                                 >
                                     <ChevronRight className="w-4 h-4 rotate-180" /> Retour au Dashboard
                                 </button>
 
+                                {/* Dashboard Intelligent : En-tête Global */}
+                                {analysis && (
+                                    <div className="bg-white rounded-3xl border border-sand-200 p-8 mb-8 flex flex-col md:flex-row gap-8 items-stretch shadow-sm">
+
+                                        {/* Score Scoreboard */}
+                                        <div className="flex-shrink-0 flex flex-col items-center justify-center p-6 bg-sand-50 rounded-2xl border border-sand-200 min-w-[200px]">
+                                            <span className="text-xs font-bold text-dark-300 uppercase tracking-widest mb-4">Score Voyage</span>
+                                            <div className="relative w-24 h-24 flex items-center justify-center mb-2">
+                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="16" fill="none" className="stroke-sand-200" strokeWidth="4"></circle>
+                                                    <circle cx="18" cy="18" r="16" fill="none" className={analysis.score >= 80 ? 'stroke-green-500' : analysis.score >= 50 ? 'stroke-gold' : 'stroke-orange-500'} strokeWidth="4" strokeDasharray="100" strokeDashoffset={100 - analysis.score} strokeLinecap="round"></circle>
+                                                </svg>
+                                                <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                                    <span className="text-2xl font-serif text-dark leading-none">{analysis.score}</span>
+                                                    <span className="text-[10px] text-dark-400">/ 100</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-medium text-center text-dark-400">
+                                                {analysis.score >= 80 ? "Parfaitement organisé ✨" : analysis.score >= 50 ? "En bonne voie 👍" : "À compléter ⚠️"}
+                                            </span>
+                                        </div>
+
+                                        {/* Budget Tracking */}
+                                        <div className="flex-1 flex flex-col justify-center">
+                                            <div className="flex justify-between items-end mb-4">
+                                                <div>
+                                                    <span className="text-xs font-bold text-dark-300 uppercase tracking-widest block mb-1">Budget</span>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-3xl font-serif text-dark">{analysis.budget.used}€</span>
+                                                        <span className="text-sm text-dark-400">/ {analysis.budget.total > 0 ? `${analysis.budget.total}€` : 'Non défini'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className={analysis.budget.percentage > 100 ? 'text-sm font-bold text-red-500' : 'text-sm font-bold text-gold'}>
+                                                        {analysis.budget.percentage}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="w-full h-3 bg-sand-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={analysis.budget.percentage > 100 ? 'h-full bg-red-500' : 'h-full bg-gold'}
+                                                    style={{ width: `${Math.min(analysis.budget.percentage, 100)}%` }}
+                                                />
+                                            </div>
+
+                                            {/* Quick metrics row */}
+                                            <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-sand-100">
+                                                <div>
+                                                    <p className="text-[10px] text-dark-400 uppercase tracking-widest font-bold mb-1">Réservations</p>
+                                                    <p className="text-lg font-serif text-dark">{bookings.length}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-dark-400 uppercase tracking-widest font-bold mb-1">Hébergement</p>
+                                                    <div className="text-sm font-medium text-dark flex items-center gap-1">
+                                                        {analysis.coverage.missingHotelNights === 0 ? <span className="text-green-500">Complet</span> :
+                                                            analysis.coverage.missingHotelNights > 0 ? <span className="text-orange-500">{analysis.coverage.missingHotelNights} nuit(s) max. libre</span> :
+                                                                <span className="text-dark-300">À définir</span>}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-dark-400 uppercase tracking-widest font-bold mb-1">Activités</p>
+                                                    <div className="text-sm font-medium text-dark">{analysis.coverage.hasActivity ? <span className="text-green-500">Prévues</span> : <span className="text-orange-500">À prévoir</span>}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex flex-col lg:flex-row gap-8">
                                     <div className="flex-1">
                                         <div className="bg-white rounded-3xl border border-sand-200 p-8 mb-8">
-                                            <h3 className="text-2xl font-serif text-dark mb-6">Itinéraire du voyage</h3>
+                                            <div className="flex items-center justify-between mb-8">
+                                                <h3 className="text-2xl font-serif text-dark">Itinéraire détaillé</h3>
+                                                <button
+                                                    onClick={() => setShowBookingModal(true)}
+                                                    className="flex items-center gap-2 bg-gold/10 text-gold text-xs font-bold px-4 py-2 rounded-xl hover:bg-gold hover:text-dark transition-colors"
+                                                >
+                                                    <Plus className="w-4 h-4" /> Ajouter
+                                                </button>
+                                            </div>
 
                                             {bookings.length === 0 ? (
                                                 <div className="py-12 text-center">
                                                     <div className="text-4xl mb-4">🗓️</div>
                                                     <p className="text-dark-400 text-sm">Aucune réservation pour ce voyage.</p>
-                                                    <button
-                                                        onClick={() => setShowBookingModal(true)}
-                                                        className="mt-6 text-gold font-bold text-sm hover:underline"
-                                                    >
-                                                        + Ajouter ma première réservation
-                                                    </button>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-6">
@@ -397,7 +493,7 @@ export default function DashboardPage() {
                                                                         <Trash2 className="w-3.5 h-3.5" />
                                                                     </button>
                                                                 </div>
-                                                                <p className="text-xs text-dark-400 mb-2">{b.provider || "Prestataire non défini"}</p>
+                                                                <p className="text-xs text-dark-400 mb-2">{b.provider || "Prestataire non défini"} • {b.price ? `${b.price} €` : 'Prix non renseigné'}</p>
                                                                 <div className="flex items-center gap-4 text-[10px] font-bold text-dark-300 uppercase tracking-widest">
                                                                     <span className="flex items-center gap-1.5 bg-sand-50 px-2 py-1 rounded-md">
                                                                         {b.start_date ? new Date(b.start_date).toLocaleDateString() : 'Date à définir'}
@@ -421,160 +517,187 @@ export default function DashboardPage() {
 
                                     <div className="lg:w-80">
                                         <div className="bg-dark rounded-3xl p-8 text-white sticky top-8">
-                                            <h4 className="font-serif text-xl mb-6">Récapitulatif</h4>
-                                            <div className="space-y-4 mb-8">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-white/40">Réservations</span>
-                                                    <span className="font-bold">{bookings.length}</span>
+                                            <h4 className="font-serif text-xl mb-6">Suggestions AIVANA</h4>
+
+                                            {analysis && analysis.warnings.length > 0 ? (
+                                                <div className="space-y-4 mb-8">
+                                                    {analysis.warnings.map((warn, i) => (
+                                                        <div key={i} className="flex items-start gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                                                            <span className="text-gold mt-0.5">💡</span>
+                                                            <p className="text-sm text-sand-100 leading-relaxed font-medium">{warn}</p>
+                                                        </div>
+                                                    ))}
+                                                    <Link href="/chat" className="btn-gold w-full flex items-center justify-center gap-2 py-3 mt-4 text-sm shadow-xl shadow-gold/20">
+                                                        <Plane className="w-4 h-4" /> Optimiser mon voyage
+                                                    </Link>
                                                 </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-white/40">Statut</span>
-                                                    <span className="text-gold font-bold uppercase text-[10px] tracking-widest">{selectedTrip.status}</span>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-6 text-center">
+                                                    <div className="text-4xl mb-4">✅</div>
+                                                    <p className="text-white/60 text-sm mb-6">Aucun incident détecté. Votre voyage est parfaitement planifié.</p>
+                                                    <Link href="/chat" className="w-full py-3 rounded-xl border border-white/20 text-xs font-bold text-white hover:bg-white/10 transition-colors">
+                                                        Parler avec l'assistant
+                                                    </Link>
                                                 </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setShowBookingModal(true)}
-                                                className="w-full btn-gold py-3 text-sm"
-                                            >
-                                                Ajouter une réservation
-                                            </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         )}
                     </div>
-                </div>
-            </main>
+                </div >
+            </main >
 
             {/* Create Trip Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-                    <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
-                    <div className="relative bg-white w-full max-w-md rounded-3xl p-10 shadow-2xl animate-in zoom-in-95 duration-200">
-                        <h3 className="text-2xl font-serif text-dark mb-2">Nouveau Voyage</h3>
-                        <p className="text-sm text-dark-400 mb-8">Comment souhaitez-vous appeler cette aventure ?</p>
+            {
+                showCreateModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+                        <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+                        <div className="relative bg-white w-full max-w-md rounded-3xl p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+                            <h3 className="text-2xl font-serif text-dark mb-2">Nouveau Voyage</h3>
+                            <p className="text-sm text-dark-400 mb-8">Comment souhaitez-vous appeler cette aventure ?</p>
 
-                        <form onSubmit={handleCreateTrip}>
-                            <div className="mb-6">
-                                <label className="block text-xs font-bold text-dark-400 uppercase tracking-widest mb-2">Nom du voyage</label>
-                                <input
-                                    type="text"
-                                    autoFocus
-                                    required
-                                    value={newTripTitle}
-                                    onChange={(e) => setNewTripTitle(e.target.value)}
-                                    placeholder="ex: Roadtrip Italie 2024"
-                                    className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
-                                />
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCreateModal(false)}
-                                    className="flex-1 py-3 text-xs font-bold text-dark-400 hover:text-dark transition-colors"
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-[2] btn-gold py-3"
-                                >
-                                    Créer le voyage
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Create Booking Modal */}
-            {showBookingModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-                    <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowBookingModal(false)} />
-                    <div className="relative bg-white w-full max-w-lg rounded-3xl p-10 shadow-2xl animate-in zoom-in-95 duration-200">
-                        <h3 className="text-2xl font-serif text-dark mb-2">Nouvelle Réservation</h3>
-                        <p className="text-sm text-dark-400 mb-8">Ajoutez manuellement les détails de votre réservation.</p>
-
-                        <form onSubmit={handleAddBooking} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Type</label>
-                                    <select
-                                        value={newBooking.type}
-                                        onChange={(e) => setNewBooking({ ...newBooking, type: e.target.value as any })}
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all appearance-none"
-                                    >
-                                        <option value="flight">✈️ Vol</option>
-                                        <option value="hotel">🏨 Hôtel</option>
-                                        <option value="transport">🚆 Transport</option>
-                                        <option value="activity">🎒 Activité</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Titre</label>
+                            <form onSubmit={handleCreateTrip}>
+                                <div className="mb-6">
+                                    <label className="block text-xs font-bold text-dark-400 uppercase tracking-widest mb-2">Nom du voyage</label>
                                     <input
                                         type="text"
+                                        autoFocus
                                         required
-                                        value={newBooking.title}
-                                        onChange={(e) => setNewBooking({ ...newBooking, title: e.target.value })}
-                                        placeholder="ex: Vol AF123"
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                        value={newTripTitle}
+                                        onChange={(e) => setNewTripTitle(e.target.value)}
+                                        placeholder="ex: Roadtrip Italie 2024"
+                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
                                     />
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Prestataire</label>
-                                <input
-                                    type="text"
-                                    value={newBooking.provider}
-                                    onChange={(e) => setNewBooking({ ...newBooking, provider: e.target.value })}
-                                    placeholder="ex: Air France"
-                                    className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date début</label>
-                                    <input
-                                        type="date"
-                                        value={newBooking.start_date}
-                                        onChange={(e) => setNewBooking({ ...newBooking, start_date: e.target.value })}
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                    />
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateModal(false)}
+                                        className="flex-1 py-3 text-xs font-bold text-dark-400 hover:text-dark transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-[2] btn-gold py-3"
+                                    >
+                                        Créer le voyage
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date fin</label>
-                                    <input
-                                        type="date"
-                                        value={newBooking.end_date}
-                                        onChange={(e) => setNewBooking({ ...newBooking, end_date: e.target.value })}
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowBookingModal(false)}
-                                    className="flex-1 py-3 text-xs font-bold text-dark-400 hover:text-dark transition-colors"
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-[2] btn-gold py-3 shadow-lg shadow-gold/20"
-                                >
-                                    Enregistrer
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            {/* Create Booking Modal */}
+            {
+                showBookingModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+                        <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowBookingModal(false)} />
+                        <div className="relative bg-white w-full max-w-lg rounded-3xl p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+                            <h3 className="text-2xl font-serif text-dark mb-2">Nouvelle Réservation</h3>
+                            <p className="text-sm text-dark-400 mb-8">Ajoutez manuellement les détails de votre réservation.</p>
+
+                            <form onSubmit={handleAddBooking} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Type</label>
+                                        <select
+                                            value={newBooking.type}
+                                            onChange={(e) => setNewBooking({ ...newBooking, type: e.target.value as any })}
+                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all appearance-none"
+                                        >
+                                            <option value="flight">✈️ Vol</option>
+                                            <option value="hotel">🏨 Hôtel</option>
+                                            <option value="transport">🚆 Transport</option>
+                                            <option value="activity">🎒 Activité</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Titre</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newBooking.title}
+                                            onChange={(e) => setNewBooking({ ...newBooking, title: e.target.value })}
+                                            placeholder="ex: Vol AF123"
+                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Prix (Optionnel)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={newBooking.price || ''}
+                                            onChange={(e) => setNewBooking({ ...newBooking, price: parseFloat(e.target.value) })}
+                                            placeholder="0.00"
+                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                        />
+                                        <span className="absolute right-4 top-3 text-dark-400">€</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Prestataire</label>
+                                    <input
+                                        type="text"
+                                        value={newBooking.provider}
+                                        onChange={(e) => setNewBooking({ ...newBooking, provider: e.target.value })}
+                                        placeholder="ex: Air France"
+                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date début</label>
+                                        <input
+                                            type="date"
+                                            value={newBooking.start_date}
+                                            onChange={(e) => setNewBooking({ ...newBooking, start_date: e.target.value })}
+                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date fin</label>
+                                        <input
+                                            type="date"
+                                            value={newBooking.end_date}
+                                            onChange={(e) => setNewBooking({ ...newBooking, end_date: e.target.value })}
+                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBookingModal(false)}
+                                        className="flex-1 py-3 text-xs font-bold text-dark-400 hover:text-dark transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-[2] btn-gold py-3 shadow-lg shadow-gold/20"
+                                    >
+                                        Enregistrer
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
