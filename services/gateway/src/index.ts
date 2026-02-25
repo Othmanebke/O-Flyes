@@ -54,11 +54,23 @@ app.use('/auth', createProxyMiddleware({
 }));
 
 // 🤖 CHAT
-app.use('/chat', createProxyMiddleware({
-    target: AI_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/chat': '/chat' },
-}));
+// POST /chat/message -> AI Service (Assistant logic)
+app.use('/chat/message', (req, res, next) => {
+    return createProxyMiddleware({
+        target: AI_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: { '^/chat/message': '/chat' }, // Rewrite to internal /chat
+    })(req, res, next);
+});
+
+// GET /chat/history/:tripId -> DB Service (Messages persistence)
+app.use('/chat/history', authenticate, (req: any, res: any, next: any) => {
+    return createProxyMiddleware({
+        target: DB_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: (path: string) => path.replace('/chat/history', '/chat/history'), // keep path as is for db-service
+    })(req, res, next);
+});
 
 // 🌍 EXPLORE
 app.use('/explore', createProxyMiddleware({

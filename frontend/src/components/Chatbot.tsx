@@ -173,10 +173,36 @@ export default function Chatbot() {
   }, []);
 
   useEffect(() => {
+    const loadHistory = async () => {
+      const pathParts = window.location.pathname.split("/");
+      const tripIdx = pathParts.indexOf("trips");
+      if (tripIdx !== -1 && pathParts[tripIdx + 1]) {
+        const tId = pathParts[tripIdx + 1];
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const res = await axios.get(`/api/chat/history/${tId}`);
+            if (res.data && Array.isArray(res.data)) {
+              const formatted = res.data.map((m: any) => ({
+                role: m.role,
+                content: m.content
+              }));
+              if (formatted.length > 0) {
+                setMessages(formatted);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to load history:", e);
+          }
+        }
+      }
+    };
+
     if (open) {
       setUnread(0);
       setShowPopup(false);
       setTimeout(() => inputRef.current?.focus(), 100);
+      loadHistory();
     }
   }, [open]);
 
@@ -194,12 +220,21 @@ export default function Chatbot() {
         : [{ role: "user" as const, content: text }];
 
       let userId: string | undefined;
+      let tripId: string | undefined;
+
+      // Extract tripId from URL if on a trip page (e.g. /trips/[id])
+      const pathParts = window.location.pathname.split("/");
+      const tripIdx = pathParts.indexOf("trips");
+      if (tripIdx !== -1 && pathParts[tripIdx + 1]) {
+        tripId = pathParts[tripIdx + 1];
+      }
+
       const token = localStorage.getItem("token");
       if (token) {
         try { userId = JSON.parse(atob(token.split(".")[1])).id; } catch (e) { }
       }
 
-      const res = await axios.post("/api/ai/chat", { messages: history, userId });
+      const res = await axios.post("/api/chat/message", { messages: history, userId, tripId });
       setMessages(prev => [...prev, { role: "assistant", content: res.data.reply, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
     } catch (err: any) {

@@ -90,15 +90,28 @@ async function syncUserEmails(cred: any) {
             });
 
             if (aiRes && aiRes.data.booking) {
-                // 5. Save to database
+                // 5. Find Active Trip
+                let targetTripId = null;
+                try {
+                    const activeTripRes = await axios.get(`${DB_URL}/trips/user/${cred.user_id}`);
+                    const activeTrip = activeTripRes.data.find((t: any) => t.is_active);
+                    if (activeTrip) {
+                        targetTripId = activeTrip.id;
+                    }
+                } catch (e) {
+                    console.warn(`[sync-worker] Could not find active trip for user ${cred.user_id}`);
+                }
+
+                // 6. Save to database
                 const booking = aiRes.data.booking;
                 const savedBooking = await axios.post(`${DB_URL}/bookings`, {
                     ...booking,
+                    trip_id: targetTripId, // Link to active trip if found
                     user_id: cred.user_id,
                     raw_data: { source: "email", message_id: msg.id }
                 });
 
-                // 6. Mark as processed
+                // 7. Mark as processed
                 await axios.post(`${DB_URL}/processed-emails`, {
                     user_id: cred.user_id,
                     message_id: msg.id
