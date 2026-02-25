@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import jwt from 'jsonwebtoken';
+import searchRouter from './routes/search';
 
 import path from 'path';
 
@@ -124,6 +125,9 @@ apiRouter.use('/db', createProxyMiddleware({
     pathRewrite: { '^/api/db': '', '^/db': '' },
     onProxyReq: fixRequestBody,
 }));
+
+// 🔍 SEARCH (External APIs Mock)
+apiRouter.use('/search', authenticate, searchRouter);
 
 // Montage du routeur sur /api et aussi à la racine pour plus de flexibilité
 app.use('/api', apiRouter);

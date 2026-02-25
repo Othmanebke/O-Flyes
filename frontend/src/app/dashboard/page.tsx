@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Plane, LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
+import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
 
 interface Trip {
     id: string;
@@ -53,20 +54,10 @@ export default function DashboardPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newTripTitle, setNewTripTitle] = useState("");
 
-    // Booking & Analysis state
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [newBooking, setNewBooking] = useState({
-        type: 'flight',
-        title: '',
-        provider: '',
-        start_datetime: '',
-        end_datetime: '',
-        location: '',
-        price: 0
-    });
 
     const [emailConnected, setEmailConnected] = useState(false);
 
@@ -168,16 +159,14 @@ export default function DashboardPage() {
         fetchAnalysis(trip.id);
     };
 
-    const handleAddBooking = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddBooking = async (bookingData: BookingData) => {
         if (!selectedTrip) return;
 
         try {
             await axios.post("/api/db/bookings", {
                 trip_id: selectedTrip.id,
-                ...newBooking
+                ...bookingData
             });
-            setNewBooking({ type: 'flight', title: '', provider: '', start_datetime: '', end_datetime: '', location: '', price: 0 });
             setShowBookingModal(false);
             fetchBookings(selectedTrip.id);
         } catch (err) {
@@ -597,121 +586,14 @@ export default function DashboardPage() {
                 )
             }
 
-            {/* Create Booking Modal */}
+            {/* Create Booking Modal (Shopping Mode) */}
             {
-                showBookingModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-                        <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowBookingModal(false)} />
-                        <div className="relative bg-white w-full max-w-lg rounded-3xl p-10 shadow-2xl animate-in zoom-in-95 duration-200">
-                            <h3 className="text-2xl font-serif text-dark mb-2">Nouvelle Réservation</h3>
-                            <p className="text-sm text-dark-400 mb-8">Ajoutez manuellement les détails de votre réservation.</p>
-
-                            <form onSubmit={handleAddBooking} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Type</label>
-                                        <select
-                                            value={newBooking.type}
-                                            onChange={(e) => setNewBooking({ ...newBooking, type: e.target.value as any })}
-                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all appearance-none"
-                                        >
-                                            <option value="flight">✈️ Vol</option>
-                                            <option value="hotel">🏨 Hôtel</option>
-                                            <option value="transport">🚆 Transport</option>
-                                            <option value="activity">🎒 Activité</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Titre</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={newBooking.title}
-                                            onChange={(e) => setNewBooking({ ...newBooking, title: e.target.value })}
-                                            placeholder="ex: Vol AF123"
-                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Prix (Optionnel)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={newBooking.price || ''}
-                                            onChange={(e) => setNewBooking({ ...newBooking, price: parseFloat(e.target.value) })}
-                                            placeholder="0.00"
-                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                        />
-                                        <span className="absolute right-4 top-3 text-dark-400">€</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Prestataire</label>
-                                    <input
-                                        type="text"
-                                        value={newBooking.provider}
-                                        onChange={(e) => setNewBooking({ ...newBooking, provider: e.target.value })}
-                                        placeholder="ex: Air France"
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date début</label>
-                                        <input
-                                            type="date"
-                                            value={newBooking.start_datetime}
-                                            onChange={(e) => setNewBooking({ ...newBooking, start_datetime: e.target.value })}
-                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date fin</label>
-                                        <input
-                                            type="date"
-                                            value={newBooking.end_datetime}
-                                            onChange={(e) => setNewBooking({ ...newBooking, end_datetime: e.target.value })}
-                                            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Lieu / Adresse</label>
-                                    <input
-                                        type="text"
-                                        value={newBooking.location}
-                                        onChange={(e) => setNewBooking({ ...newBooking, location: e.target.value })}
-                                        placeholder="ex: Cité des arts, Valencia"
-                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-6">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowBookingModal(false)}
-                                        className="flex-1 py-3 text-xs font-bold text-dark-400 hover:text-dark transition-colors"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-[2] btn-gold py-3 shadow-lg shadow-gold/20"
-                                    >
-                                        Enregistrer
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                showBookingModal && selectedTrip && (
+                    <BookingShoppingModal
+                        tripId={selectedTrip.id}
+                        onClose={() => setShowBookingModal(false)}
+                        onAddBooking={handleAddBooking}
+                    />
                 )
             }
         </div >
