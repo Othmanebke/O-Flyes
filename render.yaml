@@ -126,7 +126,7 @@ services:
       - key: OAUTH_GOOGLE_CLIENT_SECRET
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: OAUTH_CALLBACK_URL
-        value: "https://auth-service.onrender.com/auth/callback"
+        value: "https://auth-service-v702.onrender.com/auth/callback" # Update with your actual auth-service public URL
 
   # ── Partner Service ────────────────────────────────────────────────────────
   - type: web
