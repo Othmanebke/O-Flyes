@@ -248,6 +248,132 @@ app.delete("/bookings/:id", async (req, res) => {
   res.status(204).end();
 });
 
+// ── Trip Analysis (Dashboard Brain) ──────────────────────────────────────────
+app.get("/trips/:id/analysis", async (req, res) => {
+  try {
+    const tripId = req.params.id;
+
+    // 1. Fetch trip details
+    const tripRes = await pool.query("SELECT * FROM trips WHERE id = $1", [tripId]);
+    if (!tripRes.rows.length) return res.status(404).json({ error: "Trip not found" });
+    const trip = tripRes.rows[0];
+
+    // 2. Fetch all bookings for this trip
+    const bookingsRes = await pool.query("SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_date ASC", [tripId]);
+    const bookings = bookingsRes.rows;
+
+    // --- Budget Tracking ---
+    const totalBudget = parseFloat(trip.budget) || 0;
+    const usedBudget = bookings.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
+    const budgetPercentage = totalBudget > 0 ? Math.round((usedBudget / totalBudget) * 100) : 0;
+
+    // --- Coverage & Empty Days ---
+    let missingHotelNights = 0;
+    let missingReturnFlight = true;
+    let missingOutboundFlight = true;
+    let emptyDays: string[] = [];
+    let hasActivity = false;
+
+    // Parse dates to handle logic
+    let tripStart = trip.start_date ? new Date(trip.start_date) : null;
+    let tripEnd = trip.end_date ? new Date(trip.end_date) : null;
+
+    if (tripStart && tripEnd) {
+      // Create a set of dates covered by activities/flights
+      const coveredDates = new Set<string>();
+      let totalNights = Math.round((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24));
+      if (totalNights <= 0) totalNights = 1;
+
+      let coveredHotelNights = 0;
+
+      bookings.forEach(b => {
+        const bStart = b.start_date ? new Date(b.start_date) : null;
+        const bEnd = b.end_date ? new Date(b.end_date) : null;
+
+        if (b.type === "activity" || b.type === "flight" || b.type === "transport") {
+          if (b.type === "activity") hasActivity = true;
+
+          // Register dates active
+          if (bStart) {
+            coveredDates.add(bStart.toISOString().split('T')[0]);
+            if (bEnd) {
+              coveredDates.add(bEnd.toISOString().split('T')[0]);
+            }
+          }
+        }
+
+        if (b.type === "hotel" && bStart && bEnd) {
+          const nights = Math.round((bEnd.getTime() - bStart.getTime()) / (1000 * 60 * 60 * 24));
+          coveredHotelNights += (nights > 0 ? nights : 1);
+        }
+
+        if (b.type === "flight") {
+          // Basic heuristics: if flight is close to start date => outbound. Close to end => return.
+          if (bStart) {
+            const daysFromStart = Math.abs((bStart.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24));
+            const daysFromEnd = Math.abs((bStart.getTime() - tripEnd.getTime()) / (1000 * 60 * 60 * 24));
+
+            // If flight is within first 2 days, it's outbound. Within last 2 days, it's return.
+            if (daysFromStart <= 2) missingOutboundFlight = false;
+            if (daysFromEnd <= 2) missingReturnFlight = false;
+          }
+        }
+      });
+
+      missingHotelNights = Math.max(0, totalNights - coveredHotelNights);
+
+      // Find empty days
+      for (let d = new Date(tripStart); d <= tripEnd; d.setDate(d.getDate() + 1)) {
+        const dStr = d.toISOString().split('T')[0];
+        if (!coveredDates.has(dStr)) {
+          emptyDays.push(dStr);
+        }
+      }
+    } else {
+      // Cannot calculate coverage properly without dates
+      missingHotelNights = -1; // Unknown
+    }
+
+    // --- Generate Warnings ---
+    const warnings: string[] = [];
+    if (missingOutboundFlight && tripStart) warnings.push("Aucun vol d'aller détecté / planifié.");
+    if (missingReturnFlight && tripEnd) warnings.push("Aucun vol de retour détecté / planifié.");
+    if (missingHotelNights > 0) warnings.push(`Il manque ${missingHotelNights} nuit(s) d'hôtel ou de logement.`);
+    if (emptyDays.length > 0) warnings.push(`${emptyDays.length} jour(s) sans activité détecté(s).`);
+    if (totalBudget > 0 && budgetPercentage > 100) warnings.push(`Budget dépassé (${budgetPercentage}%).`);
+
+    // --- Scoring (/100) ---
+    // +30 si vol aller, +30 si vol retour, +20 si hôtel couvre toutes les nuits, +10 si au moins 1 activité, +10 si budget respecté
+    let score = 0;
+    if (!missingOutboundFlight) score += 30;
+    if (!missingReturnFlight) score += 30;
+    if (missingHotelNights === 0) score += 20;
+    if (hasActivity) score += 10;
+    if (totalBudget === 0 || budgetPercentage <= 100) score += 10;
+
+    res.json({
+      budget: {
+        total: totalBudget,
+        used: usedBudget,
+        percentage: budgetPercentage
+      },
+      coverage: {
+        missingHotelNights,
+        missingOutboundFlight,
+        missingReturnFlight,
+        emptyDays,
+        hasActivity
+      },
+      warnings,
+      score
+    });
+
+  } catch (err: any) {
+    console.error("[database/analysis]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Chat (saved conversations) ───────────────────────────────────────────────
 app.post("/chat", async (req, res) => {
   const { user_id, trip_id, role, content } = req.body;

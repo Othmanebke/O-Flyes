@@ -112,6 +112,7 @@ apiRouter.use('/trips', authenticate, (req: any, res: Response, next: NextFuncti
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
+        pathRewrite: { '^/api/trips': '/trips', '^/trips': '/trips' },
         onProxyReq: fixRequestBody,
     })(req, res, next);
 });
