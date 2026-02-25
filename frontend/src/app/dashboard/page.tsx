@@ -30,6 +30,9 @@ interface Booking {
     currency?: string;
     location?: string;
     status: string;
+    external_reference?: string;
+    booking_url?: string;
+    raw_data?: Record<string, any>;
 }
 
 interface TripAnalysis {
@@ -182,6 +185,44 @@ export default function DashboardPage() {
         } catch (err) {
             console.error("Failed to delete booking", err);
         }
+    };
+
+    const downloadICS = () => {
+        if (!selectedTrip || bookings.length === 0) return;
+
+        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//O-Flyes//Timeline//FR\n";
+        bookings.forEach(b => {
+            if (!b.start_datetime) return;
+            // Format to YYYYMMDDTHHMMSSZ
+            const startStr = new Date(b.start_datetime);
+            if (isNaN(startStr.getTime())) return;
+            const start = startStr.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+            let end = start;
+            if (b.end_datetime) {
+                const endStr = new Date(b.end_datetime);
+                if (!isNaN(endStr.getTime())) {
+                    end = endStr.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                }
+            }
+
+            icsContent += "BEGIN:VEVENT\n";
+            icsContent += `SUMMARY:${b.title}\n`;
+            icsContent += `DTSTART:${start}\n`;
+            icsContent += `DTEND:${end}\n`;
+            if (b.location) icsContent += `LOCATION:${b.location}\n`;
+            icsContent += "END:VEVENT\n";
+        });
+        icsContent += "END:VCALENDAR";
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `voyage_${selectedTrip.title.replace(/\s+/g, '_')}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     if (loading) {
@@ -456,12 +497,21 @@ export default function DashboardPage() {
                                         <div className="bg-white rounded-3xl border border-sand-200 p-8 mb-8">
                                             <div className="flex items-center justify-between mb-8">
                                                 <h3 className="text-2xl font-serif text-dark">Itinéraire détaillé</h3>
-                                                <button
-                                                    onClick={() => setShowBookingModal(true)}
-                                                    className="flex items-center gap-2 bg-gold/10 text-gold text-xs font-bold px-4 py-2 rounded-xl hover:bg-gold hover:text-dark transition-colors"
-                                                >
-                                                    <Plus className="w-4 h-4" /> Ajouter
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={downloadICS}
+                                                        disabled={bookings.length === 0}
+                                                        className="flex items-center gap-2 bg-dark text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-gold transition-colors disabled:opacity-50"
+                                                    >
+                                                        <Calendar className="w-4 h-4" /> Export iCal
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setShowBookingModal(true)}
+                                                        className="flex items-center gap-2 bg-gold/10 text-gold text-xs font-bold px-4 py-2 rounded-xl hover:bg-gold hover:text-dark transition-colors"
+                                                    >
+                                                        <Plus className="w-4 h-4" /> Ajouter
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {bookings.length === 0 ? (
@@ -471,15 +521,25 @@ export default function DashboardPage() {
                                                 </div>
                                             ) : (
                                                 <div className="space-y-6">
-                                                    {bookings.map((b) => (
-                                                        <div key={b.id} className="flex gap-6 relative">
-                                                            <div className="w-12 h-12 bg-sand-50 rounded-2xl flex items-center justify-center flex-shrink-0 relative z-10 text-xl shadow-sm border border-sand-200">
+                                                    {bookings.map((b, index) => (
+                                                        <div key={b.id} className="flex gap-6 relative group">
+                                                            {/* Vertical Timeline Line */}
+                                                            {index !== bookings.length - 1 && (
+                                                                <div className="absolute left-6 top-14 bottom-[-1.5rem] w-px bg-sand-200 z-0 group-hover:bg-gold/50 transition-colors"></div>
+                                                            )}
+
+                                                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 relative z-10 text-xl shadow-sm border border-sand-200">
                                                                 {b.type === 'flight' ? '✈️' : b.type === 'hotel' ? '🏨' : b.type === 'transport' ? '🚆' : '🎒'}
                                                             </div>
-                                                            <div className="flex-1 pt-1">
+                                                            <div className="flex-1 pt-1 pb-4">
                                                                 <div className="flex justify-between items-start mb-1">
                                                                     <div className="flex items-center gap-3">
                                                                         <h4 className="font-bold text-dark">{b.title}</h4>
+                                                                        {(b.booking_url || (b.external_reference && b.external_reference.startsWith('WIKI')) || (b.raw_data && Object.keys(b.raw_data).length > 2)) && (
+                                                                            <span className="bg-blue-50 text-blue-600 border border-blue-200 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                                                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span> Verifié
+                                                                            </span>
+                                                                        )}
                                                                         {b.status === 'pending' && <span className="bg-orange-100 text-orange-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Incomplet</span>}
                                                                         {b.status === 'confirmed' && <span className="bg-green-100 text-green-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Confirmé</span>}
                                                                     </div>
@@ -490,16 +550,32 @@ export default function DashboardPage() {
                                                                         <Trash2 className="w-3.5 h-3.5" />
                                                                     </button>
                                                                 </div>
-                                                                <p className="text-xs text-dark-400 mb-2">{b.provider || "Prestataire non défini"} • {b.price ? `${b.price} €` : 'Prix non renseigné'}</p>
+
+                                                                <div className="flex items-center gap-2 mb-3 mt-1">
+                                                                    <span className="text-xs font-bold text-dark bg-sand-50 px-2 py-1 rounded-md">{b.provider || "Prestataire non défini"}</span>
+                                                                    <span className="text-xs text-dark-400">•</span>
+                                                                    <span className="text-xs text-dark-400">{b.price ? `${b.price} €` : 'Prix à définir'}</span>
+                                                                </div>
+
+                                                                {/* Displaying Extracted Intelligence from raw_data */}
+                                                                {(b.raw_data || b.location) && (
+                                                                    <div className="bg-sand-50/50 rounded-xl p-3 mb-3 border border-sand-100/50">
+                                                                        {b.location && <p className="text-xs text-dark-500 mb-1 flex items-center gap-1.5"><strong className="text-dark-300 font-bold uppercase text-[9px] tracking-wider">Lieu:</strong> {b.location}</p>}
+                                                                        {b.raw_data && b.raw_data.flight_number && <p className="text-xs text-dark-500 mb-1 flex items-center gap-1.5"><strong className="text-dark-300 font-bold uppercase text-[9px] tracking-wider">Vol:</strong> {b.raw_data.flight_number} {b.raw_data.cabin_class && `(${b.raw_data.cabin_class})`}</p>}
+                                                                        {b.raw_data && b.raw_data.address && <p className="text-xs text-dark-500 mb-1 flex items-center gap-1.5"><strong className="text-dark-300 font-bold uppercase text-[9px] tracking-wider">Adresse:</strong> {b.raw_data.address}</p>}
+                                                                        {b.raw_data && b.raw_data.meeting_point && <p className="text-xs text-dark-500 mb-1 flex items-center gap-1.5"><strong className="text-dark-300 font-bold uppercase text-[9px] tracking-wider">Rendez-vous:</strong> {b.raw_data.meeting_point}</p>}
+                                                                    </div>
+                                                                )}
+
                                                                 <div className="flex items-center gap-4 text-[10px] font-bold text-dark-300 uppercase tracking-widest">
-                                                                    <span className="flex items-center gap-1.5 bg-sand-50 px-2 py-1 rounded-md">
-                                                                        {b.start_datetime ? new Date(b.start_datetime).toLocaleDateString() : 'Date à définir'}
+                                                                    <span className="flex items-center gap-1.5">
+                                                                        ⏱️ {b.start_datetime ? new Date(b.start_datetime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Horaire à définir'}
                                                                     </span>
                                                                     {b.end_datetime && (
                                                                         <>
                                                                             <ChevronRight className="w-3 h-3 text-dark-200" />
-                                                                            <span className="flex items-center gap-1.5 bg-sand-50 px-2 py-1 rounded-md">
-                                                                                {new Date(b.end_datetime).toLocaleDateString()}
+                                                                            <span className="flex items-center gap-1.5">
+                                                                                {new Date(b.end_datetime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                                                                             </span>
                                                                         </>
                                                                     )}

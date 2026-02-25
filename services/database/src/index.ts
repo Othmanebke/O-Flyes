@@ -204,15 +204,136 @@ app.delete("/trips/:id", async (req, res) => {
 // ── Bookings ─────────────────────────────────────────────────────────────────
 // Legacy /bookings POST (kept for internal use)
 app.post("/bookings", async (req, res) => {
-  const { trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
+  const { trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, external_reference, booking_url, raw_data } = req.body;
 
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
-      [trip_id, type, title, provider, confirmation_number, start_datetime || null, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'pending', external_url || null, raw_data || null]
+      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, external_reference, booking_url, raw_data, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW()) RETURNING *`,
+      [
+        trip_id, type, title, provider, confirmation_number,
+        start_datetime || null, end_datetime || null, price || 0, currency || 'EUR',
+        location || null, status || 'pending', external_url || null,
+        external_reference || null, booking_url || null,
+        raw_data ? JSON.stringify(raw_data) : null
+      ]
     );
     res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Scenarios MOCK (Phase B) ──────────────────────────────────────────────────
+app.post("/trips/:id/seed-mock-scenario", async (req, res) => {
+  const tripId = req.params.id;
+  const { scenario } = req.body; // 'A', 'B', or 'C'
+
+  try {
+    // 1. Delete existing bookings for a clean slate
+    await pool.query("DELETE FROM bookings WHERE trip_id = $1", [tripId]);
+
+    // Format dates based on current date for realistic testing
+    const now = new Date();
+    const dPlus = (days: number, hours: number) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + days);
+      d.setHours(hours, 0, 0, 0);
+      return d.toISOString();
+    };
+
+    interface MockBooking {
+      type: string;
+      title: string;
+      provider: string;
+      start: string;
+      end: string;
+      price: number;
+      location: string;
+      status: string;
+      ex_ref: string | null;
+      raw: Record<string, any>;
+    }
+
+    let newBookings: MockBooking[] = [];
+
+    if (scenario === 'A') {
+      // SCENARIO A: Perfect Trip (Flight + Hotel + Activities)
+      newBookings = [
+        {
+          type: 'flight', title: 'Vol Aller CDG-FCO', provider: 'Air France',
+          start: dPlus(10, 8), end: dPlus(10, 10), price: 150,
+          location: 'CDG -> FCO', status: 'confirmed', ex_ref: 'AF-1029',
+          raw: { flight_number: "AF123", duration_minutes: 120, cabin_class: "Economy", departure_airport: "CDG", arrival_airport: "FCO" }
+        },
+        {
+          type: 'flight', title: 'Vol Retour FCO-CDG', provider: 'Air France',
+          start: dPlus(14, 18), end: dPlus(14, 20), price: 150,
+          location: 'FCO -> CDG', status: 'confirmed', ex_ref: 'AF-1030',
+          raw: { flight_number: "AF124", duration_minutes: 120, cabin_class: "Economy", departure_airport: "FCO", arrival_airport: "CDG" }
+        },
+        {
+          type: 'hotel', title: 'Grand Hotel Roma', provider: 'Booking.com',
+          start: dPlus(10, 15), end: dPlus(14, 11), price: 600,
+          location: 'Via Veneto, Rom', status: 'confirmed', ex_ref: 'BKG-9922',
+          raw: { address: "Via Veneto, Roma", room_type: "Double Superior", stars: 4, rating: 4.8, nights_count: 4 }
+        },
+        {
+          type: 'activity', title: 'Visite Colisée VIP', provider: 'GetYourGuide',
+          start: dPlus(11, 10), end: dPlus(11, 13), price: 45,
+          location: 'Colosseum, Roma', status: 'confirmed', ex_ref: 'GYG-11',
+          raw: { duration_minutes: 180, meeting_point: "Arch of Constantine", ticket_type: "Skip-the-line" }
+        }
+      ];
+    } else if (scenario === 'B') {
+      // SCENARIO B: Incomplete Trip (Only outbound flight, missing 1 night hotel, pending prices)
+      newBookings = [
+        {
+          type: 'flight', title: 'Vol Aller Aéroport', provider: 'EasyJet',
+          start: dPlus(10, 9), end: dPlus(10, 11), price: 0, // Pending price
+          location: 'Paris -> Rome', status: 'pending', ex_ref: null,
+          raw: { flight_number: "U2-404" }
+        },
+        {
+          type: 'hotel', title: 'AirBnb Rome Centre', provider: 'Airbnb',
+          start: dPlus(10, 16), end: dPlus(13, 10), price: 300, // Missing the final night (leaves on 14th)
+          location: 'Trastevere', status: 'confirmed', ex_ref: 'ABNB-XYZ',
+          raw: { address: "Trastevere", nights_count: 3 }
+        }
+      ];
+    } else if (scenario === 'C') {
+      // SCENARIO C: Incoherent Trip (Activity before arrival, overlapping flights)
+      newBookings = [
+        {
+          type: 'flight', title: 'Vol Aller', provider: 'Ryanair',
+          start: dPlus(10, 14), end: dPlus(10, 16), price: 80, // Arrives at 16:00
+          location: 'ORY -> CIA', status: 'confirmed', ex_ref: 'RY-1',
+          raw: {}
+        },
+        {
+          type: 'activity', title: 'Tour Gastronomique', provider: 'Viator',
+          start: dPlus(10, 12), end: dPlus(10, 15), price: 90, // Starts at 12:00 (Before flight arrives!)
+          location: 'Rome Center', status: 'confirmed', ex_ref: 'VIA-99',
+          raw: {}
+        }
+      ];
+    }
+
+    // Insert all
+    const inserted = [];
+    for (const b of newBookings) {
+      const resBooking = await pool.query(
+        `INSERT INTO bookings (trip_id, type, title, provider, start_datetime, end_datetime, price, currency, location, status, external_reference, raw_data, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'EUR', $8, $9, $10, $11, NOW()) RETURNING *`,
+        [tripId, b.type, b.title, b.provider, b.start, b.end, b.price, b.location, b.status, b.ex_ref, JSON.stringify(b.raw)]
+      );
+      inserted.push(resBooking.rows[0]);
+    }
+
+    // Also update trip budget to ensure realistic calculations
+    await pool.query("UPDATE trips SET budget = 1000 WHERE id = $1", [tripId]);
+
+    res.status(201).json({ message: `Scenario ${scenario} injecté avec succès`, bookings: inserted });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -227,13 +348,19 @@ app.get("/trips/:id/bookings", async (req, res) => {
 });
 
 app.post("/trips/:id/bookings", async (req, res) => {
-  const { type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
+  const { type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, external_reference, booking_url, raw_data } = req.body;
 
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
-      [req.params.id, type, title, provider, confirmation_number, start_datetime || null, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'pending', external_url || null, raw_data || null]
+      `INSERT INTO bookings(trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, external_reference, booking_url, raw_data, created_at)
+       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW()) RETURNING * `,
+      [
+        req.params.id, type, title, provider, confirmation_number,
+        start_datetime || null, end_datetime || null, price || 0, currency || 'EUR',
+        location || null, status || 'pending', external_url || null,
+        external_reference || null, booking_url || null,
+        raw_data ? JSON.stringify(raw_data) : null
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
@@ -283,6 +410,8 @@ app.get("/trips/:id/analysis", async (req, res) => {
     let missingOutboundFlight = true;
     let emptyDays: string[] = [];
     let hasActivity = false;
+    let firstFlightArrival: Date | null = null;
+    const warnings: string[] = [];
 
     // Parse dates to handle logic
     let tripStart = trip.start_date ? new Date(trip.start_date) : null;
@@ -323,9 +452,24 @@ app.get("/trips/:id/analysis", async (req, res) => {
             const daysFromStart = Math.abs((bStart.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24));
             const daysFromEnd = Math.abs((bStart.getTime() - tripEnd.getTime()) / (1000 * 60 * 60 * 24));
 
-            // If flight is within first 2 days, it's outbound. Within last 2 days, it's return.
-            if (daysFromStart <= 2) missingOutboundFlight = false;
+            if (daysFromStart <= 2) {
+              missingOutboundFlight = false;
+              // If this is the outbound flight, store its end date (arrival time)
+              if (bEnd && (!firstFlightArrival || bEnd < firstFlightArrival)) {
+                firstFlightArrival = bEnd;
+              }
+            }
             if (daysFromEnd <= 2) missingReturnFlight = false;
+          }
+        }
+      });
+
+      // Pass 2: Check for Incoherent Schedules
+      bookings.forEach(b => {
+        if (b.type === "activity" && b.start_datetime && firstFlightArrival) {
+          const actStart = new Date(b.start_datetime);
+          if (actStart < firstFlightArrival) {
+            warnings.push(`Incohérence: '${b.title}' commence avant l'arrivée prévue de votre vol aller.`);
           }
         }
       });
@@ -345,7 +489,6 @@ app.get("/trips/:id/analysis", async (req, res) => {
     }
 
     // --- Generate Warnings ---
-    const warnings: string[] = [];
     if (missingOutboundFlight && tripStart) warnings.push("Aucun vol d'aller détecté / planifié.");
     if (missingReturnFlight && tripEnd) warnings.push("Aucun vol de retour détecté / planifié.");
     if (missingHotelNights > 0) warnings.push(`Il manque ${missingHotelNights} nuit(s) d'hôtel ou de logement.`);

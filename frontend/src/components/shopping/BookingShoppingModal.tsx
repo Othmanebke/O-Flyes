@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plane, Hotel, Backpack, X, Search, MapPin, Clock } from "lucide-react";
+import { Plane, Hotel, Backpack, X, Search, MapPin, Clock, Mail } from "lucide-react";
 import axios from "axios";
 
 export interface BookingData {
@@ -83,7 +83,7 @@ const Autocompleter = ({ value, onChange, placeholder, onSelect }: any) => {
 };
 
 export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: BookingShoppingModalProps) {
-    const [activeTab, setActiveTab] = useState<'flight' | 'hotel' | 'activity'>('flight');
+    const [activeTab, setActiveTab] = useState<'flight' | 'hotel' | 'activity' | 'email'>('flight');
     const [isSearching, setIsSearching] = useState(false);
 
     // Flight Form
@@ -102,6 +102,10 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
 
     // Activity Form
     const [activities, setActivities] = useState<any[]>([]);
+
+    // Email Form
+    const [emailText, setEmailText] = useState("");
+    const [emailResult, setEmailResult] = useState<any>(null);
 
     const searchFlights = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,6 +146,25 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
         }
     };
 
+    const parseEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSearching(true);
+        setEmailResult(null);
+        try {
+            const res = await axios.post(`/api/ai/extract`, { emailBody: emailText });
+            if (res.data && res.data.booking) {
+                setEmailResult(res.data.booking);
+            } else {
+                throw new Error("Format Invalide");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de l'analyse de l'email.");
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     const handleSelectFlight = (flight: any) => {
         onAddBooking({
             type: 'flight',
@@ -175,13 +198,42 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
             type: 'activity',
             title: activity.name,
             provider: activity.provider,
-            start_datetime: new Date().toISOString(), // Mock pour l'instant
-            end_datetime: new Date().toISOString(), // Mock
-            location: 'Local Center',
+            start_datetime: new Date().toISOString(), // Placeholder
+            end_datetime: new Date(Date.now() + 3 * 3600000).toISOString(), // +3 hours
+            location: cityCode || destId || 'Centre-Ville',
             price: activity.price,
             currency: activity.currency,
-            status: 'confirmed'
-        });
+            status: 'pending',
+            external_reference: activity.id,
+            booking_url: activity.bookingUrl,
+            raw_data: {
+                activity_name: activity.name,
+                duration_minutes: parseInt(activity.duration) * 60 || 180,
+                meeting_point: "Billeterie Principale",
+                description: activity.description,
+                image_url: activity.image
+            }
+        } as any);
+    };
+
+    const handleSelectEmailBooking = () => {
+        if (!emailResult) return;
+        onAddBooking({
+            type: emailResult.type || 'flight',
+            title: emailResult.title || 'Réservation Importée',
+            provider: emailResult.provider || 'Inconnu',
+            start_datetime: emailResult.start_datetime ? new Date(emailResult.start_datetime).toISOString() : new Date().toISOString(),
+            end_datetime: emailResult.end_datetime ? new Date(emailResult.end_datetime).toISOString() : new Date().toISOString(),
+            location: emailResult.location || 'Inconnu',
+            price: emailResult.price || 0,
+            currency: emailResult.currency || 'EUR',
+            status: 'confirmed',
+            external_reference: emailResult.confirmation_number || null,
+            raw_data: emailResult
+        } as any);
+        setEmailResult(null);
+        setEmailText("");
+        onClose(); // Optional: close modal since it's a direct import
     };
 
     return (
@@ -210,6 +262,9 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                     </button>
                     <button onClick={() => { setActiveTab('activity'); setActivities([]); }} className={`flex-1 max-w-[200px] flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'activity' ? 'bg-white shadow-sm text-dark' : 'text-dark-300 hover:bg-sand-100'}`}>
                         <Backpack className="w-4 h-4" /> Activités
+                    </button>
+                    <button onClick={() => { setActiveTab('email'); setEmailResult(null); }} className={`flex-1 max-w-[200px] flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'email' ? 'bg-white shadow-sm text-dark' : 'text-dark-300 hover:bg-sand-100'}`}>
+                        <Mail className="w-4 h-4" /> Import Email
                     </button>
                 </div>
 
@@ -300,6 +355,25 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                                 </button>
                             </form>
                         )}
+
+                        {/* EMAIL FORM */}
+                        {activeTab === 'email' && (
+                            <form onSubmit={parseEmail} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Collez l'email de confirmation</label>
+                                    <textarea
+                                        required
+                                        value={emailText}
+                                        onChange={(e) => setEmailText(e.target.value)}
+                                        placeholder="Ex: Bonjour Othmane, votre vol Air France AF1234 partira le 12/04 à 08h30..."
+                                        className="w-full h-48 bg-white border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all resize-none"
+                                    ></textarea>
+                                </div>
+                                <button type="submit" className="w-full btn-gold py-3 mt-4 flex items-center justify-center gap-2" disabled={isSearching || emailText.length < 20}>
+                                    {isSearching ? 'Analyse par IA...' : <><Mail className="w-4 h-4" /> Analyser l'email</>}
+                                </button>
+                            </form>
+                        )}
                     </div>
 
                     {/* Results Panel (Right) */}
@@ -385,6 +459,37 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                                         </div>
                                     </div>
                                 ))}
+
+                                {/* Email Render */}
+                                {activeTab === 'email' && emailResult && (
+                                    <div className="bg-white rounded-2xl border border-sand-200 shadow-sm p-6 flex flex-col gap-4 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 bg-gold text-dark text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+                                            Données extraites
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-sand-100 rounded-xl flex items-center justify-center">
+                                                <Mail className="w-5 h-5 text-dark" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-dark">{emailResult.title || 'Réservation trouvée'}</h3>
+                                                <p className="text-xs text-dark-400 font-bold uppercase">{emailResult.type} - {emailResult.provider}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 mt-2">
+                                            <div className="bg-sand-50 p-3 rounded-xl border border-sand-100">
+                                                <p className="text-[10px] font-bold uppercase text-dark-300 mb-1">Date Début</p>
+                                                <p className="text-sm font-medium text-dark">{emailResult.start_datetime ? new Date(emailResult.start_datetime).toLocaleDateString() : 'Inconnue'}</p>
+                                            </div>
+                                            <div className="bg-sand-50 p-3 rounded-xl border border-sand-100">
+                                                <p className="text-[10px] font-bold uppercase text-dark-300 mb-1">Montant</p>
+                                                <p className="text-sm font-bold text-dark">{emailResult.price || 0} {emailResult.currency || 'EUR'}</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={handleSelectEmailBooking} className="w-full mt-2 btn-gold py-2 text-xs shadow-lg">
+                                            Confirmer & Ajouter au voyage
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Activities Render */}
                                 {activeTab === 'activity' && activities.map(a => (

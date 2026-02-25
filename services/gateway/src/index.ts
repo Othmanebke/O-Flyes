@@ -77,6 +77,14 @@ apiRouter.use('/chat/message', createProxyMiddleware({
     onProxyReq: fixRequestBody,
 }));
 
+// 🧠 AI SERVICE DIRECT PROXY
+apiRouter.use('/ai', createProxyMiddleware({
+    target: AI_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/api/ai': '', '^/ai': '' },
+    onProxyReq: fixRequestBody,
+}));
+
 apiRouter.use('/chat/history', authenticate, (req: any, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,

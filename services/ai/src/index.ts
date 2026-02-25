@@ -113,11 +113,19 @@ ${analysis.warnings.length > 0 ? analysis.warnings.map((w: string) => `- ${w}`).
 IMPORTANT : Prends en compte cette analyse si l'utilisateur demande d'optimiser son voyage, demande s'il manque quelque chose, ou que faire ensuite. Propose des solutions de manière proactive et naturelle (ex: suggérer de trouver des hôtels s'il manque des nuits, de chercher des vols s'il n'y a pas de vol retour, ou des activités pour les jours vides). Transforme ces warnings "bruts" en conseils amicaux.`;
         }
 
+        const bookingsContext = bookings.length > 0
+          ? bookings.map((b: any) => {
+            const dates = b.start_datetime ? `(du ${new Date(b.start_datetime).toLocaleString()} au ${b.end_datetime ? new Date(b.end_datetime).toLocaleString() : '?'})` : '';
+            return `- ${b.type.toUpperCase()}: ${b.title} ${dates} [Status: ${b.status}] | Provider: ${b.provider || '?'} | Price: ${b.price || '?'}€ | Raw: ${JSON.stringify(b.raw_data || {})}`;
+          }).join('\n')
+          : 'Aucune réservation pour le moment.';
+
         contextPrompt = `\n[CONTEXTE DU VOYAGE ACTUEL]
 Destination: ${trip.destination_name || trip.destination || 'Non définie'}
 Dates: du ${trip.start_date || '?'} au ${trip.end_date || '?'}
 Préférences: ${JSON.stringify(trip.preferences)}
-Réservations actuelles: ${bookings.length > 0 ? bookings.map((b: any) => `- ${b.type}: ${b.title} (${b.status})`).join(', ') : 'Aucune'}
+Réservations (Timeline):
+${bookingsContext}
 ${analysisContext}
 `;
       } catch (e: any) {
@@ -197,11 +205,12 @@ Réponds UNIQUEMENT en JSON valide suivant ce format :
 {
   "booking": {
     "type": "flight" | "hotel" | "activity" | "transport",
-    "title": "Nom du vol ou de l'hôtel",
-    "provider": "Compagnie ou plateforme",
+    "title": "Nom résumé (Ex: Vol AF123, Hôtel Ibis)",
+    "provider": "Compagnie ou plateforme (Ex: Air France)",
     "confirmation_number": "Code de confirmation",
-    "start_date": "ISO-8601 date",
-    "end_date": "ISO-8601 date (optionnel)",
+    "start_datetime": "ISO-8601 complete date (ex: 2024-05-12T08:30:00Z)",
+    "end_datetime": "ISO-8601 complete date (ex: 2024-05-12T10:30:00Z)",
+    "location": "Destination finale, aéroport ou adresse",
     "price": 123.45,
     "currency": "EUR"
   }

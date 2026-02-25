@@ -58,8 +58,10 @@ CREATE TABLE IF NOT EXISTS bookings (
   currency            TEXT DEFAULT 'EUR',
   location            TEXT,          -- city or address
   status              TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'confirmed' | 'cancelled'
-  external_url        TEXT,          -- Link to affiliate/provider site
-  raw_data            JSONB,         -- original data from email parsing
+  external_url        TEXT,          -- Link to affiliate/provider site (Legacy)
+  external_reference  TEXT,          -- PNR, booking number, API reservation ID
+  booking_url         TEXT,          -- Link to partner site specifically for the reservation
+  raw_data            JSONB,         -- original data from email parsing or API payload
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

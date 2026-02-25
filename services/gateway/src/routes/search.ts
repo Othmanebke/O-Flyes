@@ -162,47 +162,58 @@ router.get("/hotels", (req, res) => {
     setTimeout(() => res.json(mockHotels), 1100);
 });
 
-// ── 4. Search Activities ──
-router.get("/activities", (req, res) => {
+import axios from "axios";
+
+// ── 4. Search Activities (Real API via Wikipedia) ──
+router.get("/activities", async (req, res) => {
     const { cityCode } = req.query;
+    if (!cityCode) return res.status(400).json({ error: "cityCode is required" });
 
-    const mockActivities = [
-        {
-            id: `ACT-${cityCode}-1`,
-            name: "Visite guidée historique",
-            provider: "Viator",
-            rating: 4.7,
-            image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=800",
-            price: 45.00,
-            currency: "EUR",
-            duration: "3h",
-            bookingUrl: "https://www.viator.com"
-        },
-        {
-            id: `ACT-${cityCode}-2`,
-            name: "Excursion en bateau & Snorkeling",
-            provider: "GetYourGuide",
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-            price: 85.00,
-            currency: "EUR",
-            duration: "Demi-journée",
-            bookingUrl: "https://www.getyourguide.com"
-        },
-        {
-            id: `ACT-${cityCode}-3`,
-            name: "Dîner gastronomique local",
-            provider: "TripAdvisor",
-            rating: 4.6,
-            image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800",
-            price: 110.00,
-            currency: "EUR",
-            duration: "Soirée",
-            bookingUrl: "https://www.tripadvisor.com"
+    try {
+        // 1. Fetch real tourist places via Wikipedia API for the city
+        const wikiUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=monument historique tourisme ${cityCode}&utf8=&format=json&srlimit=5`;
+        const response = await axios.get(wikiUrl);
+        const searchResults = response.data?.query?.search || [];
+
+        // 2. Map Wikipedia results to our Activity standard format
+        const realActivities = searchResults.map((item: any, index: number) => {
+            // Strip HTML tags from the snippet
+            const cleanSnippet = item.snippet.replace(/<\/?[^>]+(>|$)/g, "");
+
+            return {
+                id: `WIKI-${item.pageid}`,
+                name: item.title,
+                provider: "Wikipedia API",
+                rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Random rating between 4.0 and 5.0
+                image: `https://source.unsplash.com/800x600/?monument,${encodeURIComponent(item.title)}`, // Fallback image logic
+                price: Math.floor(Math.random() * 50) + 10, // Simulated price for MVP
+                currency: "EUR",
+                duration: "2h - 4h",
+                bookingUrl: `https://fr.wikipedia.org/?curid=${item.pageid}`,
+                description: cleanSnippet
+            };
+        });
+
+        // Add a fallback if Wikipedia returns nothing
+        if (realActivities.length === 0) {
+            realActivities.push({
+                id: `ACT-FALLBACK-1`,
+                name: `Visite guidée - ${cityCode}`,
+                provider: "Local Guide",
+                rating: "4.8",
+                image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=800",
+                price: 45.00,
+                currency: "EUR",
+                duration: "3h",
+                bookingUrl: "https://www.viator.com"
+            });
         }
-    ];
 
-    setTimeout(() => res.json(mockActivities), 600);
+        res.json(realActivities);
+    } catch (err: any) {
+        console.error("[Search Router] Wikipedia API Error:", err.message);
+        res.status(500).json({ error: "Erreur lors de la récupération des activités externes." });
+    }
 });
 
 export default router;
