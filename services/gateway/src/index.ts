@@ -15,6 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'oflyes_secret';
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
 const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'http://database-service:3002';
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://ai-service:3003';
+const TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'http://travel-engine:3005';
 
 app.use(cors());
 app.use(express.json());
@@ -52,6 +53,30 @@ app.use('/auth', createProxyMiddleware({
     pathRewrite: { '^/auth': '/auth' },
 }));
 
+// 🤖 CHAT
+app.use('/chat', createProxyMiddleware({
+    target: AI_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/chat': '/chat' },
+}));
+
+// 🌍 EXPLORE
+app.use('/explore', createProxyMiddleware({
+    target: TRAVEL_ENGINE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/explore': '/explore' },
+}));
+
+// 📦 BOOKINGS (Auth Required + Trip Context)
+app.use('/bookings', authenticate, (req: any, res: any, next: any) => {
+    // Note: GET /trips/:id/bookings and POST /trips/:id/bookings are handled via /trips proxy
+    // This /bookings route is for direct actions on bookings
+    return createProxyMiddleware({
+        target: DB_SERVICE_URL,
+        changeOrigin: true,
+    })(req, res, next);
+});
+
 // 🧳 TRIPS (Auth Required)
 app.use('/trips', authenticate, (req: any, res: any, next: any) => {
     // Si GET /trips -> redirection interne vers /trips/user/:id
@@ -63,8 +88,17 @@ app.use('/trips', authenticate, (req: any, res: any, next: any) => {
         })(req, res, next);
     }
 
+    // Gestion des bookings via /trips/:id/bookings
+    const bookingMatch = req.path.match(/^\/([^/]+)\/bookings/);
+    if (bookingMatch) {
+        const tripId = bookingMatch[1];
+        if (req.method === 'POST') {
+            req.body.trip_id = tripId;
+        }
+    }
+
     // Si POST /trips -> injection du user_id dans le body
-    if (req.method === 'POST') {
+    if (req.method === 'POST' && (req.path === '/' || req.path === '')) {
         req.body.user_id = req.user.id;
     }
 

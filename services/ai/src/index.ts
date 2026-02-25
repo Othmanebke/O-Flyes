@@ -78,14 +78,38 @@ app.get("/health", (_req, res) => res.json({ status: "ok", service: "ai", provid
 
 // ── POST /chat – conversational chatbot ──────────────────────────────────────
 app.post("/chat", async (req, res) => {
-  const { messages, userId } = req.body as {
+  const { messages, userId, tripId } = req.body as {
     messages: { role: "user" | "assistant"; content: string }[];
     userId?: string;
+    tripId?: string;
   };
 
   if (!messages?.length) return res.status(400).json({ error: "No messages" });
 
   try {
+    let contextPrompt = "";
+
+    // Fetch Trip Context if tripId is provided
+    if (tripId) {
+      try {
+        const tripRes = await axios.get(`${DB_URL}/trips/${tripId}`);
+        const bookingsRes = await axios.get(`${DB_URL}/trips/${tripId}/bookings`).catch(() => ({ data: [] }));
+
+        const trip = tripRes.data;
+        const bookings = bookingsRes.data;
+
+        contextPrompt = `\n[CONTEXTE DU VOYAGE ACTUEL]
+Destination: ${trip.destination_name || trip.destination || 'Non définie'}
+Dates: du ${trip.start_date || '?'} au ${trip.end_date || '?'}
+Budget: ${trip.budget || 'Non défini'} €
+Préférences: ${JSON.stringify(trip.preferences)}
+Réservations actuelles: ${bookings.length > 0 ? bookings.map((b: any) => `- ${b.type}: ${b.title} (${b.status})`).join(', ') : 'Aucune'}
+`;
+      } catch (e: any) {
+        console.warn("[ai] Could not fetch trip context:", e.message);
+      }
+    }
+
     const allMessages = messages.slice(0, -1);
     const firstUserIdx = allMessages.findIndex(m => m.role === "user");
     const trimmedHistory = firstUserIdx >= 0 ? allMessages.slice(firstUserIdx) : [];
@@ -99,7 +123,7 @@ app.post("/chat", async (req, res) => {
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: SYSTEM_PROMPT + contextPrompt },
         ...history,
         { role: "user", content: lastMessage }
       ],
@@ -121,7 +145,6 @@ app.post("/chat", async (req, res) => {
       } catch (e) {
         console.error("[ai] Failed to parse enriched JSON:", e);
       }
-      // Remove the JSON block from the visible reply
       reply = raw.replace(/<<<ENRICHED>>>[\s\S]*?<<<END>>>/, "").trim();
     }
 
@@ -129,12 +152,14 @@ app.post("/chat", async (req, res) => {
     if (userId) {
       await axios.post(`${DB_URL}/chat`, {
         user_id: userId,
+        trip_id: tripId,
         role: "user",
         content: lastMessage,
       }).catch((e) => console.error("Error saving user msg", e));
 
       await axios.post(`${DB_URL}/chat`, {
         user_id: userId,
+        trip_id: tripId,
         role: "assistant",
         content: reply,
       }).catch((e) => console.error("Error saving assistant msg", e));
@@ -143,9 +168,6 @@ app.post("/chat", async (req, res) => {
     res.json({ reply, enriched });
   } catch (err: any) {
     console.error("[ai] Groq error:", err.message);
-    if (err.code === 'ECONNREFUSED') {
-      return res.status(503).json({ error: "Le service AI est incapable de contacter l'API Groq ou la base de données." });
-    }
     res.status(500).json({ error: "AI service error", detail: err.message });
   }
 });

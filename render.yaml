@@ -22,6 +22,21 @@ services:
         value: http://database-service:3002
       - key: AI_SERVICE_URL
         value: http://ai-service:3003
+      - key: TRAVEL_ENGINE_URL
+        value: http://travel-engine:3005
+      - key: NODE_ENV
+        value: production
+
+  # ── Travel Engine Service ────────────────────────────────────────────────
+  - type: web
+    name: travel-engine
+    plan: free
+    env: docker
+    dockerContext: services/travel-engine
+    dockerfilePath: services/travel-engine/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3005
       - key: NODE_ENV
         value: production
 
