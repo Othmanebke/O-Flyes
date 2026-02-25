@@ -81,6 +81,8 @@ services:
         value: redis://red-d6egai88tnhs738m6mig:6379
       - key: DB_URL
         value: http://database-service:3002
+      - key: AUTH_SERVICE_URL
+        value: "https://ton-gateway.onrender.com/api" # Remplace par l'URL publique de ta Gateway
       - key: FRONTEND_URL
         value: "https://aivanaflyes.vercel.app"
       - key: JWT_SECRET
@@ -128,7 +130,7 @@ services:
       - key: OAUTH_GOOGLE_CLIENT_SECRET
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: OAUTH_CALLBACK_URL
-        value: "https://auth-service-v702.onrender.com/auth/callback" # Update with your actual auth-service public URL
+        value: "https://ton-gateway.onrender.com/api/auth/callback" # Remplace par ton URL Gateway
 
   # ── Partner Service ────────────────────────────────────────────────────────
   - type: web
