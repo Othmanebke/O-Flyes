@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || process.env.AI_PORT || 3003;
 const DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
 
-console.log(`[ai-service] Starting with:`);
+app.get("/", (req, res) => res.send("AIVANA AI Service is running."));
 console.log(` - PORT: ${PORT}`);
 console.log(` - DB_URL: ${DB_URL}`);
 

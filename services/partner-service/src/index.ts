@@ -5,7 +5,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || process.env.PARTNER_PORT || 3005;
+const PORT = process.env.PORT || process.env.PARTNER_PORT || 3008;
+
+app.get("/", (req, res) => res.send("AIVANA Partner Service is running."));
 
 app.use(cors());
 app.use(express.json());

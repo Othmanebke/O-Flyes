@@ -7,7 +7,9 @@ import client from "prom-client";
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
-const PORT = process.env.METRICS_PORT || 3006;
+const PORT = process.env.PORT || process.env.METRICS_PORT || 3009;
+
+app.get("/", (req, res) => res.send("AIVANA Metrics Service is running."));
 
 console.log(`[metrics-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);

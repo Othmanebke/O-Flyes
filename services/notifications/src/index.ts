@@ -8,7 +8,9 @@ import twilio from "twilio";
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
-const PORT = process.env.NOTIF_PORT || 3004;
+const PORT = process.env.PORT || process.env.NOTIF_PORT || 3004;
+
+app.get("/", (req, res) => res.send("AIVANA Notifications Service is running."));
 
 console.log(`[notifications-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);
