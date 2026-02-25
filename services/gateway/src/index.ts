@@ -121,8 +121,19 @@ app.use('/trips', authenticate, (req: any, res: any, next: any) => {
     })(req, res, next);
 });
 
-// Placeholder for other routes (to be implemented)
-// /explore, /bookings, /chat, etc.
+// 📊 METRICS
+app.use('/metrics', createProxyMiddleware({
+    target: METRICS_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/metrics': '' }, // metrics-service expects /health, /event etc
+}));
+
+// 🗄️ DATABASE (Generic proxy to support legacy /api/db/ calls via gateway)
+app.use('/db', createProxyMiddleware({
+    target: DB_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/db': '' },
+}));
 
 app.listen(PORT, () => {
     console.log(`[Gateway] running on port ${PORT}`);
