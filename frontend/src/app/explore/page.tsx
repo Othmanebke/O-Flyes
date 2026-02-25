@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface Destination {
@@ -360,7 +361,13 @@ export default function ExplorePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {topFive.map((d, i) => (
-            <div key={d.id} className={`relative rounded-3xl overflow-hidden group card-hover ${i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}`}>
+            <motion.div
+              key={d.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className={`relative rounded-3xl overflow-hidden group card-hover ${i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}`}
+            >
               <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute top-3 left-3">
@@ -390,7 +397,7 @@ export default function ExplorePage() {
                 </div>
                 <p className="text-white/70 text-xs italic leading-snug">&ldquo;{d.highlight}&rdquo;</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -455,49 +462,56 @@ export default function ExplorePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filtered.map(d => (
-              <Link key={d.id} href={`/destination/${d.id}`} className="bg-sand-50 rounded-3xl overflow-hidden card-hover group block transition-all hover:shadow-2xl" style={{ border: '1.5px solid #C9A84C', boxShadow: '0 2px 12px 0 rgba(201,168,76,0.10)' }}>
-                <div className="relative h-48 overflow-hidden">
-                  <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
-                    {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.emoji} {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
-                  </span>
-                  <span className="absolute top-3 right-3 text-[10px] bg-sand-50/90 text-dark font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-gold-400 text-gold-400" />
-                    <span className="text-white text-xs font-semibold">{d.rating}</span>
-                  </div>
-                  {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-gold-400 text-dark font-bold px-2 py-0.5 rounded-full">⭐ Top 5</span>}
-                </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-serif text-xl text-dark leading-tight">{d.name}</h3>
-                      <p className="text-dark-400 text-xs flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{d.country}</p>
-                    </div>
-                    <span className="w-8 h-8 rounded-full border border-sand-200 flex items-center justify-center bg-sand-50 group-hover:bg-dark group-hover:text-white group-hover:border-dark transition-all flex-shrink-0">
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+            {filtered.map((d, i) => (
+              <motion.div
+                key={d.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <Link href={`/destination/${d.id}`} className="bg-sand-50 rounded-3xl overflow-hidden card-hover group block transition-all hover:shadow-2xl" style={{ border: '1.5px solid #C9A84C', boxShadow: '0 2px 12px 0 rgba(201,168,76,0.10)' }}>
+                  <div className="relative h-48 overflow-hidden">
+                    <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
+                      {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.emoji} {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
                     </span>
+                    <span className="absolute top-3 right-3 text-[10px] bg-sand-50/90 text-dark font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-gold-400 text-gold-400" />
+                      <span className="text-white text-xs font-semibold">{d.rating}</span>
+                    </div>
+                    {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-gold-400 text-dark font-bold px-2 py-0.5 rounded-full">⭐ Top 5</span>}
                   </div>
-                  <p className="text-dark-400 text-xs leading-relaxed mb-4 line-clamp-2">{d.description}</p>
-                  <div className="bg-sand-50 rounded-xl p-3 mb-4">
-                    <p className="text-[10px] text-dark-300 uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 semaines</p>
-                    <p className="text-dark font-bold text-base">{d.tripBudget.min.toLocaleString()}€<span className="text-dark-300 font-normal text-sm"> — {d.tripBudget.max.toLocaleString()}€</span></p>
-                    <div className="flex gap-4 mt-1.5">
-                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-gold-500" /> ~{d.flightFrom}€ <span className="text-dark-300">A/R/pers</span></span>
-                      <span className="text-dark-400 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-gold-500" /> ~{d.hotelPerNight}€ <span className="text-dark-300">/nuit</span></span>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-serif text-xl text-dark leading-tight">{d.name}</h3>
+                        <p className="text-dark-400 text-xs flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{d.country}</p>
+                      </div>
+                      <span className="w-8 h-8 rounded-full border border-sand-200 flex items-center justify-center bg-sand-50 group-hover:bg-dark group-hover:text-white group-hover:border-dark transition-all flex-shrink-0">
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                    <p className="text-dark-400 text-xs leading-relaxed mb-4 line-clamp-2">{d.description}</p>
+                    <div className="bg-sand-50 rounded-xl p-3 mb-4">
+                      <p className="text-[10px] text-dark-300 uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 semaines</p>
+                      <p className="text-dark font-bold text-base">{d.tripBudget.min.toLocaleString()}€<span className="text-dark-300 font-normal text-sm"> — {d.tripBudget.max.toLocaleString()}€</span></p>
+                      <div className="flex gap-4 mt-1.5">
+                        <span className="text-dark-400 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-gold-500" /> ~{d.flightFrom}€ <span className="text-dark-300">A/R/pers</span></span>
+                        <span className="text-dark-400 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-gold-500" /> ~{d.hotelPerNight}€ <span className="text-dark-300">/nuit</span></span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calendar className="w-3.5 h-3.5 text-dark-300 flex-shrink-0" />
+                      <p className="text-[11px] text-dark-400">{d.bestMonths.join(" · ")}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {d.style.slice(0, 3).map(s => <span key={s} className="tag capitalize text-[10px]">{s}</span>)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-3.5 h-3.5 text-dark-300 flex-shrink-0" />
-                    <p className="text-[11px] text-dark-400">{d.bestMonths.join(" · ")}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {d.style.slice(0, 3).map(s => <span key={s} className="tag capitalize text-[10px]">{s}</span>)}
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}

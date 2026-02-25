@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const HERO_SLIDES = [
   {
@@ -85,17 +86,27 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               {/* Left – dynamic title */}
               <div className="max-w-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-px bg-sand-50/60" />
-                  <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
-                  <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
-                    {HERO_SLIDES[slide].location}
-                  </span>
-                </div>
-                <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl text-white leading-[1.1] whitespace-pre-line drop-shadow-lg">
-                  {HERO_SLIDES[slide].title}
-                </h1>
-                <p className="text-white/70 text-sm mt-4 mb-8 max-w-sm">{HERO_SLIDES[slide].sub}</p>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={slide}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-px bg-sand-50/60" />
+                      <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
+                      <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
+                        {HERO_SLIDES[slide].location}
+                      </span>
+                    </div>
+                    <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl text-white leading-[1.1] whitespace-pre-line drop-shadow-lg">
+                      {HERO_SLIDES[slide].title}
+                    </h1>
+                    <p className="text-white/70 text-sm mt-4 mb-8 max-w-sm">{HERO_SLIDES[slide].sub}</p>
+                  </motion.div>
+                </AnimatePresence>
                 <div className="flex flex-wrap items-center gap-4">
                   <Link href="/auth/register" className="btn-gold text-sm whitespace-nowrap px-8">Créer mon espace</Link>
                   <a href="#how-it-works" className="inline-flex items-center gap-2 text-white hover:text-gold transition-colors text-sm font-medium">
@@ -161,11 +172,18 @@ export default function HomePage() {
             { step: "02", title: "Connexion Email", desc: "Connectez votre boîte Gmail ou Outlook en toute sécurité. Notre IA fait le reste." },
             { step: "03", title: "Dashboard Magique", desc: "Vos vols, hôtels et activités s'affichent automatiquement. Zéro saisie manuelle." },
           ].map((s, i) => (
-            <div key={i} className="p-10 rounded-3xl bg-sand-50 border border-sand-200 hover:border-gold/30 transition-all group">
-              <span className="text-5xl font-serif text-gold/20 group-hover:text-gold/40 transition-colors">{s.step}</span>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ delay: i * 0.2, duration: 0.6 }}
+              className="p-10 rounded-3xl bg-sand-50 border border-sand-200 hover:border-gold/30 transition-all group lg:min-h-[300px]"
+            >
+              <span className="text-5xl font-serif text-gold/50 group-hover:text-gold transition-colors">{s.step}</span>
               <h3 className="text-xl font-bold text-dark mt-4 mb-3">{s.title}</h3>
               <p className="text-dark-400 text-sm leading-relaxed">{s.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -365,7 +383,14 @@ export default function HomePage() {
               { name: "Thomas B.", loc: "Lyon", text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },
               { name: "Marie L.", loc: "Bordeaux", text: "Interface top, réponses ultra rapides. J'ai planifié mon voyage au Japon en une soirée. Je recommande !", stars: 5 },
             ].map((t, i) => (
-              <div key={i} className="bg-sand-50 rounded-2xl p-6 card-hover">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+                className="bg-sand-50 rounded-2xl p-6 hover:shadow-xl transition-shadow border border-sand-100"
+              >
                 <div className="flex gap-0.5 mb-4">
                   {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
                 </div>
@@ -379,7 +404,7 @@ export default function HomePage() {
                     <p className="text-dark-400 text-xs">{t.loc}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

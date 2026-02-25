@@ -5,6 +5,7 @@ import { Plane, LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, Chevron
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
+import { motion } from "framer-motion";
 
 interface Trip {
     id: string;
@@ -358,9 +359,12 @@ export default function DashboardPage() {
                                 ) : (
                                     /* Trips List */
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                                        {trips.map((trip) => (
-                                            <div
+                                        {trips.map((trip, i) => (
+                                            <motion.div
                                                 key={trip.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 }}
                                                 onClick={() => handleSelectTrip(trip)}
                                                 className="group cursor-pointer bg-white rounded-3xl border border-sand-200 overflow-hidden hover:shadow-xl hover:shadow-dark/5 transition-all"
                                             >
@@ -398,7 +402,7 @@ export default function DashboardPage() {
                                                         Voir les détails <ChevronRight className="w-3 h-3" />
                                                     </button>
                                                 </div>
-                                            </div>
+                                            </motion.div>
                                         ))}
 
                                         {/* Add card */}
@@ -426,7 +430,11 @@ export default function DashboardPage() {
 
                                 {/* Dashboard Intelligent : En-tête Global */}
                                 {analysis && (
-                                    <div className="bg-white rounded-3xl border border-sand-200 p-8 mb-8 flex flex-col md:flex-row gap-8 items-stretch shadow-sm">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-white rounded-3xl border border-sand-200 p-8 mb-8 flex flex-col md:flex-row gap-8 items-stretch shadow-sm"
+                                    >
 
                                         {/* Score Scoreboard */}
                                         <div className="flex-shrink-0 flex flex-col items-center justify-center p-6 bg-sand-50 rounded-2xl border border-sand-200 min-w-[200px]">
@@ -489,7 +497,7 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 )}
 
                                 <div className="flex flex-col lg:flex-row gap-8">
@@ -522,7 +530,13 @@ export default function DashboardPage() {
                                             ) : (
                                                 <div className="space-y-6">
                                                     {bookings.map((b, index) => (
-                                                        <div key={b.id} className="flex gap-6 relative group">
+                                                        <motion.div
+                                                            key={b.id}
+                                                            initial={{ opacity: 0, x: -20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            transition={{ delay: index * 0.1, duration: 0.4 }}
+                                                            className="flex gap-6 relative group"
+                                                        >
                                                             {/* Vertical Timeline Line */}
                                                             {index !== bookings.length - 1 && (
                                                                 <div className="absolute left-6 top-14 bottom-[-1.5rem] w-px bg-sand-200 z-0 group-hover:bg-gold/50 transition-colors"></div>
@@ -581,7 +595,7 @@ export default function DashboardPage() {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        </motion.div>
                                                     ))}
                                                 </div>
                                             )}
@@ -621,7 +635,27 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </div >
-            </main >
+            </main>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-sand-200 flex justify-around items-center h-16 px-4 z-40 pb-safe">
+                <button onClick={() => setSelectedTrip(null)} className={`flex flex-col items-center gap-1 ${!selectedTrip ? "text-gold" : "text-dark-300"}`}>
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Accueil</span>
+                </button>
+                <button onClick={() => { }} className={`flex flex-col items-center gap-1 ${selectedTrip ? "text-gold" : "text-dark-300"}`}>
+                    <Calendar className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Voyages</span>
+                </button>
+                <button onClick={handleConnectEmail} className={`flex flex-col items-center gap-1 ${emailConnected ? "text-green-500" : "text-dark-300"}`}>
+                    <Mail className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Email</span>
+                </button>
+                <button onClick={() => { localStorage.removeItem("token"); router.push("/"); }} className="flex flex-col items-center gap-1 text-dark-300 hover:text-red-500">
+                    <LogOut className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Déco</span>
+                </button>
+            </nav>
 
             {/* Create Trip Modal */}
             {
