@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS bookings (
   title               TEXT NOT NULL,
   provider            TEXT,          -- e.g. 'Air France', 'Marriott'
   confirmation_number TEXT,
-  start_datetime      TIMESTAMPTZ NOT NULL,
+  start_datetime      TIMESTAMPTZ,
   end_datetime        TIMESTAMPTZ,
-  price               NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+  price               NUMERIC(10,2) DEFAULT 0.00,
   currency            TEXT DEFAULT 'EUR',
   location            TEXT,          -- city or address
-  status              TEXT NOT NULL DEFAULT 'confirmed', -- 'pending' | 'confirmed' | 'cancelled'
+  status              TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'confirmed' | 'cancelled'
   external_url        TEXT,          -- Link to affiliate/provider site
   raw_data            JSONB,         -- original data from email parsing
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()

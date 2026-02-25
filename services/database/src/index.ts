@@ -206,15 +206,11 @@ app.delete("/trips/:id", async (req, res) => {
 app.post("/bookings", async (req, res) => {
   const { trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
 
-  if (!start_datetime || price === undefined) {
-    return res.status(400).json({ error: "start_datetime and price are required for bookings logic" });
-  }
-
   try {
     const result = await pool.query(
       `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
-      [trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'confirmed', external_url || null, raw_data || null]
+      [trip_id, type, title, provider, confirmation_number, start_datetime || null, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'pending', external_url || null, raw_data || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
@@ -233,15 +229,11 @@ app.get("/trips/:id/bookings", async (req, res) => {
 app.post("/trips/:id/bookings", async (req, res) => {
   const { type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
 
-  if (!start_datetime || price === undefined) {
-    return res.status(400).json({ error: "start_datetime and price are required for bookings logic" });
-  }
-
   try {
     const result = await pool.query(
       `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
-      [req.params.id, type, title, provider, confirmation_number, start_datetime, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'confirmed', external_url || null, raw_data || null]
+      [req.params.id, type, title, provider, confirmation_number, start_datetime || null, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'pending', external_url || null, raw_data || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {

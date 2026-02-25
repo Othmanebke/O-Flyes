@@ -478,7 +478,11 @@ export default function DashboardPage() {
                                                             </div>
                                                             <div className="flex-1 pt-1">
                                                                 <div className="flex justify-between items-start mb-1">
-                                                                    <h4 className="font-bold text-dark">{b.title}</h4>
+                                                                    <div className="flex items-center gap-3">
+                                                                        <h4 className="font-bold text-dark">{b.title}</h4>
+                                                                        {b.status === 'pending' && <span className="bg-orange-100 text-orange-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Incomplet</span>}
+                                                                        {b.status === 'confirmed' && <span className="bg-green-100 text-green-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Confirmé</span>}
+                                                                    </div>
                                                                     <button
                                                                         onClick={() => handleDeleteBooking(b.id)}
                                                                         className="text-dark-200 hover:text-red-500 transition-colors"
