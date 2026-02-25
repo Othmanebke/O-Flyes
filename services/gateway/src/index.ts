@@ -1,8 +1,7 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createProxyMiddleware } from 'http-proxy-middleware';
-
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import jwt from 'jsonwebtoken';
 
 dotenv.config();
@@ -22,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // Log incoming requests & Handle /api prefix from frontend
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
     const oldPath = req.url;
     if (req.url.startsWith('/api')) {
         req.url = req.url.replace(/^\/api/, '');
@@ -35,7 +34,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware d'authentification
-const authenticate = (req: any, res: any, next: any) => {
+const authenticate = (req: any, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'Token manquant' });
 
@@ -50,33 +49,35 @@ const authenticate = (req: any, res: any, next: any) => {
 };
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', service: 'gateway' });
 });
 
-// 🔐 AUTH
+// 🔐 AUTH (Login, Register, verification)
 app.use('/auth', createProxyMiddleware({
     target: AUTH_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/auth': '/auth' },
+    onProxyReq: fixRequestBody,
 }));
 
 // 🤖 CHAT
 // POST /chat/message -> AI Service (Assistant logic)
-app.use('/chat/message', (req, res, next) => {
+app.use('/chat/message', (req: Request, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: AI_SERVICE_URL,
         changeOrigin: true,
         pathRewrite: { '^/chat/message': '/chat' }, // Rewrite to internal /chat
+        onProxyReq: fixRequestBody,
     })(req, res, next);
 });
 
 // GET /chat/history/:tripId -> DB Service (Messages persistence)
-app.use('/chat/history', authenticate, (req: any, res: any, next: any) => {
+app.use('/chat/history', authenticate, (req: any, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
-        pathRewrite: (path: string) => path.replace('/chat/history', '/chat/history'), // keep path as is for db-service
+        pathRewrite: (path: string) => path.replace('/chat/history', '/chat/history'),
     })(req, res, next);
 });
 
@@ -87,18 +88,17 @@ app.use('/explore', createProxyMiddleware({
     pathRewrite: { '^/explore': '/explore' },
 }));
 
-// 📦 BOOKINGS (Auth Required + Trip Context)
-app.use('/bookings', authenticate, (req: any, res: any, next: any) => {
-    // Note: GET /trips/:id/bookings and POST /trips/:id/bookings are handled via /trips proxy
-    // This /bookings route is for direct actions on bookings
+// 📦 BOOKINGS
+app.use('/bookings', authenticate, (req: any, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
+        onProxyReq: fixRequestBody,
     })(req, res, next);
 });
 
 // 🧳 TRIPS (Auth Required)
-app.use('/trips', authenticate, (req: any, res: any, next: any) => {
+app.use('/trips', authenticate, (req: any, res: Response, next: NextFunction) => {
     // Si GET /trips -> redirection interne vers /trips/user/:id
     if (req.method === 'GET' && (req.path === '/' || req.path === '')) {
         return createProxyMiddleware({
@@ -125,6 +125,7 @@ app.use('/trips', authenticate, (req: any, res: any, next: any) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
+        onProxyReq: fixRequestBody,
     })(req, res, next);
 });
 
@@ -132,19 +133,21 @@ app.use('/trips', authenticate, (req: any, res: any, next: any) => {
 app.use('/metrics', createProxyMiddleware({
     target: METRICS_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/metrics': '' }, // metrics-service expects /health, /event etc
+    pathRewrite: { '^/metrics': '' },
 }));
 
-// 🗄️ DATABASE (Generic proxy to support legacy /api/db/ calls via gateway)
+// 🗄️ DATABASE (Generic proxy to support legacy /api/db/ calls)
 app.use('/db', createProxyMiddleware({
     target: DB_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/db': '' },
+    onProxyReq: fixRequestBody,
 }));
 
 app.listen(PORT, () => {
     console.log(`[Gateway] running on port ${PORT}`);
     console.log(`  AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}`);
     console.log(`  DB_SERVICE_URL: ${DB_SERVICE_URL}`);
+    console.log(`  AI_SERVICE_URL: ${AI_SERVICE_URL}`);
     console.log(`  METRICS_SERVICE_URL: ${METRICS_SERVICE_URL}`);
 });
