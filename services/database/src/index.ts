@@ -93,17 +93,79 @@ app.get("/destinations/:id", async (req, res) => {
 
 // ── Trips (saved trips per user) ─────────────────────────────────────────────
 app.post("/trips", async (req, res) => {
-  const { user_id, destination_id, title, start_date, end_date, budget, status } = req.body;
+  const { user_id, destination_id, title, start_date, end_date, budget, status, is_active, preferences } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO trips (user_id, destination_id, title, start_date, end_date, budget, status, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
-      [user_id, destination_id || null, title, start_date, end_date, budget, status || 'planned']
+      `INSERT INTO trips (user_id, destination_id, title, start_date, end_date, budget, status, is_active, preferences, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING *`,
+      [user_id, destination_id || null, title, start_date, end_date, budget, status || 'planned', is_active || false, preferences || {}]
     );
     res.status(201).json(result.rows[0]);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Could not create trip" });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/trips/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT t.*, d.name as destination_name, d.country, d.image_url FROM trips t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.id = $1",
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "Trip not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/trips/:id", async (req, res) => {
+  const { title, start_date, end_date, budget, status, is_active, preferences } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE trips 
+       SET title = COALESCE($1, title), 
+           start_date = COALESCE($2, start_date), 
+           end_date = COALESCE($3, end_date), 
+           budget = COALESCE($4, budget), 
+           status = COALESCE($5, status),
+           is_active = COALESCE($6, is_active),
+           preferences = COALESCE($7, preferences)
+       WHERE id = $8 RETURNING *`,
+      [title, start_date, end_date, budget, status, is_active, preferences, req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "Trip not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/trips/:id", async (req, res) => {
+  try {
+    const result = await pool.query("DELETE FROM trips WHERE id = $1 RETURNING id", [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: "Trip not found" });
+    res.json({ message: "Trip deleted", id: req.params.id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/trips/:id/activate", async (req, res) => {
+  try {
+    // Deactivate all other trips for this user
+    const tripRes = await pool.query("SELECT user_id FROM trips WHERE id = $1", [req.params.id]);
+    if (!tripRes.rows.length) return res.status(404).json({ error: "Trip not found" });
+
+    const userId = tripRes.rows[0].user_id;
+    await pool.query("UPDATE trips SET is_active = false WHERE user_id = $1", [userId]);
+
+    // Activate this one
+    const result = await pool.query("UPDATE trips SET is_active = true WHERE id = $1 RETURNING *", [req.params.id]);
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 

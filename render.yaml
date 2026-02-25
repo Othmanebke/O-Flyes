@@ -6,6 +6,25 @@ databases:
 
 services:
 
+  # ── API Gateway (Public) ──────────────────────────────────────────────────
+  - type: web
+    name: api-gateway
+    plan: free
+    env: docker
+    dockerContext: services/gateway
+    dockerfilePath: services/gateway/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: AUTH_SERVICE_URL
+        value: http://auth-service:3001
+      - key: DB_SERVICE_URL
+        value: http://database-service:3002
+      - key: AI_SERVICE_URL
+        value: http://ai-service:3003
+      - key: NODE_ENV
+        value: production
+
   # ── Redis ──────────────────────────────────────────────────────────────────
   - type: redis
     name: oflyes-redis-instance
@@ -42,7 +61,7 @@ services:
       - key: REDIS_URL
         value: redis://red-d6egai88tnhs738m6mig:6379
       - key: NEXT_PUBLIC_API_DB
-        value: http://database-service-uybo:3002
+        value: http://database-service:3002
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV
@@ -61,7 +80,7 @@ services:
       - key: AI_PORT
         value: 3003
       - key: NEXT_PUBLIC_API_DB
-        value: http://database-service-uybo:3002
+        value: http://database-service:3002
       - key: GROQ_API_KEY
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
 
@@ -78,9 +97,9 @@ services:
       - key: SYNC_PORT
         value: 3004
       - key: NEXT_PUBLIC_API_DB
-        value: http://database-service-uybo:3002
+        value: http://database-service:3002
       - key: NEXT_PUBLIC_API_AI
-        value: http://ai-service-qfvv:3003
+        value: http://ai-service:3003
       - key: OAUTH_GOOGLE_CLIENT_ID
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: OAUTH_GOOGLE_CLIENT_SECRET

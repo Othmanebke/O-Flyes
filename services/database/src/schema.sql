@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   name          TEXT,
   password_hash TEXT,
   provider      TEXT NOT NULL DEFAULT 'local', -- 'local' | 'google'
-  plan          TEXT NOT NULL DEFAULT 'free',   -- 'free' | 'pro'
+  role          TEXT NOT NULL DEFAULT 'free',   -- 'free' | 'premium'
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS trips (
   end_date       DATE,
   budget         NUMERIC(10,2),
   status         TEXT NOT NULL DEFAULT 'planned', -- 'planned' | 'booked' | 'completed'
+  is_active      BOOLEAN NOT NULL DEFAULT false,
+  preferences    JSONB NOT NULL DEFAULT '{}',
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -66,6 +68,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
   role       TEXT NOT NULL, -- 'user' | 'assistant'
   content    TEXT NOT NULL,
+  trip_id    UUID REFERENCES trips(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
