@@ -79,8 +79,8 @@ export default function DashboardPage() {
     };
 
     const handleConnectEmail = () => {
-        // Redirect to auth-service sync route
-        window.location.href = `${process.env.NEXT_PUBLIC_API_AUTH || 'http://localhost:3001'}/auth/google/sync`;
+        // Redirect to auth-service sync route via Gateway
+        window.location.href = `/api/auth/google/sync`;
     };
 
     const fetchTrips = async (uid: string) => {

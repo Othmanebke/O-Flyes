@@ -16,6 +16,7 @@ const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:30
 const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'http://database-service:3002';
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://ai-service:3003';
 const TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'http://travel-engine:3005';
+const METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
 
 app.use(cors());
 app.use(express.json());
@@ -127,4 +128,5 @@ app.listen(PORT, () => {
     console.log(`[Gateway] running on port ${PORT}`);
     console.log(`  AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}`);
     console.log(`  DB_SERVICE_URL: ${DB_SERVICE_URL}`);
+    console.log(`  METRICS_SERVICE_URL: ${METRICS_SERVICE_URL}`);
 });
