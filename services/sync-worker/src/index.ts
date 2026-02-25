@@ -8,9 +8,11 @@ import cron from "node-cron";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || process.env.SYNC_PORT || 3004;
-const DB_URL = process.env.NEXT_PUBLIC_API_DB || "http://localhost:3002";
-const AI_URL = process.env.NEXT_PUBLIC_API_AI || "http://localhost:3003";
+const PORT = process.env.PORT || 3007;
+const DB_URL = process.env.DB_URL || "http://database-service:3002";
+const AI_URL = process.env.AI_URL || "http://ai-service:3003";
+const NOTIF_URL = process.env.NOTIF_URL || "http://notifications-service:3004";
+const METRICS_URL = process.env.METRICS_URL || "http://metrics-service:3009";
 
 console.log(`[sync-worker] Starting with:`);
 console.log(` - PORT: ${PORT}`);
@@ -119,7 +121,7 @@ async function syncUserEmails(cred: any) {
 
                 // 7. Send notification
                 console.log(`[sync-worker] Sending sync confirmation for booking ${msg.id}`);
-                await axios.post(`${process.env.NEXT_PUBLIC_API_NOTIF || 'http://localhost:3004'}/notify/email`, {
+                await axios.post(`${NOTIF_URL}/notify/email`, {
                     to: cred.email,
                     template: "SYNC_CONFIRMATION",
                     data: savedBooking.data
@@ -128,7 +130,7 @@ async function syncUserEmails(cred: any) {
                 console.log(`[sync-worker] Successfully extracted, saved and notified for email ${msg.id}`);
 
                 // 8. Report metrics
-                await axios.post(`${process.env.NEXT_PUBLIC_API_METRICS || 'http://localhost:3006'}/metrics/event`, {
+                await axios.post(`${METRICS_URL}/metrics/event`, {
                     event: "email_sync_success"
                 }).catch(() => { });
             }
@@ -150,7 +152,7 @@ async function checkUpcomingTrips() {
 
         for (const booking of bookings) {
             console.log(`[sync-worker] Sending reminder for booking ${booking.id} to ${booking.email}`);
-            await axios.post(`${process.env.NEXT_PUBLIC_API_NOTIF || 'http://localhost:3004'}/notify/email`, {
+            await axios.post(`${NOTIF_URL}/notify/email`, {
                 to: booking.email,
                 template: "TRIP_REMINDER",
                 data: booking

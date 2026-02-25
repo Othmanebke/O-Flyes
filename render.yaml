@@ -24,6 +24,10 @@ services:
         value: http://ai-service:3003
       - key: TRAVEL_ENGINE_URL
         value: http://travel-engine:3005
+      - key: NOTIF_SERVICE_URL
+        value: http://notifications-service:3004
+      - key: METRICS_SERVICE_URL
+        value: http://metrics-service:3009
       - key: NODE_ENV
         value: production
 
@@ -108,13 +112,15 @@ services:
     dockerfilePath: services/sync-worker/Dockerfile
     envVars:
       - key: PORT
-        value: 3004
-      - key: SYNC_PORT
-        value: 3004
-      - key: NEXT_PUBLIC_API_DB
+        value: 3007
+      - key: DB_URL
         value: http://database-service:3002
-      - key: NEXT_PUBLIC_API_AI
+      - key: AI_URL
         value: http://ai-service:3003
+      - key: NOTIF_URL
+        value: http://notifications-service:3004
+      - key: METRICS_URL
+        value: http://metrics-service:3009
       - key: OAUTH_GOOGLE_CLIENT_ID
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: OAUTH_GOOGLE_CLIENT_SECRET
@@ -131,6 +137,38 @@ services:
     dockerfilePath: services/partner-service/Dockerfile
     envVars:
       - key: PORT
-        value: 3005
+        value: 3008
       - key: PARTNER_PORT
-        value: 3005
+        value: 3008
+
+  # ── Notifications Service ────────────────────────────────────────────────
+  - type: web
+    name: notifications-service
+    plan: free
+    env: docker
+    dockerContext: services/notifications
+    dockerfilePath: services/notifications/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3004
+      - key: NODE_ENV
+        value: production
+      - key: SMTP_HOST
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+      - key: SMTP_USER
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+      - key: SMTP_PASS
+        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+
+  # ── Metrics Service ──────────────────────────────────────────────────
+  - type: web
+    name: metrics-service
+    plan: free
+    env: docker
+    dockerContext: services/metrics
+    dockerfilePath: services/metrics/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3009
+      - key: NODE_ENV
+        value: production

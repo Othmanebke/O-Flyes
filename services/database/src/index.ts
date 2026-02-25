@@ -71,6 +71,17 @@ app.get("/users/:id", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+app.post("/users/:id/upgrade", async (req, res) => {
+  const { role } = req.body;
+  try {
+    const result = await pool.query("UPDATE users SET role = $1 WHERE id = $2 RETURNING *", [role || 'premium', req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: "User not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Destinations ─────────────────────────────────────────────────────────────
 app.get("/destinations", async (req, res) => {
   const { climate, min_budget, max_budget, period } = req.query;
