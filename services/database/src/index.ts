@@ -31,6 +31,14 @@ console.log(` - DATABASE_URL: ${process.env.DATABASE_URL ? '(secret)' : 'using s
 // ── Auto-initialisation du schéma ────────────────────────────────────────────
 async function initSchema() {
   try {
+    // Drop table to migrate for MVP (User requirement)
+    try {
+      await pool.query("DROP TABLE IF EXISTS bookings CASCADE;");
+      console.log("[database-service] Dropped bookings table for MVP migration ✓");
+    } catch (e: any) {
+      console.warn("[database-service] Drop table skipped:", e.message);
+    }
+
     const schemaPath = path.join(__dirname, "schema.sql");
     if (fs.existsSync(schemaPath)) {
       const sql = fs.readFileSync(schemaPath, "utf-8");
@@ -196,12 +204,17 @@ app.delete("/trips/:id", async (req, res) => {
 // ── Bookings ─────────────────────────────────────────────────────────────────
 // Legacy /bookings POST (kept for internal use)
 app.post("/bookings", async (req, res) => {
-  const { trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data } = req.body;
+  const { trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
+
+  if (!start_datetime || price === undefined) {
+    return res.status(400).json({ error: "start_datetime and price are required for bookings logic" });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING *`,
-      [trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency || 'EUR', status || 'confirmed', external_url || null, raw_data || null]
+      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
+      [trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'confirmed', external_url || null, raw_data || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
@@ -211,19 +224,24 @@ app.post("/bookings", async (req, res) => {
 
 app.get("/trips/:id/bookings", async (req, res) => {
   const result = await pool.query(
-    "SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_date ASC",
+    "SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_datetime ASC",
     [req.params.id]
   );
   res.json(result.rows);
 });
 
 app.post("/trips/:id/bookings", async (req, res) => {
-  const { type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data } = req.body;
+  const { type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data } = req.body;
+
+  if (!start_datetime || price === undefined) {
+    return res.status(400).json({ error: "start_datetime and price are required for bookings logic" });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_date, end_date, price, currency, status, external_url, raw_data, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING *`,
-      [req.params.id, type, title, provider, confirmation_number, start_date, end_date, price, currency || 'EUR', status || 'confirmed', external_url || null, raw_data || null]
+      `INSERT INTO bookings (trip_id, type, title, provider, confirmation_number, start_datetime, end_datetime, price, currency, location, status, external_url, raw_data, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *`,
+      [req.params.id, type, title, provider, confirmation_number, start_datetime, end_datetime || null, price || 0, currency || 'EUR', location || null, status || 'confirmed', external_url || null, raw_data || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
@@ -259,7 +277,7 @@ app.get("/trips/:id/analysis", async (req, res) => {
     const trip = tripRes.rows[0];
 
     // 2. Fetch all bookings for this trip
-    const bookingsRes = await pool.query("SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_date ASC", [tripId]);
+    const bookingsRes = await pool.query("SELECT * FROM bookings WHERE trip_id = $1 ORDER BY start_datetime ASC", [tripId]);
     const bookings = bookingsRes.rows;
 
     // --- Budget Tracking ---
@@ -287,8 +305,8 @@ app.get("/trips/:id/analysis", async (req, res) => {
       let coveredHotelNights = 0;
 
       bookings.forEach(b => {
-        const bStart = b.start_date ? new Date(b.start_date) : null;
-        const bEnd = b.end_date ? new Date(b.end_date) : null;
+        const bStart = b.start_datetime ? new Date(b.start_datetime) : null;
+        const bEnd = b.end_datetime ? new Date(b.end_datetime) : null;
 
         if (b.type === "activity" || b.type === "flight" || b.type === "transport") {
           if (b.type === "activity") hasActivity = true;

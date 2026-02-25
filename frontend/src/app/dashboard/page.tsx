@@ -23,9 +23,12 @@ interface Booking {
     title: string;
     provider?: string;
     confirmation_number?: string;
-    start_date?: string;
-    end_date?: string;
+    start_datetime?: string;
+    end_datetime?: string;
     price?: number;
+    currency?: string;
+    location?: string;
+    status: string;
 }
 
 interface TripAnalysis {
@@ -59,8 +62,9 @@ export default function DashboardPage() {
         type: 'flight',
         title: '',
         provider: '',
-        start_date: '',
-        end_date: '',
+        start_datetime: '',
+        end_datetime: '',
+        location: '',
         price: 0
     });
 
@@ -173,7 +177,7 @@ export default function DashboardPage() {
                 trip_id: selectedTrip.id,
                 ...newBooking
             });
-            setNewBooking({ type: 'flight', title: '', provider: '', start_date: '', end_date: '', price: 0 });
+            setNewBooking({ type: 'flight', title: '', provider: '', start_datetime: '', end_datetime: '', location: '', price: 0 });
             setShowBookingModal(false);
             fetchBookings(selectedTrip.id);
         } catch (err) {
@@ -496,13 +500,13 @@ export default function DashboardPage() {
                                                                 <p className="text-xs text-dark-400 mb-2">{b.provider || "Prestataire non défini"} • {b.price ? `${b.price} €` : 'Prix non renseigné'}</p>
                                                                 <div className="flex items-center gap-4 text-[10px] font-bold text-dark-300 uppercase tracking-widest">
                                                                     <span className="flex items-center gap-1.5 bg-sand-50 px-2 py-1 rounded-md">
-                                                                        {b.start_date ? new Date(b.start_date).toLocaleDateString() : 'Date à définir'}
+                                                                        {b.start_datetime ? new Date(b.start_datetime).toLocaleDateString() : 'Date à définir'}
                                                                     </span>
-                                                                    {b.end_date && (
+                                                                    {b.end_datetime && (
                                                                         <>
                                                                             <ChevronRight className="w-3 h-3 text-dark-200" />
                                                                             <span className="flex items-center gap-1.5 bg-sand-50 px-2 py-1 rounded-md">
-                                                                                {new Date(b.end_date).toLocaleDateString()}
+                                                                                {new Date(b.end_datetime).toLocaleDateString()}
                                                                             </span>
                                                                         </>
                                                                     )}
@@ -662,20 +666,32 @@ export default function DashboardPage() {
                                         <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date début</label>
                                         <input
                                             type="date"
-                                            value={newBooking.start_date}
-                                            onChange={(e) => setNewBooking({ ...newBooking, start_date: e.target.value })}
+                                            value={newBooking.start_datetime}
+                                            onChange={(e) => setNewBooking({ ...newBooking, start_datetime: e.target.value })}
                                             className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                            required
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Date fin</label>
                                         <input
                                             type="date"
-                                            value={newBooking.end_date}
-                                            onChange={(e) => setNewBooking({ ...newBooking, end_date: e.target.value })}
+                                            value={newBooking.end_datetime}
+                                            onChange={(e) => setNewBooking({ ...newBooking, end_datetime: e.target.value })}
                                             className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
                                         />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2">Lieu / Adresse</label>
+                                    <input
+                                        type="text"
+                                        value={newBooking.location}
+                                        onChange={(e) => setNewBooking({ ...newBooking, location: e.target.value })}
+                                        placeholder="ex: Cité des arts, Valencia"
+                                        className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all"
+                                    />
                                 </div>
 
                                 <div className="flex gap-3 pt-6">
