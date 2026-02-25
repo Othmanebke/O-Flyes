@@ -110,7 +110,7 @@ function LoginContent() {
         <div>
           <div className="flex justify-between mb-2">
             <label className="text-xs font-medium text-dark-400 uppercase tracking-widest">Mot de passe</label>
-            <a href="#" className="text-xs text-gold hover:underline">Oublié ?</a>
+            <Link href="/auth/forgot-password" className="text-xs text-gold hover:underline">Oublié ?</Link>
           </div>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
             className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
@@ -155,9 +155,9 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-sand-50 flex">
+    <div className="min-h-screen bg-sand-50 flex -mt-20">
       {/* Left — decorative panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12 pt-32">
         <div className="relative z-10">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-sand-50 rounded-xl flex items-center justify-center">

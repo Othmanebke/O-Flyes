@@ -117,6 +117,30 @@ async function sendVerificationEmail(to: string, token: string, name: string) {
   });
 }
 
+async function sendResetPasswordEmail(to: string, token: string, name: string) {
+  const resetLink = `${FRONTEND_URL}/auth/reset-password?token=${token}`;
+  await transporter.sendMail({
+    from: `"O-Flyes ✈" <${process.env.SMTP_USER}>`,
+    to,
+    subject: "Réinitialisation de votre mot de passe — O-Flyes",
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #faf9f6; border-radius: 16px;">
+        <h1 style="font-size: 28px; color: #1a1a1a; margin-bottom: 8px;">Bonjour, ${name}</h1>
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 28px;">
+          Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe.
+        </p>
+        <a href="${resetLink}"
+          style="display: inline-block; background: #1a1a1a; color: #fff; text-decoration: none;
+                 font-weight: 600; font-size: 15px; padding: 14px 28px; border-radius: 12px;">
+          Réinitialiser mon mot de passe
+        </a>
+        <p style="color: #aaa; font-size: 12px; margin-top: 28px;">
+          Ce lien expire dans 1 heure. Si vous n'avez pas demandé de réinitialisation, ignorez cet email. Le lien vous redirigera vers la page de changement de mot de passe.
+        </p>
+      </div>`,
+  });
+}
+
 // ── Helpers Redis keys ───────────────────────────────────────────────────────
 const userKey = (email: string) => `user:${email}`;
 const verifyKey = (token: string) => `verify:${token}`;
@@ -167,7 +191,7 @@ if (process.env.OAUTH_MICROSOFT_CLIENT_ID && process.env.OAUTH_MICROSOFT_CLIENT_
         clientID: process.env.OAUTH_MICROSOFT_CLIENT_ID,
         clientSecret: process.env.OAUTH_MICROSOFT_CLIENT_SECRET,
         callbackURL: process.env.OAUTH_MICROSOFT_CALLBACK_URL || "http://localhost:3001/auth/microsoft/callback",
-        scope: ["user.read", "email", "offline_access"]
+        scope: ["openid", "profile", "email", "user.read"]
       },
       async (accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
@@ -447,6 +471,78 @@ app.post("/auth/resend-verification", async (req, res) => {
   }
 });
 
+/** POST /auth/forgot-password */
+app.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email requis." });
+
+    const raw = await redis.get(userKey(email));
+    if (!raw) {
+      // Pour des raisons de sécurité, ne pas indiquer que l'email n'existe pas
+      return res.json({ message: "Si un compte existe, un email a été envoyé." });
+    }
+
+    const user = JSON.parse(raw);
+
+    // Si c'est un compte Google/Microsoft exclusif
+    if ((user.provider === "google" || user.provider === "microsoft") && !user.passwordHash) {
+      return res.status(400).json({ error: `Ce compte utilise la connexion ${user.provider}. Vous ne pouvez pas réinitialiser de mot de passe.` });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    // Token valid for 1 hour
+    await redis.set(resetKey(token), email, { EX: 3600 });
+
+    await sendResetPasswordEmail(email, token, user.name);
+
+    return res.json({ message: "Si un compte existe, un email a été envoyé." });
+  } catch (err) {
+    console.error("[auth/forgot-password]", err);
+    return res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+/** POST /auth/reset-password */
+app.post("/auth/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ error: "Token et mot de passe requis." });
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Le mot de passe doit faire au moins 8 caractères." });
+    }
+
+    const email = await redis.get(resetKey(token));
+    if (!email) {
+      return res.status(400).json({ error: "Le lien est invalide ou a expiré." });
+    }
+
+    const raw = await redis.get(userKey(email));
+    if (!raw) return res.status(404).json({ error: "Compte introuvable." });
+
+    const user = JSON.parse(raw);
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    user.passwordHash = passwordHash;
+    await redis.set(userKey(email), JSON.stringify(user));
+    await redis.del(resetKey(token));
+
+    // Update Postgres
+    try {
+      await axios.put(`${DB_URL}/users`, { email: user.email, password_hash: passwordHash });
+    } catch (err: any) {
+      console.error("[auth/reset-password] Postgres sync error (optional update):", err.message);
+      // We can fail gracefully here if Postgres is disconnected since Redis is source of truth for auth
+    }
+
+    return res.json({ message: "Mot de passe réinitialisé avec succès." });
+  } catch (err) {
+    console.error("[auth/reset-password]", err);
+    return res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
 /** POST /auth/verify */
 app.post("/auth/verify", (req, res) => {
   const { token } = req.body;
@@ -458,4 +554,4 @@ app.post("/auth/verify", (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`[auth-service] running on port ${PORT}`));
+app.listen(PORT, () => console.log(`[auth - service] running on port ${PORT}`));
