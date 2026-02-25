@@ -95,16 +95,30 @@ app.post("/chat", async (req, res) => {
       try {
         const tripRes = await axios.get(`${DB_URL}/trips/${tripId}`);
         const bookingsRes = await axios.get(`${DB_URL}/trips/${tripId}/bookings`).catch(() => ({ data: [] }));
+        const analysisRes = await axios.get(`${DB_URL}/trips/${tripId}/analysis`).catch(() => ({ data: null }));
 
         const trip = tripRes.data;
         const bookings = bookingsRes.data;
+        const analysis = analysisRes.data;
+
+        let analysisContext = "";
+        if (analysis) {
+          analysisContext = `
+[ANALYSE INTELLIGENTE DU VOYAGE]
+Score d'organisation : ${analysis.score}/100
+Budget : ${analysis.budget.percentage}% utilisé (${analysis.budget.used}€ / ${analysis.budget.total}€)
+Avertissements (Warnings) générés automatiquement par le système :
+${analysis.warnings.length > 0 ? analysis.warnings.map((w: string) => `- ${w}`).join('\n') : "Aucun avertissement, le voyage semble très bien organisé."}
+
+IMPORTANT : Prends en compte cette analyse si l'utilisateur demande d'optimiser son voyage, demande s'il manque quelque chose, ou que faire ensuite. Propose des solutions de manière proactive et naturelle (ex: suggérer de trouver des hôtels s'il manque des nuits, de chercher des vols s'il n'y a pas de vol retour, ou des activités pour les jours vides). Transforme ces warnings "bruts" en conseils amicaux.`;
+        }
 
         contextPrompt = `\n[CONTEXTE DU VOYAGE ACTUEL]
 Destination: ${trip.destination_name || trip.destination || 'Non définie'}
 Dates: du ${trip.start_date || '?'} au ${trip.end_date || '?'}
-Budget: ${trip.budget || 'Non défini'} €
 Préférences: ${JSON.stringify(trip.preferences)}
 Réservations actuelles: ${bookings.length > 0 ? bookings.map((b: any) => `- ${b.type}: ${b.title} (${b.status})`).join(', ') : 'Aucune'}
+${analysisContext}
 `;
       } catch (e: any) {
         console.warn("[ai] Could not fetch trip context:", e.message);
