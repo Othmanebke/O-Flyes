@@ -45,12 +45,38 @@ app.use(express.json());
 app.use(passport.initialize());
 
 // ── Redis ───────────────────────────────────────────────────────────────────
-const redis = createClient({ url: process.env.REDIS_URL || "redis://localhost:6379" });
-redis.on("error", (err) => console.error("[auth] Redis Error:", err));
-redis.connect().catch((err) => {
-  console.error("[auth] Redis connection failed! Auth will not work without Redis.");
-  console.error("[auth] Error details:", err.message);
+let isRedisConnected = false;
+const redis = createClient({
+  url: process.env.REDIS_URL || "redis://localhost:6379",
+  socket: {
+    connectTimeout: 5000, // Fail fast (5s) instead of hanging
+  }
 });
+
+redis.on("error", (err) => {
+  console.error("[auth] Redis Error:", err.message);
+  isRedisConnected = false;
+});
+
+redis.connect()
+  .then(() => {
+    isRedisConnected = true;
+    console.log("[auth] Redis connected successfully.");
+  })
+  .catch((err) => {
+    isRedisConnected = false;
+    console.error("[auth] Redis connection failed! Auth will work in degraded mode (In-memory mock).");
+    console.error("[auth] Error details:", err.message);
+  });
+
+// Mock Redis simple pour éviter les plantages si Redis est HS
+const redisMock = {
+  get: async () => null,
+  set: async () => "OK",
+  del: async () => 1,
+};
+
+const getRedis = () => isRedisConnected ? redis : redisMock;
 
 // ── Nodemailer ───────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -106,7 +132,7 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
       async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
         try {
           const email = profile.emails?.[0]?.value || "";
-          const existing = await redis.get(userKey(email));
+          const existing = await getRedis().get(userKey(email));
           if (!existing) {
             // Auto-create user from Google (already verified)
             const user = {
@@ -117,7 +143,7 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
               provider: "google",
               createdAt: Date.now(),
             };
-            await redis.set(userKey(email), JSON.stringify(user));
+            await getRedis().set(userKey(email), JSON.stringify(user));
           }
           // Pass tokens in the info object
           return done(null, profile, { accessToken, refreshToken });
@@ -204,7 +230,7 @@ app.post("/auth/register", async (req, res) => {
     }
 
     // Check if user already exists
-    const existing = await redis.get(userKey(email));
+    const existing = await getRedis().get(userKey(email));
     if (existing) {
       return res.status(409).json({ error: "Un compte existe déjà avec cet email." });
     }
@@ -222,7 +248,7 @@ app.post("/auth/register", async (req, res) => {
       provider: "local",
       createdAt: Date.now(),
     };
-    await redis.set(userKey(email), JSON.stringify(user));
+    await getRedis().set(userKey(email), JSON.stringify(user));
 
     if (isDev) {
       console.log(`[auth] Dev mode: Auto-verified user ${email}`);
@@ -231,7 +257,7 @@ app.post("/auth/register", async (req, res) => {
 
     // Generate verification token (expires 24h)
     const token = crypto.randomBytes(32).toString("hex");
-    await redis.set(verifyKey(token), email, { EX: 86400 });
+    await getRedis().set(verifyKey(token), email, { EX: 86400 });
 
     // Send verification email (non-blocking)
     sendVerificationEmail(email, token, name).catch((err) =>
@@ -343,7 +369,7 @@ app.post("/auth/resend-verification", async (req, res) => {
     if (user.emailVerified) return res.status(400).json({ error: "Email déjà vérifié." });
 
     const token = crypto.randomBytes(32).toString("hex");
-    await redis.set(verifyKey(token), email, { EX: 86400 });
+    await getRedis().set(verifyKey(token), email, { EX: 86400 });
 
     await sendVerificationEmail(email, token, user.name);
     return res.json({ message: "Email de vérification renvoyé." });
