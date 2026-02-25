@@ -1,178 +1,178 @@
 databases:
-  - name: oflyes-db-instance
-    plan: free
-    databaseName: oflyes_db
-    user: oflyes
+  - name: "oflyes-db-instance"
+    plan: "free"
+    databaseName: "oflyes_db"
+    user: "oflyes"
 
 services:
 
   # ── API Gateway (Public) ──────────────────────────────────────────────────
-  - type: web
-    name: api-gateway
-    plan: free
-    env: docker
-    dockerContext: services/gateway
-    dockerfilePath: services/gateway/Dockerfile
+  - type: "web"
+    name: "api-gateway"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/gateway"
+    dockerfilePath: "services/gateway/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3000
-      - key: AUTH_SERVICE_URL
+      - key: "PORT"
+        value: "3000"
+      - key: "AUTH_SERVICE_URL"
         value: "https://auth-service-8x7w.onrender.com"
-      - key: DB_SERVICE_URL
-        value: http://database-service:3002
-      - key: AI_SERVICE_URL
-        value: http://ai-service:3003
-      - key: TRAVEL_ENGINE_URL
-        value: http://travel-engine:3005
-      - key: NOTIF_SERVICE_URL
-        value: http://notifications-service:3004
-      - key: METRICS_SERVICE_URL
-        value: http://metrics-service:3009
-      - key: NODE_ENV
-        value: production
+      - key: "DB_SERVICE_URL"
+        value: "https://database-service-uybo.onrender.com"
+      - key: "AI_SERVICE_URL"
+        value: "https://ai-service-qfvv.onrender.com"
+      - key: "TRAVEL_ENGINE_URL"
+        value: "https://travel-engine-7tk8.onrender.com"
+      - key: "NOTIF_SERVICE_URL"
+        value: "https://notifications-service-a7f6.onrender.com"
+      - key: "METRICS_SERVICE_URL"
+        value: "http://metrics-service:3009"
+      - key: "NODE_ENV"
+        value: "production"
 
   # ── Travel Engine Service ────────────────────────────────────────────────
-  - type: web
-    name: travel-engine
-    plan: free
-    env: docker
-    dockerContext: services/travel-engine
-    dockerfilePath: services/travel-engine/Dockerfile
+  - type: "web"
+    name: "travel-engine"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/travel-engine"
+    dockerfilePath: "services/travel-engine/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3005
-      - key: NODE_ENV
-        value: production
+      - key: "PORT"
+        value: "3005"
+      - key: "NODE_ENV"
+        value: "production"
 
   # ── Redis ──────────────────────────────────────────────────────────────────
-  - type: redis
-    name: oflyes-redis-instance
-    plan: free
-    ipAllowList: [] # Only allow access from within Render
+  - type: "redis"
+    name: "oflyes-redis-instance"
+    plan: "free"
+    ipAllowList: []
 
   # ── Database Service ────────────────────────────────────────────────────────
-  - type: web
-    name: database-service
-    plan: free
-    env: docker
-    dockerContext: services/database
-    dockerfilePath: services/database/Dockerfile
+  - type: "web"
+    name: "database-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/database"
+    dockerfilePath: "services/database/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3002
-      - key: DB_PORT
-        value: 3002
-      - key: DATABASE_URL
-        value: postgresql://oflyes:R5WjzwxqPs35QBIdlLnaGAev1QnUALro@dpg-d6egaig8tnhs738m6mkg-a/oflyes_db
+      - key: "PORT"
+        value: "3002"
+      - key: "DB_PORT"
+        value: "3002"
+      - key: "DATABASE_URL"
+        value: "postgresql://oflyes:R5WjzwxqPs35QBIdlLnaGAev1QnUALro@dpg-d6egaig8tnhs738m6mkg-a/oflyes_db"
 
   # ── Auth Service ───────────────────────────────────────────────────────────
-  - type: web
-    name: auth-service
-    plan: free
-    env: docker
-    dockerContext: services/auth
-    dockerfilePath: services/auth/Dockerfile
+  - type: "web"
+    name: "auth-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/auth"
+    dockerfilePath: "services/auth/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3001
-      - key: AUTH_PORT
-        value: 3001
-      - key: REDIS_URL
-        value: redis://red-d6egai88tnhs738m6mig:6379
-      - key: DB_URL
-        value: http://database-service:3002
-      - key: AUTH_SERVICE_URL
-        value: "https://ton-gateway.onrender.com/api" # Remplace par l'URL publique de ta Gateway
-      - key: FRONTEND_URL
+      - key: "PORT"
+        value: "3001"
+      - key: "AUTH_PORT"
+        value: "3001"
+      - key: "REDIS_URL"
+        value: "redis://red-d6egai88tnhs738m6mig:6379"
+      - key: "DB_URL"
+        value: "https://database-service-uybo.onrender.com"
+      - key: "AUTH_SERVICE_URL"
+        value: "https://api-gateway-v0vr.onrender.com/api"
+      - key: "FRONTEND_URL"
         value: "https://aivanaflyes.vercel.app"
-      - key: JWT_SECRET
+      - key: "JWT_SECRET"
         generateValue: true
-      - key: NODE_ENV
-        value: production
+      - key: "NODE_ENV"
+        value: "production"
 
   # ── AI Service ─────────────────────────────────────────────────────────────
-  - type: web
-    name: ai-service
-    plan: free
-    env: docker
-    dockerContext: services/ai
-    dockerfilePath: services/ai/Dockerfile
+  - type: "web"
+    name: "ai-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/ai"
+    dockerfilePath: "services/ai/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3003
-      - key: AI_PORT
-        value: 3003
-      - key: DB_URL
-        value: http://database-service:3002
-      - key: GROQ_API_KEY
+      - key: "PORT"
+        value: "3003"
+      - key: "AI_PORT"
+        value: "3003"
+      - key: "DB_URL"
+        value: "https://database-service-uybo.onrender.com"
+      - key: "GROQ_API_KEY"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
 
   # ── Sync Worker Service ──────────────────────────────────────────────────
-  - type: web
-    name: sync-worker
-    plan: free
-    env: docker
-    dockerContext: services/sync-worker
-    dockerfilePath: services/sync-worker/Dockerfile
+  - type: "web"
+    name: "sync-worker"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/sync-worker"
+    dockerfilePath: "services/sync-worker/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3007
-      - key: DB_URL
-        value: http://database-service:3002
-      - key: AI_URL
-        value: http://ai-service:3003
-      - key: NOTIF_URL
-        value: http://notifications-service:3004
-      - key: METRICS_URL
-        value: http://metrics-service:3009
-      - key: OAUTH_GOOGLE_CLIENT_ID
+      - key: "PORT"
+        value: "3007"
+      - key: "DB_URL"
+        value: "https://database-service-uybo.onrender.com"
+      - key: "AI_URL"
+        value: "https://ai-service-qfvv.onrender.com"
+      - key: "NOTIF_URL"
+        value: "https://notifications-service-a7f6.onrender.com"
+      - key: "METRICS_URL"
+        value: "http://metrics-service:3009"
+      - key: "OAUTH_GOOGLE_CLIENT_ID"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: OAUTH_GOOGLE_CLIENT_SECRET
+      - key: "OAUTH_GOOGLE_CLIENT_SECRET"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: OAUTH_CALLBACK_URL
-        value: "https://ton-gateway.onrender.com/api/auth/callback" # Remplace par ton URL Gateway
+      - key: "OAUTH_CALLBACK_URL"
+        value: "https://api-gateway-v0vr.onrender.com/api/auth/callback"
 
   # ── Partner Service ────────────────────────────────────────────────────────
-  - type: web
-    name: partner-service
-    plan: free
-    env: docker
-    dockerContext: services/partner-service
-    dockerfilePath: services/partner-service/Dockerfile
+  - type: "web"
+    name: "partner-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/partner-service"
+    dockerfilePath: "services/partner-service/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3008
-      - key: PARTNER_PORT
-        value: 3008
+      - key: "PORT"
+        value: "3008"
+      - key: "PARTNER_PORT"
+        value: "3008"
 
   # ── Notifications Service ────────────────────────────────────────────────
-  - type: web
-    name: notifications-service
-    plan: free
-    env: docker
-    dockerContext: services/notifications
-    dockerfilePath: services/notifications/Dockerfile
+  - type: "web"
+    name: "notifications-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/notifications"
+    dockerfilePath: "services/notifications/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3004
-      - key: NODE_ENV
-        value: production
-      - key: SMTP_HOST
+      - key: "PORT"
+        value: "3004"
+      - key: "NODE_ENV"
+        value: "production"
+      - key: "SMTP_HOST"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: SMTP_USER
+      - key: "SMTP_USER"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: SMTP_PASS
+      - key: "SMTP_PASS"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
 
   # ── Metrics Service ──────────────────────────────────────────────────
-  - type: web
-    name: metrics-service
-    plan: free
-    env: docker
-    dockerContext: services/metrics
-    dockerfilePath: services/metrics/Dockerfile
+  - type: "web"
+    name: "metrics-service"
+    plan: "free"
+    env: "docker"
+    dockerContext: "services/metrics"
+    dockerfilePath: "services/metrics/Dockerfile"
     envVars:
-      - key: PORT
-        value: 3009
-      - key: NODE_ENV
-        value: production
+      - key: "PORT"
+        value: "3009"
+      - key: "NODE_ENV"
+        value: "production"
