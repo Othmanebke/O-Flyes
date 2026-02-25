@@ -4,13 +4,15 @@ import dotenv from 'dotenv';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import jwt from 'jsonwebtoken';
 
+import path from 'path';
+
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'oflyes_secret';
 
-// Config URLs services internes (Render private URLs or local)
 // Config URLs services (Publiques par défaut pour garantir la stabilité)
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth-service-8x7w.onrender.com';
 const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'https://database-service-uybo.onrender.com';

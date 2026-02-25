@@ -6,6 +6,7 @@ import Groq from "groq-sdk";
 import axios from "axios";
 
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 const app = express();
 const PORT = process.env.PORT || process.env.AI_PORT || 3003;

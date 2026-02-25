@@ -138,6 +138,17 @@ function LoginContent() {
         </svg>
         Continuer avec Google
       </a>
+
+      <a href="/api/auth/microsoft"
+        className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
+        <svg className="w-5 h-5" viewBox="0 0 21 21">
+          <path fill="#f25022" d="M0 0h10v10H0z" />
+          <path fill="#7fba00" d="M11 0h10v10H11z" />
+          <path fill="#00a4ef" d="M0 11h10v10H0z" />
+          <path fill="#ffb900" d="M11 11h10v10H11z" />
+        </svg>
+        Continuer avec Outlook
+      </a>
     </>
   );
 }

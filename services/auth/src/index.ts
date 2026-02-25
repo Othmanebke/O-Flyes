@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile, VerifyCallback } from "passport-google-oauth20";
+import { Strategy as MicrosoftStrategy } from "passport-microsoft";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { createClient } from "redis";
@@ -12,6 +13,7 @@ import crypto from "crypto";
 import axios from "axios";
 
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 const app = express();
 const PORT = process.env.PORT || process.env.AUTH_PORT || 3001;
@@ -157,12 +159,51 @@ if (process.env.OAUTH_GOOGLE_CLIENT_ID && process.env.OAUTH_GOOGLE_CLIENT_SECRET
   console.warn("[auth] Google OAuth credentials missing. Google login will be disabled.");
 }
 
+// ── Microsoft (Outlook) OAuth ───────────────────────────────────────────────
+if (process.env.OAUTH_MICROSOFT_CLIENT_ID && process.env.OAUTH_MICROSOFT_CLIENT_SECRET) {
+  passport.use(
+    new MicrosoftStrategy(
+      {
+        clientID: process.env.OAUTH_MICROSOFT_CLIENT_ID,
+        clientSecret: process.env.OAUTH_MICROSOFT_CLIENT_SECRET,
+        callbackURL: process.env.OAUTH_MICROSOFT_CALLBACK_URL || "http://localhost:3001/auth/microsoft/callback",
+        scope: ["user.read", "email", "offline_access"]
+      },
+      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+        try {
+          const email = profile.emails?.[0]?.value || profile.userPrincipalName || "";
+          const existing = await getRedis().get(userKey(email));
+          if (!existing) {
+            const user = {
+              email,
+              name: profile.displayName,
+              passwordHash: "",
+              emailVerified: true,
+              provider: "microsoft",
+              createdAt: Date.now(),
+            };
+            await getRedis().set(userKey(email), JSON.stringify(user));
+          }
+          return done(null, profile, { accessToken, refreshToken });
+        } catch (err) {
+          return done(err as Error);
+        }
+      }
+    )
+  );
+} else {
+  console.warn("[auth] Microsoft OAuth credentials missing. Outlook login will be disabled.");
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "auth" }));
 
 /** GET /auth/google - Normal login */
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+/** GET /auth/microsoft - Outlook login */
+app.get("/auth/microsoft", passport.authenticate("microsoft"));
 
 /** GET /auth/google/sync - Specific for email sync permissions */
 app.get("/auth/google/sync", passport.authenticate("google", {
@@ -213,6 +254,33 @@ app.get(
       res.redirect(`${FRONTEND_URL}/auth/success?token=${token}`);
     } catch (err) {
       console.error("[auth/callback] Postgres sync error:", err);
+      res.redirect(`${FRONTEND_URL}/auth/login?error=server`);
+    }
+  }
+);
+
+/** GET /auth/microsoft/callback */
+app.get(
+  "/auth/microsoft/callback",
+  passport.authenticate("microsoft", { session: false, failureRedirect: `${FRONTEND_URL}/auth/login?error=microsoft` }),
+  async (req, res) => {
+    try {
+      const user = req.user as any;
+      const email = user.emails?.[0]?.value || user.userPrincipalName;
+      const name = user.displayName;
+
+      // Sync with Postgres
+      const dbRes = await axios.post(`${DB_URL}/users`, { email, name, password_hash: "", provider: "microsoft" });
+      const dbId = dbRes.data.id;
+
+      const token = jwt.sign(
+        { id: dbId, email, name },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      res.redirect(`${FRONTEND_URL}/auth/success?token=${token}`);
+    } catch (err) {
+      console.error("[auth/microsoft/callback] Postgres sync error:", err);
       res.redirect(`${FRONTEND_URL}/auth/login?error=server`);
     }
   }
