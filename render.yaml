@@ -86,7 +86,7 @@ services:
       - key: "FRONTEND_URL"
         value: "https://aivanaflyes.vercel.app"
       - key: "JWT_SECRET"
-        generateValue: true
+        value: "oflyes_production_secret_2026"
       - key: "NODE_ENV"
         value: "production"
 

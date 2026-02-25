@@ -11,25 +11,20 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'oflyes_secret';
 
 // Config URLs services internes (Render private URLs or local)
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
-const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'http://database-service:3002';
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://ai-service:3003';
-const TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'http://travel-engine:3005';
+// Config URLs services (Publiques par défaut pour garantir la stabilité)
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth-service-8x7w.onrender.com';
+const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'https://database-service-uybo.onrender.com';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://ai-service-qfvv.onrender.com';
+const TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'https://travel-engine-7tk8.onrender.com';
 const METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
+const NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
 
 app.use(cors());
 app.use(express.json());
 
-// Log incoming requests & Handle /api prefix from frontend
+// Log incoming requests
 app.use((req: Request, res: Response, next: NextFunction) => {
-    const oldPath = req.url;
-    if (req.url.startsWith('/api')) {
-        req.url = req.url.replace(/^\/api/, '');
-        if (req.url === '') req.url = '/';
-        console.log(`[Gateway] REWRITE: ${oldPath} -> ${req.url}`);
-    } else {
-        console.log(`[Gateway] ${req.method} ${req.url}`);
-    }
+    console.log(`[Gateway DEBUG] Incoming: ${req.method} ${req.url}`);
     next();
 });
 
@@ -44,58 +39,58 @@ const authenticate = (req: any, res: Response, next: NextFunction) => {
         req.user = decoded;
         next();
     } catch (err) {
+        console.error(`[Gateway AUTH] Token invalid for secret: ${JWT_SECRET.slice(0, 3)}...`);
         return res.status(401).json({ error: 'Token invalide' });
     }
 };
 
+// ── API ROUTER (Gère le préfixe /api) ─────────────────────────────────────
+const apiRouter = express.Router();
+
 // Health check
-app.get('/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'gateway' });
+apiRouter.get('/health', (req: Request, res: Response) => {
+    res.json({ status: 'ok', service: 'gateway', env: process.env.NODE_ENV });
 });
 
-// 🔐 AUTH (Login, Register, verification)
-app.use('/auth', createProxyMiddleware({
+// 🔐 AUTH (Login, Register)
+apiRouter.use('/auth', createProxyMiddleware({
     target: AUTH_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/auth': '/auth' },
+    pathRewrite: { '^/api/auth': '/auth', '^/auth': '/auth' },
     onProxyReq: fixRequestBody,
     proxyTimeout: 60000,
     timeout: 60000,
     onError: (err, req, res) => {
-        console.error(`[Gateway] Proxy Error to Auth:`, err.message);
-        res.status(504).json({ error: "Service Auth temporairement indisponible (Timeout)", details: err.message });
+        console.error(`[Gateway] Error to Auth:`, err.message);
+        res.status(504).json({ error: "Auth Service Timeout", details: err.message });
     }
 }));
 
 // 🤖 CHAT
-// POST /chat/message -> AI Service (Assistant logic)
-app.use('/chat/message', (req: Request, res: Response, next: NextFunction) => {
-    return createProxyMiddleware({
-        target: AI_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: { '^/chat/message': '/chat' }, // Rewrite to internal /chat
-        onProxyReq: fixRequestBody,
-    })(req, res, next);
-});
+apiRouter.use('/chat/message', createProxyMiddleware({
+    target: AI_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/api/chat/message': '/chat', '^/chat/message': '/chat' },
+    onProxyReq: fixRequestBody,
+}));
 
-// GET /chat/history/:tripId -> DB Service (Messages persistence)
-app.use('/chat/history', authenticate, (req: any, res: Response, next: NextFunction) => {
+apiRouter.use('/chat/history', authenticate, (req: any, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
-        pathRewrite: (path: string) => path.replace('/chat/history', '/chat/history'),
+        pathRewrite: { '^/api/chat/history': '/chat/history', '^/chat/history': '/chat/history' },
     })(req, res, next);
 });
 
 // 🌍 EXPLORE
-app.use('/explore', createProxyMiddleware({
+apiRouter.use('/explore', createProxyMiddleware({
     target: TRAVEL_ENGINE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/explore': '/explore' },
+    pathRewrite: { '^/api/explore': '/explore', '^/explore': '/explore' },
 }));
 
 // 📦 BOOKINGS
-app.use('/bookings', authenticate, (req: any, res: Response, next: NextFunction) => {
+apiRouter.use('/bookings', authenticate, (req: any, res: Response, next: NextFunction) => {
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
@@ -103,9 +98,8 @@ app.use('/bookings', authenticate, (req: any, res: Response, next: NextFunction)
     })(req, res, next);
 });
 
-// 🧳 TRIPS (Auth Required)
-app.use('/trips', authenticate, (req: any, res: Response, next: NextFunction) => {
-    // Si GET /trips -> redirection interne vers /trips/user/:id
+// 🧳 TRIPS
+apiRouter.use('/trips', authenticate, (req: any, res: Response, next: NextFunction) => {
     if (req.method === 'GET' && (req.path === '/' || req.path === '')) {
         return createProxyMiddleware({
             target: DB_SERVICE_URL,
@@ -113,21 +107,6 @@ app.use('/trips', authenticate, (req: any, res: Response, next: NextFunction) =>
             pathRewrite: () => `/trips/user/${req.user.id}`,
         })(req, res, next);
     }
-
-    // Gestion des bookings via /trips/:id/bookings
-    const bookingMatch = req.path.match(/^\/([^/]+)\/bookings/);
-    if (bookingMatch) {
-        const tripId = bookingMatch[1];
-        if (req.method === 'POST') {
-            req.body.trip_id = tripId;
-        }
-    }
-
-    // Si POST /trips -> injection du user_id dans le body
-    if (req.method === 'POST' && (req.path === '/' || req.path === '')) {
-        req.body.user_id = req.user.id;
-    }
-
     return createProxyMiddleware({
         target: DB_SERVICE_URL,
         changeOrigin: true,
@@ -135,20 +114,20 @@ app.use('/trips', authenticate, (req: any, res: Response, next: NextFunction) =>
     })(req, res, next);
 });
 
-// 📊 METRICS
-app.use('/metrics', createProxyMiddleware({
-    target: METRICS_SERVICE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/metrics': '' },
-}));
-
-// 🗄️ DATABASE (Generic proxy to support legacy /api/db/ calls)
-app.use('/db', createProxyMiddleware({
+// �️ DATABASE
+apiRouter.use('/db', createProxyMiddleware({
     target: DB_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/db': '' },
+    pathRewrite: { '^/api/db': '', '^/db': '' },
     onProxyReq: fixRequestBody,
 }));
+
+// Montage du routeur sur /api et aussi à la racine pour plus de flexibilité
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
+// Root fallback
+app.get('/', (req, res) => res.json({ message: "AIVANA API Gateway is running." }));
 
 app.listen(PORT, () => {
     console.log(`[Gateway] running on port ${PORT}`);
