@@ -81,6 +81,8 @@ services:
         value: redis://red-d6egai88tnhs738m6mig:6379
       - key: DB_URL
         value: http://database-service:3002
+      - key: FRONTEND_URL
+        value: "https://aivanaflyes.vercel.app"
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV
