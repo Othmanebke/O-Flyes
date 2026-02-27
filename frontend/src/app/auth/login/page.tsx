@@ -128,7 +128,7 @@ function LoginContent() {
         <hr className="flex-1 border-sand-200" />
       </div>
 
-      <a href="/api/auth/google"
+      <a href="https://api-gateway-v0vr.onrender.com/api/auth/google"
         className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -139,7 +139,7 @@ function LoginContent() {
         Continuer avec Google
       </a>
 
-      <a href="/api/auth/microsoft"
+      <a href="https://api-gateway-v0vr.onrender.com/api/auth/microsoft"
         className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
         <svg className="w-5 h-5" viewBox="0 0 21 21">
           <path fill="#f25022" d="M0 0h10v10H0z" />
