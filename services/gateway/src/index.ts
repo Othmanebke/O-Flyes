@@ -21,6 +21,7 @@ let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://ai-service-qfvv.onre
 let TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'https://travel-engine-7tk8.onrender.com';
 let METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
 let NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
+let PARTNER_SERVICE_URL = process.env.PARTNER_SERVICE_URL || 'https://partner-service-wixv.onrender.com';
 
 // Auto-correct Docker Compose internal URLs for Render Web Service environments
 if (AUTH_SERVICE_URL.includes("auth-service:")) AUTH_SERVICE_URL = 'https://auth-service-8x7w.onrender.com';
@@ -28,6 +29,7 @@ if (DB_SERVICE_URL.includes("database-service:")) DB_SERVICE_URL = 'https://data
 if (AI_SERVICE_URL.includes("ai-service:")) AI_SERVICE_URL = 'https://ai-service-qfvv.onrender.com';
 if (TRAVEL_ENGINE_URL.includes("travel-engine:")) TRAVEL_ENGINE_URL = 'https://travel-engine-7tk8.onrender.com';
 if (NOTIF_SERVICE_URL.includes("notifications-service:")) NOTIF_SERVICE_URL = 'https://notifications-service-a7f6.onrender.com';
+if (PARTNER_SERVICE_URL.includes("partner-service:")) PARTNER_SERVICE_URL = 'https://partner-service-wixv.onrender.com';
 app.use(cors());
 app.use(express.json());
 
@@ -137,6 +139,14 @@ apiRouter.use('/db', createProxyMiddleware({
     target: DB_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/api/db': '', '^/db': '' },
+    onProxyReq: fixRequestBody,
+}));
+
+// 🤝 PARTNER SERVICE
+apiRouter.use('/partner', createProxyMiddleware({
+    target: PARTNER_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/api/partner': '', '^/partner': '' },
     onProxyReq: fixRequestBody,
 }));
 

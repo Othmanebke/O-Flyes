@@ -26,6 +26,8 @@ services:
         value: "https://travel-engine-7tk8.onrender.com"
       - key: "NOTIF_SERVICE_URL"
         value: "https://notifications-service-a7f6.onrender.com"
+      - key: "PARTNER_SERVICE_URL"
+        value: "https://partner-service-wixv.onrender.com"
       - key: "METRICS_SERVICE_URL"
         value: "http://metrics-service:3009"
       - key: "NODE_ENV"
