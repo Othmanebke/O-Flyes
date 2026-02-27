@@ -39,7 +39,10 @@ async function initSchema() {
       console.warn("[database-service] Drop table skipped:", e.message);
     }
 
-    const schemaPath = path.join(__dirname, "schema.sql");
+    const defaultPath = path.join(__dirname, "schema.sql");
+    const fallbackPath = path.join(__dirname, "../src/schema.sql");
+    const schemaPath = fs.existsSync(defaultPath) ? defaultPath : fallbackPath;
+
     if (fs.existsSync(schemaPath)) {
       const sql = fs.readFileSync(schemaPath, "utf-8");
       await pool.query(sql);
@@ -62,21 +65,31 @@ app.get("/health", async (_req, res) => {
 
 // ── Users ────────────────────────────────────────────────────────────────────
 app.post("/users", async (req, res) => {
-  const { email, name, password_hash, provider } = req.body;
-  const result = await pool.query(
-    `INSERT INTO users (email, name, password_hash, provider, created_at)
-     VALUES ($1, $2, $3, $4, NOW())
-     ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
-     RETURNING *`,
-    [email, name, password_hash, provider || "local"]
-  );
-  res.status(201).json(result.rows[0]);
+  try {
+    const { email, name, password_hash, provider } = req.body;
+    const result = await pool.query(
+      `INSERT INTO users (email, name, password_hash, provider, created_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
+       RETURNING *`,
+      [email, name, password_hash, provider || "local"]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    console.error("[database/users]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/users/:id", async (req, res) => {
-  const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.params.id]);
-  if (!result.rows.length) return res.status(404).json({ error: "Not found" });
-  res.json(result.rows[0]);
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: "Not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    console.error("[database/users/:id]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post("/users/:id/upgrade", async (req, res) => {
@@ -92,22 +105,32 @@ app.post("/users/:id/upgrade", async (req, res) => {
 
 // ── Destinations ─────────────────────────────────────────────────────────────
 app.get("/destinations", async (req, res) => {
-  const { climate, min_budget, max_budget, period } = req.query;
-  let query = "SELECT * FROM destinations WHERE 1=1";
-  const params: any[] = [];
-  let i = 1;
-  if (climate) { query += ` AND climate = $${i++}`; params.push(climate); }
-  if (min_budget) { query += ` AND avg_daily_budget >= $${i++}`; params.push(Number(min_budget)); }
-  if (max_budget) { query += ` AND avg_daily_budget <= $${i++}`; params.push(Number(max_budget)); }
-  if (period) { query += ` AND best_periods @> ARRAY[$${i++}]`; params.push(period); }
-  const result = await pool.query(query, params);
-  res.json(result.rows);
+  try {
+    const { climate, min_budget, max_budget, period } = req.query;
+    let query = "SELECT * FROM destinations WHERE 1=1";
+    const params: any[] = [];
+    let i = 1;
+    if (climate) { query += ` AND climate = $${i++}`; params.push(climate); }
+    if (min_budget) { query += ` AND avg_daily_budget >= $${i++}`; params.push(Number(min_budget)); }
+    if (max_budget) { query += ` AND avg_daily_budget <= $${i++}`; params.push(Number(max_budget)); }
+    if (period) { query += ` AND best_periods @> ARRAY[$${i++}]`; params.push(period); }
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err: any) {
+    console.error("[database/destinations]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/destinations/:id", async (req, res) => {
-  const result = await pool.query("SELECT * FROM destinations WHERE id = $1", [req.params.id]);
-  if (!result.rows.length) return res.status(404).json({ error: "Not found" });
-  res.json(result.rows[0]);
+  try {
+    const result = await pool.query("SELECT * FROM destinations WHERE id = $1", [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: "Not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    console.error("[database/destinations/:id]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Trips (saved trips per user) ─────────────────────────────────────────────
@@ -189,16 +212,26 @@ app.post("/trips/:id/activate", async (req, res) => {
 });
 
 app.get("/trips/user/:userId", async (req, res) => {
-  const result = await pool.query(
-    "SELECT t.*, d.name as destination_name, d.country, d.image_url as img FROM trips t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
-    [req.params.userId]
-  );
-  res.json(result.rows);
+  try {
+    const result = await pool.query(
+      "SELECT t.*, d.name as destination_name, d.country, d.image_url as img FROM trips t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.user_id = $1 ORDER BY t.created_at DESC",
+      [req.params.userId]
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    console.error("[database/trips/user]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete("/trips/:id", async (req, res) => {
-  await pool.query("DELETE FROM trips WHERE id = $1", [req.params.id]);
-  res.status(204).end();
+  try {
+    await pool.query("DELETE FROM trips WHERE id = $1", [req.params.id]);
+    res.status(204).end();
+  } catch (err: any) {
+    console.error("[database/trips/:id]", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Bookings ─────────────────────────────────────────────────────────────────
