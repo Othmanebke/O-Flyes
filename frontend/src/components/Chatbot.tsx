@@ -7,6 +7,7 @@ import {
 import Link from "next/link";
 import axios from "axios";
 import { DESTINATIONS } from "@/lib/destinations";
+import { parseJwt } from "@/lib/jwt";
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Activity { name: string; price: number; emoji: string; }
@@ -48,7 +49,11 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
 
     try {
       setSaving(true);
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = parseJwt(token);
+      if (!payload || !payload.id) {
+        alert("Jeton invalide.");
+        return;
+      }
       const userId = payload.id;
 
       await axios.post("/api/db/trips", {
@@ -231,7 +236,10 @@ export default function Chatbot() {
 
       const token = localStorage.getItem("token");
       if (token) {
-        try { userId = JSON.parse(atob(token.split(".")[1])).id; } catch (e) { }
+        try {
+          const payload = parseJwt(token);
+          if (payload) userId = payload.id;
+        } catch (e) { }
       }
 
       const res = await axios.post("/api/chat/message", { messages: history, userId, tripId });

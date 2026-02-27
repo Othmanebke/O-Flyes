@@ -4,6 +4,7 @@ import { Search, MapPin, Calendar, Star, ArrowRight, ExternalLink, Sparkles, Bed
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { parseJwt } from "@/lib/jwt";
 
 interface Hotel {
     id: string;
@@ -33,9 +34,11 @@ export default function HotelsPage() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                setUserId(payload.id);
-                fetchTrips(payload.id);
+                const payload = parseJwt(token);
+                if (payload && payload.id) {
+                    setUserId(payload.id);
+                    fetchTrips(payload.id);
+                }
             } catch (e) {
                 console.error("Invalid token", e);
             }

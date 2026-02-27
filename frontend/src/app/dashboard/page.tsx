@@ -6,6 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
 import { motion } from "framer-motion";
+import { parseJwt } from "@/lib/jwt";
 
 interface Trip {
     id: string;
@@ -71,13 +72,17 @@ export default function DashboardPage() {
             router.push("/auth/login");
         } else {
             try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
+                const payload = parseJwt(token);
+                if (!payload || !payload.id) {
+                    throw new Error("Invalid payload");
+                }
                 setUserId(payload.id);
                 setUserName(payload.name || "Voyageur");
                 fetchTrips(payload.id);
                 checkEmailSync(payload.id);
             } catch (e) {
                 console.error("Invalid token", e);
+                localStorage.removeItem("token");
                 router.push("/auth/login");
             }
         }
