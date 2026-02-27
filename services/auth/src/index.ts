@@ -494,7 +494,9 @@ app.post("/auth/forgot-password", async (req, res) => {
     // Token valid for 1 hour
     await redis.set(resetKey(token), email, { EX: 3600 });
 
-    await sendResetPasswordEmail(email, token, user.name);
+    sendResetPasswordEmail(email, token, user.name).catch((err) => {
+      console.error("[auth/forgot-password] Email send error:", err.message);
+    });
 
     return res.json({ message: "Si un compte existe, un email a été envoyé." });
   } catch (err) {

@@ -19,9 +19,28 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await axios.post("/api/auth/register", { name, email, password });
-      // On connecte l'utilisateur si possible ou on le redirige vers l'onboarding directement
-      // Pour ce MVP, on considère que l'onboarding est la prochaine étape logique
-      router.push("/onboarding");
+
+      // If the backend response indicates an auto-verification (dev mode) or we just want to attempt login
+      try {
+        const loginRes = await axios.post("/api/auth/login", { email, password });
+        if (loginRes.data.token) {
+          localStorage.setItem("token", loginRes.data.token);
+          router.push("/onboarding");
+          return;
+        }
+      } catch (loginErr: any) {
+        // If login fails (e.g. email needs verification in prod), we show the register success message
+        console.log("Auto-login post-register failed/skipped:", loginErr?.response?.data || loginErr.message);
+      }
+
+      // If we didn't redirect (because login failed due to EMAIL_NOT_VERIFIED or other), show the message
+      const msg = res.data.message || "Inscription réussie. Veuillez vérifier votre email.";
+      setError(msg); // We use the error state to show the message for simplicity, or ideally a new success state.
+      // For this MVP, let's keep it simple and redirect to login with a message if not auto-logged in.
+      if (!localStorage.getItem("token")) {
+        router.push("/auth/login?registered=1");
+      }
+
     } catch (err: any) {
       console.error("Register Error Details:", {
         status: err?.response?.status,
