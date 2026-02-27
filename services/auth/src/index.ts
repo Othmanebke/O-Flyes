@@ -433,7 +433,11 @@ app.post("/auth/login", async (req, res) => {
       if (err.code === 'ECONNREFUSED') {
         return res.status(503).json({ error: "Le service de base de données est injoignable (Postgres)." });
       }
-      return res.status(500).json({ error: "Erreur serveur lors de la synchronisation BDD." });
+      return res.status(500).json({
+        error: "Erreur serveur lors de la synchronisation BDD.",
+        details: err.message,
+        response: err.response?.data
+      });
     }
 
     const token = jwt.sign(
