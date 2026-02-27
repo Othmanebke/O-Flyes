@@ -24,11 +24,15 @@ export default function ActivitiesPage() {
     const router = useRouter();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("Marrakech");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState("Paris");
     const [userId, setUserId] = useState<string | null>(null);
     const [trips, setTrips] = useState<any[]>([]);
     const [showTripSelector, setShowTripSelector] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+    const [debouncedTerm, setDebouncedTerm] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -43,8 +47,31 @@ export default function ActivitiesPage() {
                 console.error("Invalid token", e);
             }
         }
-        fetchActivities("Marrakech");
+        fetchActivities("Paris");
     }, []);
+
+    // Debounce effect for search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedTerm(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Fetch suggestions when debounced term changes
+    useEffect(() => {
+        if (debouncedTerm.length >= 2) {
+            axios.get(`/api/partner/locations/suggest?q=${debouncedTerm}`)
+                .then(res => {
+                    setSuggestions(res.data);
+                    setShowSuggestions(true);
+                })
+                .catch(err => console.error("Failed to fetch suggestions", err));
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }, [debouncedTerm]);
 
     const fetchTrips = async (uid: string) => {
         try {
@@ -80,7 +107,18 @@ export default function ActivitiesPage() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchActivities(searchTerm);
+        setShowSuggestions(false);
+        if (searchTerm.trim()) {
+            setSelectedLocation(searchTerm);
+            fetchActivities(searchTerm);
+        }
+    };
+
+    const handleSelectSuggestion = (suggestion: any) => {
+        setSearchTerm(suggestion.label);
+        setSelectedLocation(suggestion.city);
+        setShowSuggestions(false);
+        fetchActivities(suggestion.city);
     };
 
     const handleBook = async (activity: Activity) => {
@@ -139,15 +177,38 @@ export default function ActivitiesPage() {
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="mb-16">
                     <div className="flex flex-col md:flex-row gap-4 p-2 bg-white rounded-3xl shadow-xl shadow-dark/5 border border-sand-200">
-                        <div className="flex-1 flex items-center px-4 gap-3 border-b md:border-b-0 md:border-r border-sand-200 py-3">
+                        <div className="flex-1 flex items-center px-4 gap-3 border-b md:border-b-0 md:border-r border-sand-200 py-3 relative">
                             <MapPin className="w-5 h-5 text-gold" />
-                            <input
-                                type="text"
-                                placeholder="Quelle destination ?"
-                                className="bg-transparent border-none outline-none w-full text-dark font-medium"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                            <div className="w-full relative">
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Paris, Tokyo, Bali..."
+                                    className="bg-transparent border-none outline-none w-full text-dark font-medium placeholder:text-dark-300"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // delay to allow click
+                                />
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-4 bg-white border border-sand-200 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-64 overflow-y-auto w-full md:w-[150%]">
+                                        {suggestions.map((loc, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => handleSelectSuggestion(loc)}
+                                                className="px-5 py-3 hover:bg-sand-50 cursor-pointer flex items-center gap-3 transition-colors border-b border-sand-100 last:border-0"
+                                            >
+                                                <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
+                                                    <MapPin className="w-4 h-4 text-gold" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-dark text-sm">{loc.city}</p>
+                                                    <p className="text-xs text-dark-400">{loc.country}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <button type="submit" className="bg-dark text-white font-bold px-8 py-4 rounded-2xl hover:bg-dark/90 transition-all flex items-center justify-center gap-2">
                             <Search className="w-5 h-5" />
@@ -160,8 +221,8 @@ export default function ActivitiesPage() {
                 <div>
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl font-serif text-dark flex items-center gap-2">
-                            Activités à <span className="text-gold-500">{searchTerm || "Marrakech"}</span>
-                            <Sparkles className="w-5 h-5 text-gold inline opacity-60" />
+                            Activités à <span className="text-gold flex items-center underline decoration-gold/30 underline-offset-8">{selectedLocation || "Paris"}</span>
+                            <Sparkles className="w-5 h-5 text-gold inline opacity-60 ml-2" />
                         </h2>
                         <span className="text-dark-400 text-sm">{activities.length} résultats trouvés</span>
                     </div>
@@ -174,9 +235,9 @@ export default function ActivitiesPage() {
                         </div>
                     ) : activities.length === 0 ? (
                         <div className="bg-white rounded-3xl p-20 text-center border border-sand-200">
-                            <div className="text-4xl mb-6">🏜️</div>
-                            <h3 className="text-xl font-bold text-dark mb-2">Aucune activité trouvée</h3>
-                            <p className="text-dark-400">Essayez une autre destination comme "Marrakech".</p>
+                            <div className="text-5xl mb-6">🏕️</div>
+                            <h3 className="text-xl font-bold text-dark mb-2">Aucune activité trouvée à {selectedLocation}</h3>
+                            <p className="text-dark-400 max-w-md mx-auto">Nous n'avons pas encore de partenaires référencés pour cette ville. Essayez d'autres villes phares comme Paris, Tokyo, ou New York !</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
