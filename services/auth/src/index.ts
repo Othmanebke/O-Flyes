@@ -19,8 +19,12 @@ const app = express();
 const PORT = process.env.PORT || process.env.AUTH_PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || "oflyes_secret";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://aivanaflyes.vercel.app";
-const DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "https://database-service-uybo.onrender.com";
+let DB_URL = process.env.DB_URL || process.env.NEXT_PUBLIC_API_DB || "https://database-service-uybo.onrender.com";
 
+// Auto-correct Docker Compose internal URLs for Render Web Service environments
+if (DB_URL.includes("database-service:")) {
+  DB_URL = "https://database-service-uybo.onrender.com";
+}
 console.log(`[auth-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);
 console.log(` - FRONTEND_URL: ${FRONTEND_URL}`);

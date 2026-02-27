@@ -15,13 +15,19 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'oflyes_secret';
 
 // Config URLs services (Publiques par défaut pour garantir la stabilité)
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth-service-8x7w.onrender.com';
-const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'https://database-service-uybo.onrender.com';
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://ai-service-qfvv.onrender.com';
-const TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'https://travel-engine-7tk8.onrender.com';
-const METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
-const NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
+let AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth-service-8x7w.onrender.com';
+let DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'https://database-service-uybo.onrender.com';
+let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://ai-service-qfvv.onrender.com';
+let TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'https://travel-engine-7tk8.onrender.com';
+let METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
+let NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
 
+// Auto-correct Docker Compose internal URLs for Render Web Service environments
+if (AUTH_SERVICE_URL.includes("auth-service:")) AUTH_SERVICE_URL = 'https://auth-service-8x7w.onrender.com';
+if (DB_SERVICE_URL.includes("database-service:")) DB_SERVICE_URL = 'https://database-service-uybo.onrender.com';
+if (AI_SERVICE_URL.includes("ai-service:")) AI_SERVICE_URL = 'https://ai-service-qfvv.onrender.com';
+if (TRAVEL_ENGINE_URL.includes("travel-engine:")) TRAVEL_ENGINE_URL = 'https://travel-engine-7tk8.onrender.com';
+if (NOTIF_SERVICE_URL.includes("notifications-service:")) NOTIF_SERVICE_URL = 'https://notifications-service-a7f6.onrender.com';
 app.use(cors());
 app.use(express.json());
 
