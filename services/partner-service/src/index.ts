@@ -16,17 +16,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok", service: "partner-ser
 
 // ── Expanded Mock Data ─────────────────────────────────────────────────────
 
-const MOCK_LOCATIONS = [
-    { city: "Paris", country: "France", label: "Paris, France" },
-    { city: "Marrakech", country: "Maroc", label: "Marrakech, Maroc" },
-    { city: "Tokyo", country: "Japon", label: "Tokyo, Japon" },
-    { city: "New York", country: "États-Unis", label: "New York, États-Unis" },
-    { city: "Rome", country: "Italie", label: "Rome, Italie" },
-    { city: "Bali", country: "Indonésie", label: "Bali, Indonésie" },
-    { city: "Londres", country: "Royaume-Uni", label: "Londres, Royaume-Uni" },
-    { city: "Barcelone", country: "Espagne", label: "Barcelone, Espagne" },
-    { city: "Dubai", country: "Émirats Arabes Unis", label: "Dubai, Émirats Arabes Unis" }
-];
+import { MOCK_LOCATIONS } from "./data/locations";
 
 const MOCK_ACTIVITIES = [
     // --- MARRAKECH ---

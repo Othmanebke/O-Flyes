@@ -116,9 +116,11 @@ export default function ActivitiesPage() {
 
     const handleSelectSuggestion = (suggestion: any) => {
         setSearchTerm(suggestion.label);
-        setSelectedLocation(suggestion.city);
+        // If it's a country-only suggestion (city is empty), we might want to search for the capital or just the term
+        const searchCity = suggestion.city || suggestion.country;
+        setSelectedLocation(searchCity);
         setShowSuggestions(false);
-        fetchActivities(suggestion.city);
+        fetchActivities(searchCity);
     };
 
     const handleBook = async (activity: Activity) => {
@@ -201,8 +203,12 @@ export default function ActivitiesPage() {
                                                     <MapPin className="w-4 h-4 text-gold" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-dark text-sm">{loc.city}</p>
-                                                    <p className="text-xs text-dark-400">{loc.country}</p>
+                                                    <p className="font-bold text-dark text-sm">
+                                                        {loc.city ? loc.city : loc.country}
+                                                    </p>
+                                                    <p className="text-xs text-dark-400">
+                                                        {loc.city ? loc.country : "Pays"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}
