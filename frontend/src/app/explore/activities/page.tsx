@@ -19,6 +19,7 @@ interface Activity {
     image_url: string;
     description: string;
     booking_url: string;
+    category?: string;
 }
 
 export default function ActivitiesPage() {
@@ -301,10 +302,15 @@ export default function ActivitiesPage() {
                                             alt={activity.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out"
                                         />
-                                        <div className="absolute top-6 left-6 flex gap-2">
+                                        <div className="absolute top-6 left-6 flex flex-col gap-2">
                                             <span className="bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.1em] text-dark shadow-xl">
-                                                Selection
+                                                {activity.category || "Sélection"}
                                             </span>
+                                            {activity.category === "Gastronomie" && (
+                                                <span className="bg-gold text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
+                                                    🍴 Incontournable
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="absolute top-6 right-6">
                                             <div className="bg-dark/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl">
@@ -340,9 +346,11 @@ export default function ActivitiesPage() {
                                             </div>
                                             <button
                                                 onClick={() => handleBook(activity)}
-                                                className="bg-dark text-white hover:bg-gold hover:text-dark w-14 h-14 rounded-2xl transition-all duration-500 flex items-center justify-center shadow-lg active:scale-90 group/btn"
+                                                className="group/btn relative overflow-hidden bg-dark text-white hover:text-dark px-6 py-4 rounded-2xl transition-all duration-500 flex items-center gap-3 shadow-xl active:scale-95"
                                             >
-                                                <ArrowRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
+                                                <div className="absolute inset-0 bg-gold translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500"></div>
+                                                <span className="relative z-10 font-bold text-sm tracking-tight">Réserver</span>
+                                                <ArrowRight className="relative z-10 w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                                             </button>
                                         </div>
                                     </div>
