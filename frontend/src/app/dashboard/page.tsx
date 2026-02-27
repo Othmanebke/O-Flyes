@@ -65,6 +65,8 @@ export default function DashboardPage() {
     const [showBookingModal, setShowBookingModal] = useState(false);
 
     const [emailConnected, setEmailConnected] = useState(false);
+    const [provider, setProvider] = useState<string>("local");
+    const [showSyncOptions, setShowSyncOptions] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -80,6 +82,10 @@ export default function DashboardPage() {
                 setUserName(payload.name || "Voyageur");
                 fetchTrips(payload.id);
                 checkEmailSync(payload.id);
+
+                axios.get(`/api/db/users/${payload.id}`).then(res => {
+                    if (res.data && res.data.provider) setProvider(res.data.provider);
+                }).catch(err => console.error("Failed to fetch provider", err));
             } catch (e) {
                 console.error("Invalid token", e);
                 localStorage.removeItem("token");
@@ -98,8 +104,13 @@ export default function DashboardPage() {
     };
 
     const handleConnectEmail = () => {
-        // Redirect to auth-service sync route via Gateway
-        window.location.href = `/api/auth/google/sync`;
+        if (provider === "google") {
+            window.location.href = `https://api-gateway-v0vr.onrender.com/api/auth/google/sync`;
+        } else if (provider === "microsoft") {
+            window.location.href = `https://api-gateway-v0vr.onrender.com/api/auth/microsoft`;
+        } else {
+            setShowSyncOptions(true); // Open modal for local users to choose
+        }
     };
 
     const fetchTrips = async (uid: string) => {
@@ -256,7 +267,13 @@ export default function DashboardPage() {
                     {[
                         { icon: LayoutDashboard, label: "Dashboard", active: !selectedTrip, onClick: () => setSelectedTrip(null) },
                         { icon: Calendar, label: "Mes Voyages", active: !!selectedTrip, onClick: () => { } },
-                        { icon: Mail, label: emailConnected ? "Email Connecté" : "Sync Email", active: false, onClick: handleConnectEmail, color: emailConnected ? "text-green-500" : "" },
+                        {
+                            icon: Mail,
+                            label: emailConnected ? "Email Connecté" : (provider === 'google' ? "Sync Gmail" : provider === 'microsoft' ? "Sync Outlook" : "Sync Email"),
+                            active: false,
+                            onClick: handleConnectEmail,
+                            color: emailConnected ? "text-green-500" : ""
+                        },
                         { icon: Settings, label: "Paramètres", active: false, onClick: () => { } },
                     ].map((item) => (
                         <button
@@ -349,9 +366,31 @@ export default function DashboardPage() {
                                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                             <button
                                                 onClick={handleConnectEmail}
-                                                className="btn-gold px-8 py-3 w-full sm:w-auto"
+                                                className="btn-gold px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2"
                                             >
-                                                Connecter mon email
+                                                {provider === 'google' ? (
+                                                    <>
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                                        </svg>
+                                                        Connecter Gmail
+                                                    </>
+                                                ) : provider === 'microsoft' ? (
+                                                    <>
+                                                        <svg className="w-4 h-4" viewBox="0 0 21 21">
+                                                            <path fill="#f25022" d="M0 0h10v10H0z" />
+                                                            <path fill="#7fba00" d="M11 0h10v10H11z" />
+                                                            <path fill="#00a4ef" d="M0 11h10v10H0z" />
+                                                            <path fill="#ffb900" d="M11 11h10v10H11z" />
+                                                        </svg>
+                                                        Connecter Outlook
+                                                    </>
+                                                ) : (
+                                                    "Connecter mon email"
+                                                )}
                                             </button>
                                             <button
                                                 onClick={() => setShowCreateModal(true)}
@@ -654,7 +693,7 @@ export default function DashboardPage() {
                 </button>
                 <button onClick={handleConnectEmail} className={`flex flex-col items-center gap-1 ${emailConnected ? "text-green-500" : "text-dark-300"}`}>
                     <Mail className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">Email</span>
+                    <span className="text-[10px] font-medium">{emailConnected ? "Connecté" : (provider === 'google' ? "Gmail" : provider === 'microsoft' ? "Outlook" : "Email")}</span>
                 </button>
                 <button onClick={() => { localStorage.removeItem("token"); router.push("/"); }} className="flex flex-col items-center gap-1 text-dark-300 hover:text-red-500">
                     <LogOut className="w-5 h-5" />
@@ -715,6 +754,43 @@ export default function DashboardPage() {
                     />
                 )
             }
+
+            {/* Select Sync Provider Modal (For Local Users) */}
+            {showSyncOptions && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-dark/60 backdrop-blur-sm" onClick={() => setShowSyncOptions(false)} />
+                    <div className="relative bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-serif text-dark mb-2">Connecter un Email</h3>
+                        <p className="text-sm text-dark-400 mb-8">Choisissez le fournisseur de votre boîte de réception pour synchroniser vos réservations :</p>
+
+                        <div className="space-y-3">
+                            <a href="https://api-gateway-v0vr.onrender.com/api/auth/google/sync"
+                                className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                </svg>
+                                Continuer avec Google
+                            </a>
+
+                            <a href="https://api-gateway-v0vr.onrender.com/api/auth/microsoft"
+                                className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
+                                <svg className="w-5 h-5" viewBox="0 0 21 21">
+                                    <path fill="#f25022" d="M0 0h10v10H0z" />
+                                    <path fill="#7fba00" d="M11 0h10v10H11z" />
+                                    <path fill="#00a4ef" d="M0 11h10v10H0z" />
+                                    <path fill="#ffb900" d="M11 11h10v10H11z" />
+                                </svg>
+                                Continuer avec Outlook
+                            </a>
+                        </div>
+
+                        <button onClick={() => setShowSyncOptions(false)} className="w-full mt-6 py-2 text-xs font-bold text-dark-400 hover:text-dark">Fermer</button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }
