@@ -19,21 +19,31 @@ app.get("/health", (_req, res) => res.json({ status: "ok", service: "partner-ser
 import { MOCK_LOCATIONS } from "./data/locations";
 
 import { ACTIVITY_TEMPLATES } from "./data/activities_templates";
+import { GYG_REAL_DATA } from "./data/gyg_data";
 
-// --- Activity Generator ---
-function generateActivitiesForCity(city: string, country: string) {
+// --- Activity Generator & Connector ---
+function getActivitiesForCity(city: string, country: string) {
+    // 1. Try real curated GYG data first (Connector approach)
+    const normalizedCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+    if (GYG_REAL_DATA[normalizedCity]) {
+        console.log(`[partner-service] Found real GYG data for ${normalizedCity}`);
+        return GYG_REAL_DATA[normalizedCity];
+    }
+
+    // 2. Fallback to Generator for 100% coverage
+    console.log(`[partner-service] Generating activities for ${normalizedCity}`);
     return ACTIVITY_TEMPLATES.map((tpl, index) => ({
-        id: `gen-${city.toLowerCase()}-${index}`,
-        title: tpl.title.replace("{city}", city).replace("{country}", country),
-        city: city,
+        id: `gen-${normalizedCity.toLowerCase()}-${index}`,
+        title: tpl.title.replace("{city}", normalizedCity).replace("{country}", country),
+        city: normalizedCity,
         country: country,
         category: tpl.category,
-        price: tpl.basePrice + Math.floor(Math.random() * 20), // Slight price variation
+        price: tpl.basePrice + Math.floor(Math.random() * 20),
         currency: "EUR",
         rating: (4.5 + Math.random() * 0.5).toFixed(1),
         reviews: Math.floor(Math.random() * 500) + 50,
         image_url: tpl.imagePool[Math.floor(Math.random() * tpl.imagePool.length)],
-        description: tpl.description.replace("{city}", city).replace("{country}", country),
+        description: tpl.description.replace("{city}", normalizedCity).replace("{country}", country),
         booking_url: "https://www.getyourguide.com"
     }));
 }
@@ -97,14 +107,14 @@ app.get("/activities/search", (req, res) => {
     console.log(`[partner-service] Searching activities for city: ${city}`);
 
     if (!city) {
-        return res.json(generateActivitiesForCity("Paris", "France"));
+        return res.json(getActivitiesForCity("Paris", "France"));
     }
 
     // Find country for the city from our locations data
     const locationInfo = MOCK_LOCATIONS.find(l => l.city.toLowerCase() === (city as string).toLowerCase());
     const country = locationInfo ? locationInfo.country : "le monde";
 
-    const results = generateActivitiesForCity(city as string, country);
+    const results = getActivitiesForCity(city as string, country);
 
     res.json(results);
 });
