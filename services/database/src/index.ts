@@ -103,6 +103,21 @@ app.post("/users/:id/upgrade", async (req, res) => {
   }
 });
 
+app.put("/users/:id", async (req, res) => {
+  const { name, email } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE users SET name = COALESCE($1, name), email = COALESCE($2, email) WHERE id = $3 RETURNING *",
+      [name, email, req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "User not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    console.error("[database/put/users/:id]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Destinations ─────────────────────────────────────────────────────────────
 app.get("/destinations", async (req, res) => {
   try {
