@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Calendar, Star, ArrowRight, ExternalLink, Sparkles } from "lucide-react";
+import { Search, MapPin, Calendar, Star, ArrowRight, ExternalLink, Sparkles, History, Compass, Globe } from "lucide-react";
 import axios from "axios";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseJwt } from "@/lib/jwt";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,7 +51,6 @@ export default function ActivitiesPage() {
         fetchActivities("Paris");
     }, []);
 
-    // Debounce effect for search term
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedTerm(searchTerm);
@@ -60,7 +58,6 @@ export default function ActivitiesPage() {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Fetch suggestions when debounced term changes
     useEffect(() => {
         if (debouncedTerm.length >= 2) {
             axios.get(`/api/partner/locations/suggest?q=${debouncedTerm}`)
@@ -118,7 +115,6 @@ export default function ActivitiesPage() {
 
     const handleSelectSuggestion = (suggestion: any) => {
         setSearchTerm(suggestion.label);
-        // If it's a country-only suggestion (city is empty), we might want to search for the capital or just the term
         const searchCity = suggestion.city || suggestion.country;
         setSelectedLocation(searchCity);
         setShowSuggestions(false);
@@ -135,7 +131,6 @@ export default function ActivitiesPage() {
         if (trips.length > 0) {
             setShowTripSelector(true);
         } else {
-            // No trips, just open the link
             trackClick('activity');
             window.open(activity.booking_url, "_blank");
         }
@@ -161,211 +156,170 @@ export default function ActivitiesPage() {
             window.open(selectedActivity.booking_url, "_blank");
         } catch (err) {
             console.error("Failed to create pending booking", err);
-            alert("Une erreur est survenue lors de la planification.");
             window.open(selectedActivity.booking_url, "_blank");
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#f9f7f4] pt-24 pb-20 relative overflow-hidden">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-gold/10 to-transparent pointer-events-none"></div>
-            <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-gold/5 blur-[120px] rounded-full pointer-events-none"></div>
-            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-dark/5 blur-[150px] rounded-full pointer-events-none"></div>
+        <div className="min-h-screen bg-[#0A0D14] relative overflow-hidden pt-32 pb-20">
+            {/* Premium Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full"></div>
+                <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-gold/5 blur-[100px] rounded-full"></div>
+            </div>
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
 
                 {/* Header Section */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="mb-12"
+                    className="mb-16 text-center"
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="h-[1px] w-12 bg-gold/40"></div>
-                        <span className="text-gold font-bold tracking-[0.2em] text-xs uppercase">Curated Experiences</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-6">
+                        <Sparkles className="w-3 h-3" /> Expériences d'Exception
                     </div>
-                    <h1 className="font-serif text-6xl text-dark mb-4 tracking-tight">Capter l'instant</h1>
-                    <p className="text-dark-400 text-lg max-w-2xl leading-relaxed">
-                        Des moments d'exception sélectionnés pour transformer votre voyage en un souvenir éternel.
+                    <h1 className="font-serif text-6xl md:text-7xl text-white mb-6 leading-tight">
+                        Capter l'<span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-300 to-gold">instant magique</span>
+                    </h1>
+                    <p className="text-white/40 text-lg max-w-2xl mx-auto">
+                        Des moments rares sélectionnés pour transformer votre voyage en un souvenir éternel.
                     </p>
                 </motion.div>
 
                 {/* Search Bar */}
-                <motion.form
-                    initial={{ opacity: 0, y: 20 }}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    onSubmit={handleSearch}
-                    className="mb-20"
+                    transition={{ delay: 0.2 }}
+                    className="max-w-4xl mx-auto mb-20 relative"
                 >
-                    <div className="flex flex-col md:flex-row gap-4 p-2 bg-white/70 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-dark/5 border border-white/50">
-                        <div className="flex-1 flex items-center px-6 gap-4 border-b md:border-b-0 md:border-r border-sand-200/50 py-4 relative group">
-                            <MapPin className="w-5 h-5 text-gold group-focus-within:scale-110 transition-transform" />
-                            <div className="w-full relative">
-                                <p className="text-[10px] text-dark-300 uppercase tracking-widest font-bold mb-0.5">Destination</p>
+                    <form onSubmit={handleSearch} className="group">
+                        <div className="relative flex flex-col md:flex-row gap-3 p-3 bg-white/[0.03] backdrop-blur-2xl rounded-[32px] border border-white/10 shadow-2xl group-hover:border-gold/30 transition-all duration-500">
+                            <div className="flex-1 flex items-center px-6 gap-4 py-4">
+                                <MapPin className="w-6 h-6 text-gold animate-pulse" />
                                 <input
                                     type="text"
-                                    placeholder="Où voulez-vous aller ?"
-                                    className="bg-transparent border-none outline-none w-full text-dark font-semibold text-lg placeholder:text-dark-300"
+                                    placeholder="Chercher une ville, une activité..."
+                                    className="bg-transparent border-none outline-none w-full text-white text-lg placeholder:text-white/20 font-light"
                                     value={searchTerm}
+                                    onFocus={() => searchTerm.length >= 2 && setShowSuggestions(true)}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
-                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 />
-                                <AnimatePresence>
-                                    {showSuggestions && suggestions.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                            className="absolute top-full left-0 right-0 mt-6 bg-white/90 backdrop-blur-2xl border border-white rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-50 overflow-hidden max-h-72 overflow-y-auto w-full md:w-[150%]"
-                                        >
-                                            {suggestions.map((loc, i) => (
-                                                <div
-                                                    key={i}
-                                                    onClick={() => handleSelectSuggestion(loc)}
-                                                    className="px-6 py-4 hover:bg-gold/5 cursor-pointer flex items-center gap-4 transition-all border-b border-sand-100 last:border-0"
-                                                >
-                                                    <div className="w-10 h-10 rounded-2xl bg-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-gold/20 transition-colors">
-                                                        <MapPin className="w-5 h-5 text-gold" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-dark text-base tracking-tight">
-                                                            {loc.city ? loc.city : loc.country}
-                                                        </p>
-                                                        <p className="text-xs text-dark-400 font-medium">
-                                                            {loc.city ? loc.country : "Explorez le Pays"}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
                             </div>
+                            <button type="submit" className="bg-gold text-dark font-black px-10 py-5 rounded-[24px] hover:bg-gold-300 transition-all shadow-lg active:scale-95">
+                                <Search className="w-5 h-5" />
+                                <span className="uppercase tracking-widest text-sm">Explorer</span>
+                            </button>
                         </div>
-                        <button type="submit" className="bg-dark text-white font-bold px-12 py-5 rounded-[24px] hover:bg-dark-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-dark/20 hover:shadow-dark/40 active:scale-95 group">
-                            <Search className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                            <span className="text-lg">Découvrir</span>
-                        </button>
-                    </div>
-                </motion.form>
 
-                {/* Results Grid */}
-                <div>
-                    <div className="flex items-center justify-between mb-10 px-2">
-                        <div className="flex flex-col gap-1">
-                            <h2 className="text-3xl font-serif text-dark flex items-center gap-3">
-                                <span className="text-gold-600 italic">Expériences à</span> {selectedLocation || "Paris"}
-                                <Sparkles className="w-6 h-6 text-gold opacity-40" />
-                            </h2>
-                            <div className="h-1 w-20 bg-gold/20 rounded-full"></div>
+                        {/* Suggestions Dropdown */}
+                        <AnimatePresence>
+                            {showSuggestions && suggestions.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute left-0 right-0 top-full mt-4 bg-[#141822]/95 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden z-[100] shadow-2xl"
+                                >
+                                    {suggestions.map((suggestion, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => handleSelectSuggestion(suggestion)}
+                                            className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-all text-left border-b border-white/5 last:border-none group/item"
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover/item:bg-gold/20 transition-colors">
+                                                <Compass className="w-4 h-4 text-gold" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-white font-medium group-hover/item:text-gold transition-colors">{suggestion.label}</p>
+                                                <p className="text-[10px] text-white/30 uppercase tracking-widest">{suggestion.city ? 'Ville' : 'Pays'}</p>
+                                            </div>
+                                            <ArrowRight className="w-4 h-4 text-white/10 group-hover/item:translate-x-1 group-hover/item:text-gold transition-all" />
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </form>
+                </motion.div>
+
+                {/* Results List */}
+                <div className="relative">
+                    <div className="flex items-center justify-between mb-12 gap-6">
+                        <h2 className="text-3xl font-serif text-white">
+                            Découvertes à <span className="text-gold italic">{selectedLocation}</span>
+                        </h2>
+                        <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                            <History className="w-4 h-4 text-gold/60" />
+                            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{activities.length} Expériences</span>
                         </div>
-                        <span className="bg-white/50 backdrop-blur px-4 py-2 rounded-full border border-white text-dark-400 text-xs font-bold uppercase tracking-widest shadow-sm">
-                            {activities.length} pépites trouvées
-                        </span>
                     </div>
 
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="animate-pulse bg-white/40 backdrop-blur-md rounded-[40px] h-[450px] border border-white shadow-sm"></div>
+                                <div key={i} className="animate-pulse bg-white/5 rounded-[40px] h-96 border border-white/10"></div>
                             ))}
                         </div>
                     ) : activities.length === 0 ? (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="bg-white/40 backdrop-blur-xl rounded-[48px] p-24 text-center border border-white shadow-xl shadow-dark/5"
-                        >
-                            <div className="text-7xl mb-8 grayscale hover:grayscale-0 transition-all duration-700 cursor-default">🏜️</div>
-                            <h3 className="text-2xl font-serif text-dark mb-4">Horizon encore inexploré à {selectedLocation}</h3>
-                            <p className="text-dark-400 max-w-md mx-auto leading-relaxed">
-                                Nos experts parcourent le monde pour vous dénicher le meilleur. Essayez d'autres destinations comme <span className="text-gold font-bold">Paris</span> ou <span className="text-gold font-bold">Marrakech</span> en attendant.
-                            </p>
-                        </motion.div>
+                        <div className="bg-white/5 backdrop-blur-xl rounded-[40px] p-24 text-center border border-white/10">
+                            <h3 className="text-2xl font-serif text-white mb-4">Aucune activité trouvée</h3>
+                            <button onClick={() => { setSearchTerm("Dubaï"); fetchActivities("Dubaï"); }} className="text-gold font-bold uppercase tracking-widest text-xs">Essayer Dubaï</button>
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {activities.map((activity, index) => (
+                            {activities.map((activity, idx) => (
                                 <motion.div
                                     key={activity.id}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                                    className="group bg-white/60 backdrop-blur-sm rounded-[40px] border border-white overflow-hidden hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-700 hover:bg-white"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="group relative bg-[#141822]/40 backdrop-blur-2xl rounded-[40px] border border-white/5 overflow-hidden hover:border-gold/40 transition-all duration-500 shadow-2xl"
                                 >
-                                    <div className="relative h-72 overflow-hidden">
+                                    {/* Image Section */}
+                                    <div className="relative h-64 overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#141822] to-transparent z-10 opacity-60"></div>
                                         <img
                                             src={activity.image_url}
                                             alt={activity.title}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]"
                                         />
-                                        <div className="absolute top-6 left-6 flex flex-col gap-2">
-                                            <span className="bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.1em] text-dark shadow-xl">
+                                        <div className="absolute top-6 left-6 z-20">
+                                            <span className="bg-white/95 text-dark px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest">
                                                 {activity.category || "Sélection"}
                                             </span>
-                                            {activity.category === "Gastronomie" && (
-                                                <span className="bg-gold text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
-                                                    🍴 Incontournable
-                                                </span>
-                                            )}
-                                            {activity.category === "Luxe" && (
-                                                <span className="bg-gradient-to-r from-[#B8860B] to-[#FFD700] text-dark px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
-                                                    ✨ Expérience Exclusive
-                                                </span>
-                                            )}
-                                            {activity.category === "Vie nocturne" && (
-                                                <span className="bg-[#6200ea] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
-                                                    🍹 Nightlife
-                                                </span>
-                                            )}
-                                            {activity.category === "Shopping" && (
-                                                <span className="bg-[#e91e63] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
-                                                    🛍️ Luxe & Mode
-                                                </span>
-                                            )}
                                         </div>
-                                        <div className="absolute top-6 right-6">
-                                            <div className="bg-dark/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl">
+                                        <div className="absolute top-6 right-6 z-20">
+                                            <div className="bg-dark/80 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl">
                                                 <Star className="w-3.5 h-3.5 text-gold fill-gold" />
                                                 {activity.rating}
                                             </div>
                                         </div>
-
-                                        {/* Overlay on hover */}
-                                        <div className="absolute inset-0 bg-dark/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                                            <div className="bg-white text-dark font-bold px-6 py-3 rounded-2xl transform translate-y-10 group-hover:translate-y-0 transition-transform duration-500">
-                                                Voir les détails
-                                            </div>
-                                        </div>
                                     </div>
 
+                                    {/* Content */}
                                     <div className="p-8">
-                                        <h3 className="font-serif text-2xl text-dark leading-tight group-hover:text-gold transition-colors mb-3">
+                                        <h3 className="font-serif text-2xl text-white mb-4 group-hover:text-gold transition-colors line-clamp-2">
                                             {activity.title}
                                         </h3>
-
-                                        <p className="text-dark-400 text-sm mb-8 leading-relaxed line-clamp-2">
+                                        <p className="text-white/40 text-xs mb-8 line-clamp-2 leading-relaxed">
                                             {activity.description}
                                         </p>
-
-                                        <div className="flex items-center justify-between pt-8 border-t border-sand-100/50">
-                                            <div className="flex flex-col">
-                                                <p className="text-[10px] text-dark-300 uppercase tracking-widest font-bold mb-1">Expérience dès</p>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-3xl font-serif text-dark tracking-tighter">{activity.price}</span>
-                                                    <span className="text-sm font-bold text-gold uppercase">{activity.currency}</span>
-                                                </div>
+                                        <div className="flex items-center justify-between pt-8 border-t border-white/5">
+                                            <div>
+                                                <p className="text-[9px] text-white/30 uppercase tracking-widest mb-1">À partir de</p>
+                                                <p className="text-3xl font-serif text-white">
+                                                    {activity.price} <span className="text-gold text-lg ml-1">{activity.currency}</span>
+                                                </p>
                                             </div>
                                             <button
                                                 onClick={() => handleBook(activity)}
-                                                className="group/btn relative overflow-hidden bg-dark text-white hover:text-dark px-6 py-4 rounded-2xl transition-all duration-500 flex items-center gap-3 shadow-xl active:scale-95"
+                                                className="bg-white text-dark hover:bg-gold px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center gap-2"
                                             >
-                                                <div className="absolute inset-0 bg-gold translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500"></div>
-                                                <span className="relative z-10 font-bold text-sm tracking-tight">Réserver</span>
-                                                <ArrowRight className="relative z-10 w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                                Réserver <ArrowRight className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -377,28 +331,23 @@ export default function ActivitiesPage() {
 
                 {/* AI CTA */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-32 bg-dark rounded-[64px] p-16 text-center relative overflow-hidden shadow-[0_50px_100px_-20px_rgba(10,17,40,0.3)]"
+                    className="mt-32 relative group"
                 >
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold opacity-10 blur-[130px] rounded-full -mr-64 -mt-64 animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 blur-[80px] rounded-full -ml-32 -mb-32"></div>
-
-                    <div className="relative z-10">
-                        <div className="mx-auto w-16 h-16 bg-gold/20 rounded-2xl flex items-center justify-center mb-8">
-                            <Sparkles className="w-8 h-8 text-gold" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif text-white mb-6 leading-tight max-w-2xl mx-auto">Votre prochaine aventure mérite une muse</h2>
-                        <p className="text-white/50 mb-12 text-lg max-w-xl mx-auto leading-relaxed">
-                            Laissez notre intelligence artificielle orchestrer votre itinéraire idéal, mêlant découvertes secrètes et luxueuses expériences.
+                    <div className="absolute inset-0 bg-gold/10 rounded-[50px] blur-[100px] opacity-20"></div>
+                    <div className="relative bg-[#141822] rounded-[50px] p-20 border border-white/10 text-center overflow-hidden">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-gold/5 blur-[120px] rounded-full -mr-48 -mt-48"></div>
+                        <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Orchestrer l'<span className="text-gold italic">exceptionnel</span></h2>
+                        <p className="text-white/40 text-lg mb-10 max-w-xl mx-auto">
+                            Laissez notre IA concevoir votre itinéraire idéal, mêlant secrets locaux et expériences exclusives.
                         </p>
                         <button
                             onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
-                            className="bg-gold hover:bg-gold-300 text-dark px-12 py-5 rounded-[24px] font-bold transition-all flex items-center gap-3 mx-auto shadow-2xl shadow-gold/20 hover:shadow-gold/40 active:scale-95 group"
+                            className="bg-gold text-dark hover:bg-gold-300 px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-2xl flex items-center gap-3 mx-auto"
                         >
-                            <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                            <span className="text-lg">Inspirer mon voyage</span>
+                            <Sparkles className="w-5 h-5" /> Inspirer mon Voyage
                         </button>
                     </div>
                 </motion.div>
@@ -406,61 +355,27 @@ export default function ActivitiesPage() {
                 {/* Trip Selector Modal */}
                 <AnimatePresence>
                     {showTripSelector && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-dark/95 backdrop-blur-xl">
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setShowTripSelector(false)}
-                                className="absolute inset-0 bg-dark/80 backdrop-blur-md"
-                            ></motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="bg-white/95 backdrop-blur-xl rounded-[64px] w-full max-w-xl p-16 shadow-[0_50px_100px_rgba(0,0,0,0.5)] relative z-[101] border border-white"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-[#141822] border border-white/10 rounded-[48px] w-full max-w-xl p-12 text-center"
                             >
-                                <div className="mb-12">
-                                    <div className="w-16 h-1 w-full bg-gold/20 rounded-full mb-8"></div>
-                                    <h2 className="font-serif text-4xl text-dark mb-4 tracking-tight">Associer au voyage</h2>
-                                    <p className="text-dark-400 text-lg">Choisissez le chapitre de votre vie où cette activité prendra place.</p>
-                                </div>
-
-                                <div className="space-y-4 max-h-72 overflow-y-auto pr-4 mb-12 custom-scrollbar">
+                                <h2 className="font-serif text-4xl text-white mb-8">Ajouter au voyage</h2>
+                                <div className="space-y-4 mb-10">
                                     {trips.map(trip => (
                                         <button
                                             key={trip.id}
                                             onClick={() => confirmBooking(trip.id)}
-                                            className="w-full text-left p-6 rounded-[32px] border border-sand-200/50 bg-white/50 hover:border-gold hover:bg-gold/5 transition-all group flex items-center justify-between shadow-sm hover:shadow-xl hover:shadow- gold/5"
+                                            className="w-full text-left p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-gold transition-all"
                                         >
-                                            <div>
-                                                <p className="font-bold text-dark text-lg group-hover:text-gold transition-colors">{trip.title}</p>
-                                                <p className="text-xs text-dark-400 font-bold uppercase tracking-widest mt-1 italic">{trip.destination_name || "Destination à définir"}</p>
-                                            </div>
-                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-gold group-hover:text-white transition-all">
-                                                <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5" />
-                                            </div>
+                                            <p className="text-white font-serif text-xl">{trip.title}</p>
                                         </button>
                                     ))}
                                 </div>
-
                                 <div className="flex flex-col gap-4">
-                                    <button
-                                        onClick={() => {
-                                            if (selectedActivity) window.open(selectedActivity.booking_url, "_blank");
-                                            setShowTripSelector(false);
-                                        }}
-                                        className="text-sm font-bold text-dark-300 hover:text-gold py-2 transition-colors tracking-widest uppercase"
-                                    >
-                                        Continuer sans associer
-                                    </button>
-                                    <button
-                                        onClick={() => setShowTripSelector(false)}
-                                        className="bg-dark text-white font-bold py-6 rounded-[24px] hover:bg-dark-600 transition-all shadow-xl shadow-dark/20 text-lg"
-                                    >
-                                        Fermer
-                                    </button>
+                                    <button onClick={() => { if (selectedActivity) window.open(selectedActivity.booking_url, "_blank"); setShowTripSelector(false); }} className="text-white/40 uppercase text-[10px] tracking-widest">Réserver directement</button>
+                                    <button onClick={() => setShowTripSelector(false)} className="bg-white/5 text-white py-5 rounded-2xl border border-white/10">Fermer</button>
                                 </div>
                             </motion.div>
                         </div>
