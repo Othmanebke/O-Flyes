@@ -95,4 +95,8 @@ app.post("/notify/email", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`[notifications-service] running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, () => console.log(`[notifications-service] running on port ${PORT}`));
+}
+
+export default app;

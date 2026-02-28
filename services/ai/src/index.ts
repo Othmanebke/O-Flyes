@@ -283,4 +283,8 @@ Réponds UNIQUEMENT en JSON valide (pas de texte autour) avec ce format :
   }
 });
 
-app.listen(PORT, () => console.log(`[ai-service] Groq Llama 3 running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, () => console.log(`[ai-service] Groq Llama 3 running on port ${PORT}`));
+}
+
+export default app;

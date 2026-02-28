@@ -69,6 +69,10 @@ app.post('/explore/packs', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`[travel-engine] running on port ${PORT}`);
-});
+if (process.env.IS_MONOLITH !== "true") {
+    app.listen(PORT, () => {
+        console.log(`[travel-engine] running on port ${PORT}`);
+    });
+}
+
+export default app;

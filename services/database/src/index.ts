@@ -606,7 +606,12 @@ app.get("/chat/user/:userId", async (req, res) => {
   res.json(result.rows);
 });
 
-app.listen(PORT, async () => {
-  console.log(`[database-service] running on port ${PORT}`);
-  await initSchema();
-});
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, async () => {
+    console.log(`[database-service] running on port ${PORT}`);
+    await initSchema();
+  });
+}
+
+export { initSchema };
+export default app;

@@ -111,4 +111,8 @@ app.post("/metrics/event", (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(PORT, () => console.log(`[metrics-service] running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, () => console.log(`[metrics-service] running on port ${PORT}`));
+}
+
+export default app;

@@ -564,4 +564,8 @@ app.post("/auth/verify", (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`[auth - service] running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, () => console.log(`[auth - service] running on port ${PORT}`));
+}
+
+export default app;

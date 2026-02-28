@@ -83,4 +83,8 @@ app.post("/payments/webhook", (req, res) => {
   res.json({ received: true });
 });
 
-app.listen(PORT, () => console.log(`[payments-service] running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+  app.listen(PORT, () => console.log(`[payments-service] running on port ${PORT}`));
+}
+
+export default app;

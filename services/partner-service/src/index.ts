@@ -225,4 +225,8 @@ app.get("/flights/search", (req, res) => {
     res.json(results);
 });
 
-app.listen(PORT, () => console.log(`[partner-service] running on port ${PORT}`));
+if (process.env.IS_MONOLITH !== "true") {
+    app.listen(PORT, () => console.log(`[partner-service] running on port ${PORT}`));
+}
+
+export default app;
