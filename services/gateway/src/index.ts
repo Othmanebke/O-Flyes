@@ -23,6 +23,11 @@ let METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-ser
 let NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
 let PARTNER_SERVICE_URL = process.env.PARTNER_SERVICE_URL || 'https://partner-service-wixv.onrender.com';
 
+// If METRICS_SERVICE_URL is provided as a hostport, prepend http://
+if (process.env.METRICS_SERVICE_URL && !process.env.METRICS_SERVICE_URL.startsWith('http')) {
+    METRICS_SERVICE_URL = `http://${process.env.METRICS_SERVICE_URL}`;
+}
+
 // Auto-correct Docker Compose internal URLs for Render Web Service environments
 if (AUTH_SERVICE_URL.includes("auth-service:")) AUTH_SERVICE_URL = 'https://auth-service-8x7w.onrender.com';
 if (DB_SERVICE_URL.includes("database-service:")) DB_SERVICE_URL = 'https://database-service-uybo.onrender.com';

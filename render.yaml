@@ -32,7 +32,7 @@ services:
         fromService:
           name: "metrics-service"
           type: "web"
-          property: "url"
+          property: "hostport"
       - key: "NODE_ENV"
         value: "production"
 
@@ -144,7 +144,7 @@ services:
         fromService:
           name: "metrics-service"
           type: "web"
-          property: "url"
+          property: "hostport"
       - key: "OAUTH_GOOGLE_CLIENT_ID"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: "OAUTH_GOOGLE_CLIENT_SECRET"
