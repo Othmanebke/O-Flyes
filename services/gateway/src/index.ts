@@ -19,7 +19,7 @@ let AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth-service-8x7
 let DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'https://database-service-uybo.onrender.com';
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://ai-service-qfvv.onrender.com';
 let TRAVEL_ENGINE_URL = process.env.TRAVEL_ENGINE_URL || 'https://travel-engine-7tk8.onrender.com';
-let METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'http://metrics-service:3009';
+let METRICS_SERVICE_URL = process.env.METRICS_SERVICE_URL || 'https://metrics-service-om0h.onrender.com';
 let NOTIF_SERVICE_URL = process.env.NOTIF_SERVICE_URL || 'https://notifications-service-a7f6.onrender.com';
 let PARTNER_SERVICE_URL = process.env.PARTNER_SERVICE_URL || 'https://partner-service-wixv.onrender.com';
 

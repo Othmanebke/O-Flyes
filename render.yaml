@@ -29,10 +29,7 @@ services:
       - key: "PARTNER_SERVICE_URL"
         value: "https://partner-service-wixv.onrender.com"
       - key: "METRICS_SERVICE_URL"
-        fromService:
-          name: "metrics-service"
-          type: "web"
-          property: "hostport"
+        value: "https://metrics-service-om0h.onrender.com"
       - key: "NODE_ENV"
         value: "production"
 
@@ -141,10 +138,7 @@ services:
       - key: "NOTIF_URL"
         value: "https://notifications-service-a7f6.onrender.com"
       - key: "METRICS_URL"
-        fromService:
-          name: "metrics-service"
-          type: "web"
-          property: "hostport"
+        value: "https://metrics-service-om0h.onrender.com"
       - key: "OAUTH_GOOGLE_CLIENT_ID"
         value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
       - key: "OAUTH_GOOGLE_CLIENT_SECRET"

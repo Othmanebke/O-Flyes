@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3007;
 const DB_URL = process.env.DB_URL || "http://database-service:3002";
 const AI_URL = process.env.AI_URL || "http://ai-service:3003";
 const NOTIF_URL = process.env.NOTIF_URL || "http://notifications-service:3004";
-let METRICS_URL = process.env.METRICS_URL || "http://metrics-service:3009";
+let METRICS_URL = process.env.METRICS_URL || "https://metrics-service-om0h.onrender.com";
 
 // If METRICS_URL is provided as a hostport, prepend http://
 if (process.env.METRICS_URL && !process.env.METRICS_URL.startsWith('http')) {
