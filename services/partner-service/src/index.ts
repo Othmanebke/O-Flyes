@@ -22,8 +22,11 @@ import { ACTIVITY_TEMPLATES } from "./data/activities_templates";
 import { GYG_REAL_DATA } from "./data/gyg_data";
 import { HOTEL_TEMPLATES } from "./data/hotels_templates";
 import { BOOKING_REAL_DATA } from "./data/booking_data";
+import { FLIGHT_TEMPLATES } from "./data/flights_templates";
+import { FLIGHTS_REAL_DATA } from "./data/flights_data";
 
 // --- Activity Generator & Connector ---
+// ... (previous functions remain the same)
 function getActivitiesForCity(city: string, country: string) {
     const normalizedCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
 
@@ -97,6 +100,55 @@ function getHotelsForCity(city: string, country: string) {
     });
 }
 
+// --- Flight Generator & Connector ---
+function getFlightsForRoute(origin: string, destination: string) {
+    const normOrg = origin.toLowerCase();
+    const normDst = destination.toLowerCase();
+
+    // 1. Try real curated Flight data
+    const realFlight = FLIGHTS_REAL_DATA.find(f =>
+        f.origin.toLowerCase().includes(normOrg) &&
+        f.destination.toLowerCase().includes(normDst)
+    );
+
+    if (realFlight) {
+        console.log(`[partner-service] Found real Flight data for ${origin} -> ${destination}`);
+        return [realFlight];
+    }
+
+    // 2. Fallback to Generator
+    console.log(`[partner-service] Generating flights for ${origin} -> ${destination}`);
+
+    // Shuffled templates
+    const shuffledTemplates = [...FLIGHT_TEMPLATES].sort(() => Math.random() - 0.5);
+
+    return shuffledTemplates.map((tpl, index) => {
+        const departureDate = new Date();
+        departureDate.setDate(departureDate.getDate() + 14); // 2 weeks from now
+        departureDate.setHours(8 + index * 2, 0, 0);
+
+        const arrivalDate = new Date(departureDate);
+        arrivalDate.setHours(arrivalDate.getHours() + 4); // 4 hour duration by default
+
+        return {
+            id: `gen-fl-comp-${index}`,
+            airline: tpl.airline,
+            origin: origin,
+            originCode: origin.slice(0, 3).toUpperCase(),
+            destination: destination,
+            destinationCode: destination.slice(0, 3).toUpperCase(),
+            departure: departureDate.toISOString(),
+            arrival: arrivalDate.toISOString(),
+            duration: "4h 00m",
+            price: tpl.basePrice + Math.floor(Math.random() * 150),
+            currency: "EUR",
+            type: tpl.type,
+            class: tpl.class,
+            booking_url: `https://www.skyscanner.fr/transport/vols/${origin.slice(0, 3)}/${destination.slice(0, 3)}`
+        };
+    });
+}
+
 const MOCK_ACTIVITIES_BASE = [
     // ... items would go here if we wanted hardcoded ones, 
     // but we'll use the generator for everything now to ensure 100% coverage
@@ -107,11 +159,7 @@ const MOCK_HOTELS = [
 ];
 
 const MOCK_FLIGHTS = [
-    {
-        id: "flt-1", airline: "Air France", origin: "Paris (CDG)", destination: "Marrakech (RAK)",
-        departure: "2024-05-15T10:30:00", arrival: "2024-05-15T13:45:00", price: 185, currency: "EUR",
-        type: "Direct", booking_url: "https://www.airfrance.fr/search-flights?from=CDG&to=RAK&date=2024-05-15"
-    }
+    // Replaced by getFlightsForRoute
 ];
 
 // ── Endpoints ────────────────────────────────────────────────────────────────
@@ -169,14 +217,10 @@ app.get("/flights/search", (req, res) => {
     const { origin, destination } = req.query;
     console.log(`[partner-service] Searching flights from ${origin} to ${destination}`);
 
-    // For MVP, we'll return all mock flights if destination matches or all if no query
-    if (!destination) {
-        return res.json(MOCK_FLIGHTS);
-    }
+    const org = origin ? (origin as string) : "Paris";
+    const dst = destination ? (destination as string) : "New York";
 
-    const results = MOCK_FLIGHTS.filter(f =>
-        f.destination.toLowerCase().includes((destination as string).toLowerCase())
-    );
+    const results = getFlightsForRoute(org, dst);
 
     res.json(results);
 });
