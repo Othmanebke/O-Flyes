@@ -20,6 +20,8 @@ import { MOCK_LOCATIONS } from "./data/locations";
 
 import { ACTIVITY_TEMPLATES } from "./data/activities_templates";
 import { GYG_REAL_DATA } from "./data/gyg_data";
+import { HOTEL_TEMPLATES } from "./data/hotels_templates";
+import { BOOKING_REAL_DATA } from "./data/booking_data";
 
 // --- Activity Generator & Connector ---
 function getActivitiesForCity(city: string, country: string) {
@@ -57,33 +59,51 @@ function getActivitiesForCity(city: string, country: string) {
     }));
 }
 
+// --- Hotel Generator & Connector ---
+function getHotelsForCity(city: string, country: string) {
+    const normalizedCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+
+    // 1. Try real curated Booking data first
+    const cityKeys = [normalizedCity, normalizedCity.normalize("NFD").replace(/[\u0300-\u036f]/g, "")];
+    for (const key of cityKeys) {
+        if (BOOKING_REAL_DATA[key]) {
+            console.log(`[partner-service] Found real Booking data for ${key}`);
+            return BOOKING_REAL_DATA[key];
+        }
+    }
+
+    // 2. Fallback to Generator
+    console.log(`[partner-service] Generating hotels for ${normalizedCity} (${country})`);
+
+    // Shuffle templates
+    const shuffledTemplates = [...HOTEL_TEMPLATES].sort(() => Math.random() - 0.5);
+
+    return shuffledTemplates.map((tpl, index) => {
+        const name = tpl.titleTemplate[Math.floor(Math.random() * tpl.titleTemplate.length)].replace("{city}", normalizedCity);
+        return {
+            id: `gen-hotel-${normalizedCity.toLowerCase()}-${index}`,
+            name: name,
+            city: normalizedCity,
+            country: country,
+            category: tpl.category,
+            price_per_night: tpl.basePrice + Math.floor(Math.random() * 100),
+            currency: "EUR",
+            rating: (4.0 + Math.random() * 1.0).toFixed(1),
+            stars: tpl.stars,
+            image_url: tpl.imagePool[Math.floor(Math.random() * tpl.imagePool.length)],
+            description: tpl.descriptionTemplate.replace("{city}", normalizedCity).replace("{country}", country),
+            booking_url: `https://www.booking.com/searchresults.fr.html?ss=${normalizedCity}`
+        };
+    });
+}
+
 const MOCK_ACTIVITIES_BASE = [
     // ... items would go here if we wanted hardcoded ones, 
     // but we'll use the generator for everything now to ensure 100% coverage
 ];
 
 const MOCK_HOTELS = [
-    {
-        id: "hotel-1", name: "La Mamounia Marrakech", city: "Marrakech", country: "Maroc",
-        price_per_night: 650, currency: "EUR", rating: 4.9, stars: 5,
-        image_url: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=800&q=80",
-        description: "Un palace légendaire au cœur de la ville ocre, alliant luxe et tradition.",
-        booking_url: "https://www.booking.com/hotel/ma/la-mamounia.fr.html"
-    },
-    {
-        id: "hotel-par", name: "Ritz Paris", city: "Paris", country: "France",
-        price_per_night: 1350, currency: "EUR", rating: 4.9, stars: 5,
-        image_url: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80",
-        description: "L'iconique hôtel de luxe sur la Place Vendôme.",
-        booking_url: "https://www.booking.com/hotel/fr/ritz-paris.html"
-    },
-    {
-        id: "hotel-tok", name: "Aman Tokyo", city: "Tokyo", country: "Japon",
-        price_per_night: 950, currency: "EUR", rating: 4.8, stars: 5,
-        image_url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80",
-        description: "Un sanctuaire au-dessus de la ville, un mariage de design moderne et de tradition.",
-        booking_url: "https://www.booking.com/hotel/jp/aman-tokyo.html"
-    }
+    // Replaced by getHotelsForCity
 ];
 
 const MOCK_FLIGHTS = [
@@ -133,12 +153,14 @@ app.get("/hotels/search", (req, res) => {
     console.log(`[partner-service] Searching hotels for city: ${city}`);
 
     if (!city) {
-        return res.json(MOCK_HOTELS);
+        return res.json(getHotelsForCity("Paris", "France"));
     }
 
-    const results = MOCK_HOTELS.filter(h =>
-        h.city.toLowerCase() === (city as string).toLowerCase()
-    );
+    // Find country for the city
+    const locationInfo = MOCK_LOCATIONS.find(l => l.city.toLowerCase() === (city as string).toLowerCase());
+    const country = locationInfo ? locationInfo.country : "le monde";
+
+    const results = getHotelsForCity(city as string, country);
 
     res.json(results);
 });
