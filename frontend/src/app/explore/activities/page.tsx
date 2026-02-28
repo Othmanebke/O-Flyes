@@ -311,6 +311,21 @@ export default function ActivitiesPage() {
                                                     🍴 Incontournable
                                                 </span>
                                             )}
+                                            {activity.category === "Luxe" && (
+                                                <span className="bg-gradient-to-r from-[#B8860B] to-[#FFD700] text-dark px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
+                                                    ✨ Expérience Exclusive
+                                                </span>
+                                            )}
+                                            {activity.category === "Vie nocturne" && (
+                                                <span className="bg-[#6200ea] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
+                                                    🍹 Nightlife
+                                                </span>
+                                            )}
+                                            {activity.category === "Shopping" && (
+                                                <span className="bg-[#e91e63] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-lg w-fit">
+                                                    🛍️ Luxe & Mode
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="absolute top-6 right-6">
                                             <div className="bg-dark/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl">

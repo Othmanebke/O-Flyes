@@ -1,7 +1,7 @@
 export interface ActivityTemplate {
     title: string;
     description: string;
-    category: "Gastronomie" | "Culture" | "Aventure" | "Détente";
+    category: "Gastronomie" | "Culture" | "Aventure" | "Détente" | "Vie nocturne" | "Shopping" | "Luxe";
     basePrice: number;
     imagePool: string[];
 }
@@ -38,10 +38,30 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
         ]
     },
     {
-        title: "Dinner secret sur un rooftop à {city}",
+        title: "Expérience Shopping VIP & Personal Shopper",
+        description: "Découvrez les boutiques les plus exclusives de {city} avec un expert de la mode locale.",
+        category: "Shopping",
+        basePrice: 150,
+        imagePool: [
+            "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1481437156560-3205f6a55735?auto=format&fit=crop&w=800&q=80"
+        ]
+    },
+    {
+        title: "Nuit magique : Bar secret & Cocktails à {city}",
+        description: "Plongez dans la vie nocturne de {city} avec une sélection des meilleurs speakeasies et bars clandestins.",
+        category: "Vie nocturne",
+        basePrice: 65,
+        imagePool: [
+            "https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=800&q=80"
+        ]
+    },
+    {
+        title: "Dîner secret sur un rooftop à {city}",
         description: "Un repas gastronomique d'exception avec une vue panoramique imprenable sur les lumières de {city}.",
-        category: "Gastronomie",
-        basePrice: 85,
+        category: "Luxe",
+        basePrice: 185,
         imagePool: [
             "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=800&q=80",
             "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
@@ -85,6 +105,16 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
         imagePool: [
             "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
             "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80"
+        ]
+    },
+    {
+        title: "Tour des marchés d'art et antiquités de {city}",
+        description: "Dénichez des trésors cachés et découvrez l'histoire de {city} à travers ses marchés aux puces célèbres.",
+        category: "Shopping",
+        basePrice: 20,
+        imagePool: [
+            "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=800&q=80"
         ]
     }
 ];

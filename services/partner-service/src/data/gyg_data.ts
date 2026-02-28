@@ -145,5 +145,143 @@ export const GYG_REAL_DATA: Record<string, GYGActivity[]> = {
             description: "Dégustez la meilleure street-food japonaise dans les ruelles secrètes.",
             booking_url: "https://www.getyourguide.com/tokyo-l193/tokyo-japanese-street-food-tour-in-shinjuku-t172106/"
         }
+    ],
+    "Londres": [
+        {
+            id: "gyg-lon-1",
+            title: "The London Eye : Billet d'entrée standard ou coupe-file",
+            city: "Londres",
+            country: "Royaume-Uni",
+            category: "Culture",
+            price: 38,
+            currency: "EUR",
+            rating: "4.5",
+            reviews: 25000,
+            image_url: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80",
+            description: "Admirez Londres à 360° depuis la roue d'observation la plus célèbre au monde.",
+            booking_url: "https://www.getyourguide.com/london-l57/the-london-eye-ticket-t200350/"
+        },
+        {
+            id: "gyg-lon-2",
+            title: "Visite des studios Warner Bros. - Le tour de Harry Potter",
+            city: "Londres",
+            country: "Royaume-Uni",
+            category: "Culture",
+            price: 115,
+            currency: "EUR",
+            rating: "4.9",
+            reviews: 18000,
+            image_url: "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?auto=format&fit=crop&w=800&q=80",
+            description: "Entrez dans les coulisses des films Harry Potter et découvrez les décors originaux.",
+            booking_url: "https://www.getyourguide.com/london-l57/warner-bros-studio-tour-london-the-making-of-harry-potter-t164024/"
+        }
+    ],
+    "Dubaï": [
+        {
+            id: "gyg-dub-1",
+            title: "Burj Khalifa : Niveaux 124 et 125",
+            city: "Dubaï",
+            country: "Émirats Arabes Unis",
+            category: "Culture",
+            price: 45,
+            currency: "EUR",
+            rating: "4.7",
+            reviews: 45000,
+            image_url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80",
+            description: "Montez au sommet de la plus haute tour du monde pour une vue imprenable.",
+            booking_url: "https://www.getyourguide.com/dubai-l173/burj-khalifa-observation-deck-entrance-ticket-t49019/"
+        },
+        {
+            id: "gyg-dub-2",
+            title: "Safari dans le désert, barbecue, chameau et surf sur sable",
+            city: "Dubaï",
+            country: "Émirats Arabes Unis",
+            category: "Aventure",
+            price: 55,
+            currency: "EUR",
+            rating: "4.9",
+            reviews: 12000,
+            image_url: "https://images.unsplash.com/photo-1512632578888-159af038d156?auto=format&fit=crop&w=800&q=80",
+            description: "Une aventure complète dans les dunes rouges du désert de Dubaï.",
+            booking_url: "https://www.getyourguide.com/dubai-l173/dubai-morning-desert-safari-with-sandboarding-camel-ride-t449080/"
+        }
+    ],
+    "New York": [
+        {
+            id: "gyg-nyc-1",
+            title: "Statue de la Liberté et Ellis Island : Visite guidée",
+            city: "New York",
+            country: "États-Unis",
+            category: "Culture",
+            price: 42,
+            currency: "EUR",
+            rating: "4.8",
+            reviews: 12000,
+            image_url: "https://images.unsplash.com/photo-1506466010722-395aa2bef877?auto=format&fit=crop&w=800&q=80",
+            description: "Un voyage historique vers les symboles emblématiques de l'Amérique.",
+            booking_url: "https://www.getyourguide.com/new-york-city-l59/statue-of-liberty-ellis-island-ferry-ticket-t121512/"
+        },
+        {
+            id: "gyg-nyc-2",
+            title: "The Edge : Billet d'entrée pour le pont d'observation",
+            city: "New York",
+            country: "États-Unis",
+            category: "Culture",
+            price: 44,
+            currency: "EUR",
+            rating: "4.7",
+            reviews: 8000,
+            image_url: "https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=800&q=80",
+            description: "Le plus haut pont d'observation extérieur de l'hémisphère ouest.",
+            booking_url: "https://www.getyourguide.com/new-york-city-l59/edge-observation-deck-ticket-t334645/"
+        }
+    ],
+    "Rome": [
+        {
+            id: "gyg-rom-1",
+            title: "Musées du Vatican et Chapelle Sixtine : Billet coupe-file",
+            city: "Rome",
+            country: "Italie",
+            category: "Culture",
+            price: 32,
+            currency: "EUR",
+            rating: "4.6",
+            reviews: 35000,
+            image_url: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80",
+            description: "Évitez l'attente pour découvrir les chefs-d'œuvre de Michel-Ange.",
+            booking_url: "https://www.getyourguide.com/rome-l33/vatican-museums-sistine-chapel-skip-the-line-ticket-t62214/"
+        }
+    ],
+    "Barcelone": [
+        {
+            id: "gyg-bcn-1",
+            title: "Sagrada Família : Billet coupe-file avec accès à la tour",
+            city: "Barcelone",
+            country: "Espagne",
+            category: "Culture",
+            price: 46,
+            currency: "EUR",
+            rating: "4.8",
+            reviews: 28000,
+            image_url: "https://images.unsplash.com/photo-1583879862211-d41951ca848d?auto=format&fit=crop&w=800&q=80",
+            description: "Visitez le monument le plus emblématique de Gaudi et profitez de la vue.",
+            booking_url: "https://www.getyourguide.com/barcelona-l45/sagrada-familia-entrance-ticket-with-guided-tour-t66190/"
+        }
+    ],
+    "Bangkok": [
+        {
+            id: "gyg-bgk-1",
+            title: "Croisière avec dîner buffet sur le fleuve Chao Phraya",
+            city: "Bangkok",
+            country: "Thaïlande",
+            category: "Gastronomie",
+            price: 25,
+            currency: "EUR",
+            rating: "4.5",
+            reviews: 6000,
+            image_url: "https://images.unsplash.com/photo-1563379091339-03b21bc4a4f8?auto=format&fit=crop&w=800&q=80",
+            description: "Une croisière festive avec vue sur les temples illuminés de Bangkok.",
+            booking_url: "https://www.getyourguide.com/bangkok-l169/chao-phraya-princess-dinner-cruise-t66190/"
+        }
     ]
 };

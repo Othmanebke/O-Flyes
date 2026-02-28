@@ -23,16 +23,25 @@ import { GYG_REAL_DATA } from "./data/gyg_data";
 
 // --- Activity Generator & Connector ---
 function getActivitiesForCity(city: string, country: string) {
-    // 1. Try real curated GYG data first (Connector approach)
     const normalizedCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-    if (GYG_REAL_DATA[normalizedCity]) {
-        console.log(`[partner-service] Found real GYG data for ${normalizedCity}`);
-        return GYG_REAL_DATA[normalizedCity];
+
+    // 1. Try real curated GYG data first (Connector approach)
+    // Basic variations check
+    const cityKeys = [normalizedCity, normalizedCity.normalize("NFD").replace(/[\u0300-\u036f]/g, "")];
+    for (const key of cityKeys) {
+        if (GYG_REAL_DATA[key]) {
+            console.log(`[partner-service] Found real GYG data for ${key}`);
+            return GYG_REAL_DATA[key];
+        }
     }
 
     // 2. Fallback to Generator for 100% coverage
-    console.log(`[partner-service] Generating activities for ${normalizedCity}`);
-    return ACTIVITY_TEMPLATES.map((tpl, index) => ({
+    console.log(`[partner-service] Generating activities for ${normalizedCity} (${country})`);
+
+    // Shuffle templates to ensure variety
+    const shuffledTemplates = [...ACTIVITY_TEMPLATES].sort(() => Math.random() - 0.5);
+
+    return shuffledTemplates.slice(0, 8).map((tpl, index) => ({
         id: `gen-${normalizedCity.toLowerCase()}-${index}`,
         title: tpl.title.replace("{city}", normalizedCity).replace("{country}", country),
         city: normalizedCity,
@@ -41,10 +50,10 @@ function getActivitiesForCity(city: string, country: string) {
         price: tpl.basePrice + Math.floor(Math.random() * 20),
         currency: "EUR",
         rating: (4.5 + Math.random() * 0.5).toFixed(1),
-        reviews: Math.floor(Math.random() * 500) + 50,
+        reviews: Math.floor(Math.random() * 800) + 100,
         image_url: tpl.imagePool[Math.floor(Math.random() * tpl.imagePool.length)],
         description: tpl.description.replace("{city}", normalizedCity).replace("{country}", country),
-        booking_url: "https://www.getyourguide.com"
+        booking_url: `https://www.getyourguide.com/s/?q=${normalizedCity}`
     }));
 }
 
