@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plane, UserCircle, Menu, X, Sparkles } from "lucide-react";
+import { Plane, Menu, X, Sparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
   { href: "/explore", label: "Destinations" },
