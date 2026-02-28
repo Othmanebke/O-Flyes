@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plane, UserCircle, Menu, X } from "lucide-react";
+import { Plane, UserCircle, Menu, X, Sparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 
@@ -39,14 +39,12 @@ export default function Navbar() {
         localStorage.removeItem("token");
       }
     }
-  }, [pathname]); // re-check on route change
+  }, [pathname]);
 
-  // Close menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -58,148 +56,129 @@ export default function Navbar() {
   return (
     <nav
       className={clsx(
-        "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl px-5 h-14 flex items-center justify-between",
-        "rounded-2xl transition-all duration-500 ease-out",
+        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-6xl px-6 h-16 flex items-center justify-between",
+        "rounded-[24px] transition-all duration-700 ease-out",
         scrolled
           ? [
-            // Glass pill — iOS style
-            "bg-sand-50/70 backdrop-blur-2xl",
-            // Outer border — clean side edges
-            "border border-white/40",
-            // Soft inner highlight (ring = inset border)
-            "ring-1 ring-inset ring-white/60",
-            // Elevation shadow
-            "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_2px_rgba(255,255,255,0.6)_inset]",
+            "bg-[#141822]/80 backdrop-blur-2xl px-8",
+            "border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
           ].join(" ")
           : [
-            // Transparent at top
-            "bg-sand-50/20 backdrop-blur-sm",
-            "border border-white/20",
-            "ring-1 ring-inset ring-white/30",
-            "shadow-sm",
+            "bg-white/5 backdrop-blur-md px-6",
+            "border border-white/5 shadow-sm",
           ].join(" ")
       )}
     >
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-1.5 font-semibold text-[15px] text-dark">
-        <span className="w-7 h-7 bg-dark rounded-xl flex items-center justify-center">
-          <Plane className="w-3.5 h-3.5 text-white" />
-        </span>
-        <span>AI<span className="text-gold">VANA</span></span>
+      <Link href="/" className="flex items-center gap-3 font-serif text-lg tracking-tight text-white group">
+        <div className="w-10 h-10 bg-gold/10 rounded-2xl flex items-center justify-center border border-gold/20 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(184,134,11,0.1)]">
+          <Plane className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform" />
+        </div>
+        <div className="flex flex-col">
+          <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
+          <span className="text-[7px] uppercase tracking-[0.4em] text-gold/60 font-sans mt-0.5">Luxe & Liberté</span>
+        </div>
       </Link>
 
-      {/* Center label */}
-      <span className="hidden md:block text-xs text-dark-300 tracking-wide">
-        Basé sur l&rsquo;IA Voyage
-      </span>
-
       {/* Nav links - Desktop */}
-      <div className="hidden md:flex items-center gap-5">
+      <div className="hidden lg:flex items-center gap-8">
         {links.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
             className={clsx(
-              "text-[13px] font-medium transition-colors relative group",
-              pathname === href ? "text-dark" : "text-dark-400 hover:text-dark"
+              "text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group py-2",
+              pathname === href ? "text-gold" : "text-white/40 hover:text-white"
             )}
           >
             {label}
             <span
               className={clsx(
-                "absolute -bottom-0.5 left-0 h-px bg-gold transition-all duration-300",
-                pathname === href ? "w-full" : "w-0 group-hover:w-full"
+                "absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-gold transition-all duration-500 rounded-full",
+                pathname === href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/3 group-hover:opacity-50"
               )}
             />
           </Link>
         ))}
+      </div>
 
+      {/* Action Buttons */}
+      <div className="flex items-center gap-4">
         {isLoggedIn ? (
           <Link
             href="/dashboard"
-            className={clsx(
-              "flex items-center gap-2 text-[13px] font-semibold px-3 py-1.5 rounded-xl border-2 transition-all duration-200 hover:scale-105",
-              pathname.startsWith("/dashboard")
-                ? "border-gold text-gold bg-gold/10"
-                : "border-gold/50 text-gold hover:border-gold hover:bg-gold/10"
-            )}
-            title="Mon dashboard"
+            className="flex items-center gap-3 bg-white/5 hover:bg-gold transition-all pl-2 pr-5 py-2 rounded-2xl border border-white/10 group active:scale-95"
           >
-            <span className="w-5 h-5 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 text-[10px] font-bold">
-              {userName.charAt(0).toUpperCase() || "?"}
-            </span>
-            <span>Dashboard</span>
+            <div className="w-8 h-8 bg-gold text-dark rounded-xl flex items-center justify-center text-[10px] font-black">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-[10px] uppercase font-black tracking-widest text-white group-hover:text-dark">Profil</span>
           </Link>
         ) : (
           <Link
             href="/auth/login"
-            className={clsx(
-              "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:scale-105",
-              pathname.startsWith("/auth")
-                ? "border-gold text-gold bg-gold/10"
-                : "border-gold/50 text-gold hover:border-gold hover:bg-gold/10"
-            )}
-            title="Se connecter"
+            className="hidden sm:flex items-center gap-2 bg-gold text-dark px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-gold-300 transition-all shadow-xl shadow-gold/10 active:scale-95"
           >
-            <UserCircle className="w-4 h-4" />
+            Se connecter
           </Link>
         )}
-      </div>
 
-      {/* Mobile Menu Controls */}
-      <div className="flex md:hidden items-center gap-3">
-        {isLoggedIn ? (
-          <Link href="/dashboard" className="w-8 h-8 bg-gold-400 rounded-full flex items-center justify-center text-dark-900 text-[10px] font-bold">
-            {userName.charAt(0).toUpperCase() || "?"}
-          </Link>
-        ) : (
-          <Link href="/auth/login" className="text-dark-400">
-            <UserCircle className="w-5 h-5" />
-          </Link>
-        )}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="w-10 h-10 flex items-center justify-center text-dark"
+          className="lg:hidden w-10 h-10 flex items-center justify-center text-white bg-white/5 rounded-xl border border-white/10"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div
-        className={clsx(
-          "fixed inset-0 z-50 bg-sand-50/95 backdrop-blur-xl transition-all duration-500 ease-in-out md:hidden flex flex-col items-center justify-center gap-8",
-          mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        )}
-        style={{ top: "0", left: "0", width: "100%", height: "100vh" }}
-      >
-        <button
-          onClick={() => setMobileMenuOpen(false)}
-          className="absolute top-6 right-8 text-dark"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
-        {links.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className={clsx(
-              "text-2xl font-serif transition-colors",
-              pathname === href ? "text-gold" : "text-dark hover:text-gold"
-            )}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="fixed inset-0 z-[200] bg-[#0A0D14]/98 backdrop-blur-3xl flex flex-col items-center justify-center gap-10 p-10"
           >
-            {label}
-          </Link>
-        ))}
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-10 right-10 text-white/40 hover:text-gold transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
 
-        <Link
-          href="/auth/login"
-          className="mt-4 btn-dark py-3 px-10 text-base"
-        >
-          {isLoggedIn ? "Mon Dashboard" : "Se connecter"}
-        </Link>
-      </div>
+            <div className="flex flex-col items-center gap-8">
+              {links.map(({ href, label }, idx) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  key={href}
+                >
+                  <Link
+                    href={href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={clsx(
+                      "text-4xl font-serif transition-all",
+                      pathname === href ? "text-gold italic" : "text-white/40 hover:text-white"
+                    )}
+                  >
+                    {label}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            <Link
+              href="/auth/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-12 bg-gold text-dark px-16 py-5 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-gold/20 flex items-center gap-3"
+            >
+              <Sparkles className="w-4 h-4" /> Accès Membre
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
