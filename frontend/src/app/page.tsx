@@ -74,7 +74,7 @@ export default function HomePage() {
         <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/20 to-transparent h-32 z-10" />
 
         {/* Content */}
-        <div className="relative z-20 w-full">
+        <div className="relative z-20 w-full pt-32 md:pt-40">
           <div className="max-w-7xl mx-auto px-8 pb-16">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               {/* Left – dynamic title */}
