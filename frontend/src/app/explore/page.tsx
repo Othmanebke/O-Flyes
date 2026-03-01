@@ -285,17 +285,17 @@ const DESTINATIONS: Destination[] = [
 // ─── Config filtres ────────────────────────────────────────────────────────────
 const CONTINENTS = ["Tous", "Europe", "Asie", "Afrique", "Amérique", "Océanie"];
 const BUDGET_TIERS = [
-  { id: "tous", label: "Tous", color: "bg-dark-900 text-white", emoji: "" },
-  { id: "petit", label: "Essentiel", color: "bg-emerald-700 text-white", emoji: "✦", range: "< 1 500€" },
-  { id: "moyen", label: "Confort", color: "bg-sky-700 text-white", emoji: "✦✦", range: "1 500 — 3 500€" },
-  { id: "confort", label: "Premium", color: "bg-violet-700 text-white", emoji: "✦✦✦", range: "3 500 — 6 000€" },
-  { id: "luxe", label: "Prestige", color: "bg-gold-500 text-dark-900", emoji: "✦✦✦✦", range: "6 000€+" },
+  { id: "tous", label: "Tous", color: "bg-[#141822] text-white border-white/20", emoji: "" },
+  { id: "petit", label: "Essentiel", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", emoji: "✦", range: "< 1 500€" },
+  { id: "moyen", label: "Confort", color: "bg-sky-500/10 text-sky-400 border-sky-500/20", emoji: "✦✦", range: "1 500 — 3 500€" },
+  { id: "confort", label: "Premium", color: "bg-violet-500/10 text-violet-400 border-violet-500/20", emoji: "✦✦✦", range: "3 500 — 6 000€" },
+  { id: "luxe", label: "Prestige", color: "bg-gold/10 text-gold-400 border-gold/20", emoji: "✦✦✦✦", range: "6 000€+" },
 ];
 const BUDGET_BADGE: Record<string, string> = {
-  petit: "bg-emerald-50 text-emerald-800 border border-emerald-200",
-  moyen: "bg-sky-50 text-sky-800 border border-sky-200",
-  confort: "bg-violet-50 text-violet-800 border border-violet-200",
-  luxe: "bg-amber-50 text-amber-800 border border-amber-200",
+  petit: "bg-[#0A0D14]/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg",
+  moyen: "bg-[#0A0D14]/80 backdrop-blur-md text-sky-400 border border-sky-500/30 shadow-lg",
+  confort: "bg-[#0A0D14]/80 backdrop-blur-md text-violet-400 border border-violet-500/30 shadow-lg",
+  luxe: "bg-[#0A0D14]/80 backdrop-blur-md text-gold-400 border border-gold/30 shadow-[0_0_15px_rgba(201,168,76,0.2)]",
 };
 const STYLES = ["Tous", "plage", "culture", "nature", "aventure", "gastronomie", "bien-être", "luxe"];
 
@@ -317,18 +317,18 @@ export default function ExplorePage() {
   const activeCount = (continent !== "Tous" ? 1 : 0) + (budgetTier !== "tous" ? 1 : 0) + (style !== "Tous" ? 1 : 0);
 
   return (
-    <div className="bg-sand-50 min-h-screen -mt-20">
+    <div className="bg-[#0A0D14] min-h-screen -mt-20">
 
       {/* ═══ HERO ════════════════════════════════════════════════════════════ */}
       <div className="relative min-h-[580px] overflow-hidden">
         <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=90" alt="Voyage" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/15" />
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/60 via-dark/30 to-sand-50" />
+          <div className="absolute inset-0 bg-[#0A0D14]/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#0A0D14]" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0">
-          <div className="inline-flex items-center gap-2 bg-sand-50/15 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 mb-6">
-            <Plane className="w-3.5 h-3.5 text-gold-300" />
+        <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0 z-10">
+          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-6">
+            <Plane className="w-3.5 h-3.5 text-gold" />
             <span className="text-white/90 text-xs font-medium tracking-wide">AIVANA Destinations</span>
           </div>
           <h1 className="font-serif text-5xl md:text-7xl text-white leading-tight mb-4 max-w-2xl">
@@ -341,7 +341,7 @@ export default function ExplorePage() {
             {[{ v: "22+", l: "Destinations" }, { v: "5", l: "Continents" }, { v: "650€", l: "À partir de" }, { v: "14k€", l: "Luxe absolu" }].map(s => (
               <div key={s.l}>
                 <p className="text-2xl md:text-3xl font-extrabold text-gold drop-shadow-sm">{s.v}</p>
-                <p className="text-dark text-xs uppercase tracking-widest font-extrabold">{s.l}</p>
+                <p className="text-white/50 text-xs uppercase tracking-widest font-extrabold mt-1">{s.l}</p>
               </div>
             ))}
           </div>
@@ -349,13 +349,13 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ TOP 5 ═══════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-8 mb-16">
+      <div className="max-w-7xl mx-auto px-8 mb-16 relative z-20">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="section-label mb-2">Sélection</p>
-            <h2 className="font-serif text-4xl md:text-5xl text-dark">Top 5 — Un monde, 5 coups de cœur</h2>
+            <p className="section-label mb-2 text-gold/80">Sélection</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-white">Top 5 — Un monde, 5 coups de cœur</h2>
           </div>
-          <p className="hidden md:block text-dark-400 text-sm max-w-xs text-right">
+          <p className="hidden md:block text-white/50 text-sm max-w-xs text-right">
             Vol + hôtel pour 2 personnes<br />sur 2 semaines depuis Paris
           </p>
         </div>
@@ -366,12 +366,12 @@ export default function ExplorePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className={`relative rounded-3xl overflow-hidden group card-hover ${i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}`}
+              className={`relative rounded-3xl overflow-hidden group hover:shadow-[0_0_30px_rgba(201,168,76,0.15)] transition-all ${i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}`}
             >
               <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 via-[#0A0D14]/20 to-transparent" />
               <div className="absolute top-3 left-3">
-                <span className="text-[10px] font-semibold bg-sand-50/90 text-dark px-2.5 py-1 rounded-full">{d.continentRank}</span>
+                <span className="text-[10px] font-semibold bg-[#141822]/90 backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full">{d.continentRank}</span>
               </div>
               <div className="absolute top-3 right-3">
                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
@@ -381,21 +381,21 @@ export default function ExplorePage() {
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-1 mb-2">
                   {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-gold-400 text-gold-400" : "text-white/30"}`} />
+                    <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-gold text-gold" : "text-white/20"}`} />
                   ))}
                   <span className="text-white/60 text-[10px] ml-1">{d.rating}</span>
                 </div>
                 <h3 className="font-serif text-2xl text-white leading-tight mb-1">{d.name}</h3>
                 <p className="text-white/60 text-xs mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" />{d.country}</p>
-                <div className="bg-sand-50/10 backdrop-blur-sm rounded-xl p-3 mb-3">
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-3 border border-white/5">
                   <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 sem</p>
                   <p className="text-white font-bold text-lg">{d.tripBudget.min.toLocaleString()}€ <span className="text-white/50 text-sm font-normal">— {d.tripBudget.max.toLocaleString()}€</span></p>
                   <div className="flex gap-3 mt-1.5">
-                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5" /> Vol ~{d.flightFrom}€/pers</span>
-                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5" /> Hôtel ~{d.hotelPerNight}€/nuit</span>
+                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5 text-gold/80" /> Vol ~{d.flightFrom}€/pers</span>
+                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5 text-gold/80" /> Hôtel ~{d.hotelPerNight}€/nuit</span>
                   </div>
                 </div>
-                <p className="text-white/70 text-xs italic leading-snug">&ldquo;{d.highlight}&rdquo;</p>
+                <p className="text-gold-200/80 text-xs italic leading-snug">&ldquo;{d.highlight}&rdquo;</p>
               </div>
             </motion.div>
           ))}
@@ -404,60 +404,60 @@ export default function ExplorePage() {
 
       {/* ═══ FILTRES ═════════════════════════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10 sticky top-[72px] z-40">
-        <div className="bg-sand-50/90 backdrop-blur-md border border-sand-200 rounded-2xl p-4 shadow-sm">
+        <div className="bg-[#141822]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl">
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-xs text-dark-400 font-medium uppercase tracking-widest mr-2">Budget</span>
+            <span className="text-xs text-white/50 font-medium uppercase tracking-widest mr-2">Budget</span>
             {BUDGET_TIERS.map(b => (
               <button key={b.id} onClick={() => setBudgetTier(b.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${budgetTier === b.id ? b.color + " border-transparent scale-105" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-dark-200"}`}>
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${budgetTier === b.id ? b.color + " border-transparent scale-105" : "bg-[#0A0D14] text-white/60 border-white/10 hover:border-white/30 hover:text-white"}`}>
                 {b.emoji} {b.label} {"range" in b && <span className="opacity-70">({b.range})</span>}
               </button>
             ))}
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`ml-auto flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-all ${showFilters ? "bg-dark text-white border-dark" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-dark"}`}>
-              <Filter className="w-3 h-3" /> Filtres {activeCount > 0 && <span className="bg-gold-400 text-dark rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">{activeCount}</span>}
+              className={`ml-auto flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-all ${showFilters ? "bg-gold text-[#0A0D14] border-gold" : "bg-[#0A0D14] text-white/60 border-white/10 hover:border-white/30 hover:text-white"}`}>
+              <Filter className="w-3 h-3" /> Filtres {activeCount > 0 && <span className="bg-[#141822] text-gold rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold shadow-[0_0_10px_rgba(201,168,76,0.5)] border border-gold/30">{activeCount}</span>}
               <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
             </button>
           </div>
           {showFilters && (
-            <div className="flex flex-wrap gap-4 pt-3 border-t border-sand-100">
+            <div className="flex flex-wrap gap-4 pt-3 border-t border-white/10">
               <div>
-                <p className="text-[10px] text-dark-300 uppercase tracking-widest mb-1.5">Continent</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Continent</p>
                 <div className="flex flex-wrap gap-1.5">
                   {CONTINENTS.map(c => (
                     <button key={c} onClick={() => setContinent(c)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${continent === c ? "bg-dark text-white border-dark" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-dark"}`}>{c}</button>
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${continent === c ? "bg-gold text-[#0A0D14] border-gold" : "bg-[#0A0D14] text-white/60 border-white/10 hover:border-gold/50 hover:text-gold"}`}>{c}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="text-[10px] text-dark-300 uppercase tracking-widest mb-1.5">Style de voyage</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Style de voyage</p>
                 <div className="flex flex-wrap gap-1.5">
                   {STYLES.map(s => (
                     <button key={s} onClick={() => setStyle(s)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${style === s ? "bg-gold-400 text-dark border-gold-400" : "bg-sand-50 text-dark-400 border-sand-200 hover:border-gold-300"}`}>{s}</button>
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${style === s ? "bg-gold text-[#0A0D14] border-gold" : "bg-[#0A0D14] text-white/60 border-white/10 hover:border-gold/50 hover:text-gold"}`}>{s}</button>
                   ))}
                 </div>
               </div>
               {activeCount > 0 && (
-                <button onClick={() => { setContinent("Tous"); setBudgetTier("tous"); setStyle("Tous"); }} className="self-end text-xs text-dark-400 hover:text-dark underline">Réinitialiser</button>
+                <button onClick={() => { setContinent("Tous"); setBudgetTier("tous"); setStyle("Tous"); }} className="self-end text-xs text-white/50 hover:text-white underline pb-1">Réinitialiser</button>
               )}
             </div>
           )}
-          <p className="text-[11px] text-dark-300 mt-2">{filtered.length} destination{filtered.length > 1 ? "s" : ""} trouvée{filtered.length > 1 ? "s" : ""}</p>
+          <p className="text-[11px] text-white/40 mt-2">{filtered.length} destination{filtered.length > 1 ? "s" : ""} trouvée{filtered.length > 1 ? "s" : ""}</p>
         </div>
       </div>
 
       {/* ═══ GRILLE ══════════════════════════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-8 pb-16">
         {filtered.length === 0 ? (
-          <div className="text-center py-24 text-dark-400">
+          <div className="text-center py-24 text-white/60">
             <p className="text-4xl mb-4">🌍</p>
-            <p className="font-serif text-2xl text-dark mb-3">Aucune destination pour ces critères</p>
+            <p className="font-serif text-2xl text-white mb-3">Aucune destination pour ces critères</p>
             <p className="text-sm mb-6">Essayez en élargissant vos filtres ou demandez à l&apos;IA !</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setContinent("Tous"); setBudgetTier("tous"); setStyle("Tous"); }} className="btn-dark text-sm">Tout afficher</button>
-              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold text-sm">Demander à l&apos;IA</button>
+              <button onClick={() => { setContinent("Tous"); setBudgetTier("tous"); setStyle("Tous"); }} className="btn-gold text-sm bg-white/10 border-white/20 text-white hover:text-dark">Tout afficher</button>
+              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold text-sm shadow-[0_0_20px_rgba(201,168,76,0.3)]">Demander à l&apos;IA</button>
             </div>
           </div>
         ) : (
@@ -469,45 +469,45 @@ export default function ExplorePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: i * 0.05 }}
               >
-                <Link href={`/destination/${d.id}`} className="bg-sand-50 rounded-3xl overflow-hidden card-hover group block transition-all hover:shadow-2xl" style={{ border: '1.5px solid #C9A84C', boxShadow: '0 2px 12px 0 rgba(201,168,76,0.10)' }}>
+                <Link href={`/destination/${d.id}`} className="bg-[#141822] rounded-3xl overflow-hidden group block transition-all hover:shadow-[0_0_30px_rgba(201,168,76,0.15)]" style={{ border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div className="relative h-48 overflow-hidden">
                     <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 to-transparent" />
                     <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
                       {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.emoji} {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
                     </span>
-                    <span className="absolute top-3 right-3 text-[10px] bg-sand-50/90 text-dark font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
+                    <span className="absolute top-3 right-3 text-[10px] bg-[#141822]/90 backdrop-blur-md text-white border border-white/10 font-medium px-2 py-0.5 rounded-full">{d.continent}</span>
                     <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-gold-400 text-gold-400" />
+                      <Star className="w-3 h-3 fill-gold text-gold" />
                       <span className="text-white text-xs font-semibold">{d.rating}</span>
                     </div>
-                    {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-gold-400 text-dark font-bold px-2 py-0.5 rounded-full">⭐ Top 5</span>}
+                    {d.topDest && <span className="absolute bottom-3 right-3 text-[10px] bg-gold text-dark font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(201,168,76,0.5)]">⭐ Top 5</span>}
                   </div>
                   <div className="p-5">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="font-serif text-xl text-dark leading-tight">{d.name}</h3>
-                        <p className="text-dark-400 text-xs flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{d.country}</p>
+                        <h3 className="font-serif text-xl text-white leading-tight">{d.name}</h3>
+                        <p className="text-white/60 text-xs flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3 text-gold/80" />{d.country}</p>
                       </div>
-                      <span className="w-8 h-8 rounded-full border border-sand-200 flex items-center justify-center bg-sand-50 group-hover:bg-dark group-hover:text-white group-hover:border-dark transition-all flex-shrink-0">
+                      <span className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center bg-[#0A0D14] group-hover:bg-gold group-hover:text-dark group-hover:border-gold transition-all flex-shrink-0 text-white/50">
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
-                    <p className="text-dark-400 text-xs leading-relaxed mb-4 line-clamp-2">{d.description}</p>
-                    <div className="bg-sand-50 rounded-xl p-3 mb-4">
-                      <p className="text-[10px] text-dark-300 uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 semaines</p>
-                      <p className="text-dark font-bold text-base">{d.tripBudget.min.toLocaleString()}€<span className="text-dark-300 font-normal text-sm"> — {d.tripBudget.max.toLocaleString()}€</span></p>
+                    <p className="text-white/60 text-xs leading-relaxed mb-4 line-clamp-2">{d.description}</p>
+                    <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/5">
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 semaines</p>
+                      <p className="text-white font-bold text-base">{d.tripBudget.min.toLocaleString()}€<span className="text-white/40 font-normal text-sm"> — {d.tripBudget.max.toLocaleString()}€</span></p>
                       <div className="flex gap-4 mt-1.5">
-                        <span className="text-dark-400 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-gold-500" /> ~{d.flightFrom}€ <span className="text-dark-300">A/R/pers</span></span>
-                        <span className="text-dark-400 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-gold-500" /> ~{d.hotelPerNight}€ <span className="text-dark-300">/nuit</span></span>
+                        <span className="text-white/60 text-[11px] flex items-center gap-1"><Plane className="w-3 h-3 text-gold" /> ~{d.flightFrom}€ <span className="text-white/40">A/R/pers</span></span>
+                        <span className="text-white/60 text-[11px] flex items-center gap-1"><Hotel className="w-3 h-3 text-gold" /> ~{d.hotelPerNight}€ <span className="text-white/40">/nuit</span></span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mb-4">
-                      <Calendar className="w-3.5 h-3.5 text-dark-300 flex-shrink-0" />
-                      <p className="text-[11px] text-dark-400">{d.bestMonths.join(" · ")}</p>
+                      <Calendar className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                      <p className="text-[11px] text-white/60">{d.bestMonths.join(" · ")}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {d.style.slice(0, 3).map(s => <span key={s} className="tag capitalize text-[10px]">{s}</span>)}
+                      {d.style.slice(0, 3).map(s => <span key={s} className="tag text-white/60 border-white/10 capitalize text-[10px]">{s}</span>)}
                     </div>
                   </div>
                 </Link>
@@ -519,22 +519,22 @@ export default function ExplorePage() {
 
       {/* ═══ IA CTA ══════════════════════════════════════════════════════════ */}
       <div className="max-w-7xl mx-auto px-8 pb-16">
-        <div className="relative bg-dark rounded-3xl p-10 md:p-14 overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gold-400/10 rounded-full -translate-y-1/3 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-sand-50/5 rounded-full translate-y-1/3 -translate-x-1/3" />
+        <div className="relative bg-[#141822] rounded-3xl p-10 md:p-14 overflow-hidden border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 rounded-full -translate-y-1/3 translate-x-1/3 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/3 blur-xl" />
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1">
-              <p className="section-label mb-3 text-gold-400/80">IA Voyage</p>
+              <p className="section-label mb-3 text-gold/80">IA Voyage</p>
               <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-4">
                 Pas trouvé votre<br /><span className="text-gold-200 italic">destination idéale ?</span>
               </h2>
               <p className="text-white/60 text-sm mb-8 max-w-md leading-relaxed">
                 Décrivez vos envies, votre budget, vos dates — notre IA trouve la destination parfaite,
-                <strong className="text-white/80"> pour n&apos;importe quel budget</strong>.
+                <strong className="text-white/90"> pour n&apos;importe quel budget</strong>.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold">Demander à l&apos;IA ✈</button>
-                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-sand-50/10 transition-colors">
+                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)]">Demander à l&apos;IA ✈</button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
                   <ArrowUpRight className="w-4 h-4 text-white" />
                 </button>
               </div>
@@ -546,7 +546,7 @@ export default function ExplorePage() {
                 "\"Famille avec ados, nature, 3 000€\"",
                 "\"Plage tropicale, moins de 1 200€\"",
               ].map(p => (
-                <div key={p} className="bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic">{p}</div>
+                <div key={p} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/70 text-xs italic">{p}</div>
               ))}
             </div>
           </div>

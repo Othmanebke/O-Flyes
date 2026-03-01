@@ -52,22 +52,22 @@ function LoginContent() {
   return (
     <>
       <div className="flex items-center gap-2 justify-center mb-10 lg:hidden">
-        <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
+        <div className="w-9 h-9 bg-[#141822] border border-white/10 rounded-xl flex items-center justify-center">
           <Plane className="w-5 h-5 text-white -rotate-45" />
         </div>
-        <span className="font-serif text-2xl text-dark">AI<span className="text-gold">VANA</span></span>
+        <span className="font-serif text-2xl text-white">AI<span className="text-gold">VANA</span></span>
       </div>
 
-      <p className="section-label mb-3">Connexion</p>
-      <h1 className="font-serif text-4xl text-dark mb-2">Content de vous revoir</h1>
-      <p className="text-dark-400 text-sm mb-8">
+      <p className="section-label mb-3 text-gold/80">Connexion</p>
+      <h1 className="font-serif text-4xl text-white mb-2">Content de vous revoir</h1>
+      <p className="text-white/60 text-sm mb-8">
         Pas encore de compte ?{" "}
-        <Link href="/auth/register" className="font-medium hover:underline text-gold">S&apos;inscrire</Link>
+        <Link href="/auth/register" className="font-medium hover:text-white transition-colors text-gold">S&apos;inscrire</Link>
       </p>
 
       {/* ✅ Email vérifié avec succès */}
       {justVerified && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
+        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
           Email confirmé ! Vous pouvez maintenant vous connecter.
         </div>
@@ -75,19 +75,19 @@ function LoginContent() {
 
       {/* ❌ Erreur */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
           {error}
           {showResend && (
-            <div className="mt-2 pt-2 border-t border-red-100">
+            <div className="mt-2 pt-2 border-t border-red-500/20">
               {resendStatus === "sent" ? (
-                <p className="text-emerald-600 text-xs flex items-center gap-1.5">
+                <p className="text-emerald-400 text-xs flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Email renvoyé !
                 </p>
               ) : (
                 <button
                   onClick={handleResend}
                   disabled={resendStatus === "loading"}
-                  className="text-xs font-medium text-red-700 hover:text-red-800 flex items-center gap-1.5 underline"
+                  className="text-xs font-medium text-red-300 hover:text-red-200 flex items-center gap-1.5 underline"
                 >
                   {resendStatus === "loading"
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</>
@@ -102,18 +102,18 @@ function LoginContent() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Email</label>
+          <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Email</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
             placeholder="vous@exemple.com" />
         </div>
         <div>
           <div className="flex justify-between mb-2">
-            <label className="text-xs font-medium text-dark-400 uppercase tracking-widest">Mot de passe</label>
-            <Link href="/auth/forgot-password" className="text-xs text-gold hover:underline">Oublié ?</Link>
+            <label className="text-xs font-medium text-white/50 uppercase tracking-widest">Mot de passe</label>
+            <Link href="/auth/forgot-password" className="text-xs text-gold hover:text-white transition-colors">Oublié ?</Link>
           </div>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-            className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
             placeholder="••••••••" />
         </div>
         <button type="submit" disabled={loading}
@@ -123,13 +123,13 @@ function LoginContent() {
       </form>
 
       <div className="my-6 flex items-center gap-3">
-        <hr className="flex-1 border-sand-200" />
-        <span className="text-dark-300 text-xs">ou</span>
-        <hr className="flex-1 border-sand-200" />
+        <hr className="flex-1 border-white/10" />
+        <span className="text-white/40 text-[10px] tracking-widest uppercase">ou</span>
+        <hr className="flex-1 border-white/10" />
       </div>
 
       <a href="https://api-gateway-v0vr.onrender.com/api/auth/google"
-        className="w-full flex items-center justify-center gap-3 py-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
+        className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-xl text-sm font-medium text-white/80 hover:border-white/30 hover:bg-[#141822] transition-colors">
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -140,7 +140,7 @@ function LoginContent() {
       </a>
 
       <a href="https://api-gateway-v0vr.onrender.com/api/auth/microsoft"
-        className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-sand-300 rounded-xl text-sm font-medium text-dark hover:border-dark-200 hover:bg-sand-50 transition-colors">
+        className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-white/10 rounded-xl text-sm font-medium text-white/80 hover:border-white/30 hover:bg-[#141822] transition-colors">
         <svg className="w-5 h-5" viewBox="0 0 21 21">
           <path fill="#f25022" d="M0 0h10v10H0z" />
           <path fill="#7fba00" d="M11 0h10v10H11z" />
@@ -155,19 +155,19 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-sand-50 flex -mt-20">
+    <div className="min-h-[100vh] bg-[#0A0D14] flex -mt-20">
       {/* Left — decorative panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12 pt-32">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#141822] overflow-hidden flex-col justify-between p-12 pt-32 border-r border-white/5">
         <div className="relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-sand-50 rounded-xl flex items-center justify-center">
-              <Plane className="w-5 h-5 text-dark -rotate-45" />
+            <div className="w-9 h-9 bg-white/10 border border-white/10 backdrop-blur-md rounded-xl flex items-center justify-center">
+              <Plane className="w-5 h-5 text-gold -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-white">AI<span className="text-gold-400">VANA</span></span>
+            <span className="font-serif text-2xl text-white">AI<span className="text-gold">VANA</span></span>
           </div>
         </div>
         <div className="relative z-10">
-          <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Bienvenue</p>
+          <p className="text-white/40 text-[10px] tracking-widest uppercase mb-4">Bienvenue</p>
           <h2 className="font-serif text-5xl text-white leading-tight mb-6">Chaque voyage<br />commence ici.</h2>
           <p className="text-white/50 text-sm max-w-xs leading-relaxed">
             Décrivez vos envies, laissez notre IA vous guider vers la destination parfaite.
@@ -179,9 +179,9 @@ export default function LoginPage() {
             { label: "Kyoto", sub: "Japon", img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=120&q=70" },
             { label: "Marrakech", sub: "Maroc", img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=120&q=70" },
           ].map((d) => (
-            <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1">
+            <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1 border border-white/5">
               <img src={d.img} alt={d.label} className="w-full h-24 object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 to-transparent" />
               <div className="absolute bottom-2 left-3">
                 <p className="text-white text-xs font-semibold">{d.label}</p>
                 <p className="text-white/50 text-[10px]">{d.sub}</p>
@@ -189,8 +189,8 @@ export default function LoginPage() {
             </div>
           ))}
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-sand-50/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
       </div>
 
       {/* Right — form */}

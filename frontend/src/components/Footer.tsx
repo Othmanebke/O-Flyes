@@ -60,9 +60,9 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-dark-900 text-white mt-24">
+    <footer className="bg-[#0A0D14] border-t border-white/10 text-white relative z-20">
       {/* Top strip — golden */}
-      <div className="h-px bg-gradient-to-r from-transparent via-gold-500/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-8 pt-16 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
@@ -70,18 +70,18 @@ export default function Footer() {
           {/* ── Brand col ─────────────────────────────────────────── */}
           <div className="md:col-span-4 text-center md:text-left">
             <Link href="/" className="flex items-center justify-center md:justify-start gap-2 mb-5">
-              <div className="w-8 h-8 bg-sand-50/10 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center">
                 <Plane className="w-4 h-4 text-white -rotate-45" />
               </div>
-              <span className="font-serif text-xl">AI<span className="text-gold-400">VANA</span></span>
+              <span className="font-serif text-xl">AI<span className="text-gold">VANA</span></span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs mx-auto md:mx-0">
+            <p className="text-white/60 text-[13px] leading-relaxed mb-6 max-w-xs mx-auto md:mx-0">
               Votre assistant voyage intelligent. Décrivez vos envies, notre IA trouve la destination parfaite — vols, hôtels, activités inclus.
             </p>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-sand-500 text-xs mb-2">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-gold text-xs mb-2">
               <MapPin className="w-3.5 h-3.5" /> Paris, France
             </div>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-sand-500 text-xs">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-gold text-xs">
               <Mail className="w-3.5 h-3.5" /> contact@aivana.com
             </div>
           </div>
@@ -89,11 +89,11 @@ export default function Footer() {
           {/* ── Navigation ─────────────────────────────────────────── */}
           <div className="grid grid-cols-2 md:col-span-4 gap-8">
             <div className="md:col-span-1">
-              <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
+              <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
               <ul className="space-y-3">
                 {NAV.map(({ href, label }) => (
                   <li key={href}>
-                    <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors flex items-center gap-1 group">
+                    <Link href={href} className="text-white/60 hover:text-white text-[13px] transition-colors flex items-center gap-1 group">
                       <span className="group-hover:translate-x-0.5 transition-transform">{label}</span>
                     </Link>
                   </li>
@@ -102,11 +102,11 @@ export default function Footer() {
             </div>
 
             <div className="md:col-span-1">
-              <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
+              <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
               <ul className="space-y-3">
                 {LEGAL.map(({ href, label }) => (
                   <li key={label}>
-                    <Link href={href} className="text-gray-400 hover:text-white text-sm transition-colors">{label}</Link>
+                    <Link href={href} className="text-white/60 hover:text-white text-[13px] transition-colors">{label}</Link>
                   </li>
                 ))}
               </ul>
@@ -115,8 +115,8 @@ export default function Footer() {
 
           {/* ── Newsletter ─────────────────────────────────────────── */}
           <div className="md:col-span-4 text-center md:text-left">
-            <p className="text-sand-500 text-[11px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
-            <p className="text-gray-400 text-sm leading-relaxed mb-4">
+            <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
+            <p className="text-white/60 text-[13px] leading-relaxed mb-4">
               Recevez chaque semaine les meilleures offres de voyage et les conseils de notre IA.
             </p>
             <form
@@ -126,16 +126,16 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="votre@email.com"
-                className="flex-1 bg-sand-50/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 focus:bg-sand-50/8 transition-all"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all"
               />
               <button
                 type="submit"
-                className="flex-shrink-0 w-10 h-10 bg-gold-400 hover:bg-gold-300 rounded-xl flex items-center justify-center text-dark-900 transition-all hover:scale-105"
+                className="flex-shrink-0 w-10 h-10 bg-gold hover:bg-gold-400 rounded-xl flex items-center justify-center text-[#0A0D14] transition-all hover:scale-105"
               >
                 <Send className="w-4 h-4" />
               </button>
             </form>
-            <p className="text-gray-600 text-xs mt-2">Pas de spam. Désabonnement en 1 clic.</p>
+            <p className="text-white/40 text-[10px] mt-2 tracking-wide uppercase">Pas de spam. Désabonnement en 1 clic.</p>
 
             {/* Réseaux */}
             <div className="flex items-center justify-center md:justify-start gap-3 mt-8">
@@ -144,7 +144,7 @@ export default function Footer() {
                   key={s.name}
                   href={s.href}
                   title={s.name}
-                  className="w-9 h-9 rounded-xl bg-sand-50/5 hover:bg-gold-400/20 hover:text-gold-400 text-gray-400 border border-white/10 hover:border-gold-400/30 flex items-center justify-center transition-all"
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-gold/20 hover:text-gold text-white/50 border border-white/10 hover:border-gold/30 flex items-center justify-center transition-all"
                 >
                   {s.icon}
                 </Link>
@@ -155,11 +155,11 @@ export default function Footer() {
 
         {/* ── Destinations highlights ────────────────────────────── */}
         <div className="border-t border-white/5 pt-8 mb-8">
-          <p className="text-gray-600 text-[10px] tracking-widest uppercase mb-4">Destinations populaires</p>
+          <p className="text-white/40 text-[10px] tracking-widest uppercase mb-4">Destinations populaires</p>
           <div className="flex flex-wrap gap-2">
             {["Bali", "Marrakech", "Kyoto", "Islande", "Lisbonne", "Maldives", "Istanbul", "Buenos Aires", "Queenstown", "Dubaï", "New York", "Thaïlande"].map((d) => (
               <Link key={d} href="/explore"
-                className="text-xs text-sand-500 hover:text-gold-400 transition-colors border border-white/5 hover:border-gold-400/20 px-3 py-1 rounded-full">
+                className="text-[11px] font-medium text-white/50 hover:text-gold transition-colors border border-white/5 hover:border-gold/30 px-3 py-1 rounded-full bg-white/5 block">
                 {d}
               </Link>
             ))}
@@ -168,15 +168,15 @@ export default function Footer() {
 
         {/* ── Bottom bar ─────────────────────────────────────────── */}
         <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-600 text-xs">
+          <p className="text-white/40 text-[11px]">
             © {new Date().getFullYear()} AIVANA — Tous droits réservés.
           </p>
-          <div className="flex items-center gap-2 text-gray-600 text-xs">
+          <div className="flex items-center gap-2 text-white/40 text-[11px]">
             <span>Fait avec</span>
-            <span className="text-gold-500">✦</span>
+            <span className="text-gold">✦</span>
             <span>et beaucoup d&apos;IA</span>
-            <span className="mx-1 text-dark-800">·</span>
-            <Link href="/auth/register" className="text-gold-500/70 hover:text-gold-400 transition-colors flex items-center gap-1">
+            <span className="mx-1 text-white/20">·</span>
+            <Link href="/auth/register" className="text-gold/70 hover:text-gold transition-colors flex items-center gap-1">
               Créer un compte <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>

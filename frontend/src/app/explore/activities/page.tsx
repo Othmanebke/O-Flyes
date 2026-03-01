@@ -137,7 +137,7 @@ export default function ActivitiesPage() {
                 <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-1/2 px-6">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="max-w-3xl mx-auto">
                         <form onSubmit={handleSearch} className="relative">
-                            <div className="flex flex-col md:flex-row gap-0 bg-[#141822] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+                            <div className="flex flex-col md:flex-row gap-0 bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden">
                                 <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
                                     <MapPin className="w-4 h-4 text-gold shrink-0" />
                                     <div className="flex-1 min-w-0">

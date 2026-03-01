@@ -20,16 +20,16 @@ export default function GalleryPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<typeof photos[0] | null>(null);
 
   return (
-    <div className="bg-sand-50 min-h-screen pb-24 relative overflow-hidden -mt-20">
+    <div className="bg-[#0A0D14] min-h-screen pb-24 relative overflow-hidden -mt-20">
       {/* Decorative planes */}
       <div className="absolute top-40 left-12 opacity-[0.03] rotate-[-30deg] pointer-events-none">
-        <Plane className="w-32 h-32 text-dark" />
+        <Plane className="w-32 h-32 text-white" />
       </div>
       <div className="absolute top-[60vh] right-12 opacity-[0.02] rotate-[45deg] pointer-events-none">
-        <Plane className="w-48 h-48 text-dark" />
+        <Plane className="w-48 h-48 text-white" />
       </div>
       <div className="absolute bottom-[20vh] left-10 opacity-[0.04] rotate-[15deg] pointer-events-none z-0">
-        <Plane className="w-64 h-64 text-dark" />
+        <Plane className="w-64 h-64 text-white" />
       </div>
 
       {/* ═══ HERO IMAGE ════════════════════════════════════════════════════════════ */}
@@ -42,10 +42,10 @@ export default function GalleryPage() {
           />
           {/* Enhanced overlay: Darker transition to protect the text areas */}
           <div className="absolute inset-0 bg-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-dark/80 via-dark/50 to-sand-50/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0D14]/80 via-[#0A0D14]/50 to-[#0A0D14]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-8 pt-40 pb-0">
-          <div className="inline-flex items-center gap-2 bg-dark/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-1.5 mb-6">
+          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 mb-6">
             <Plane className="w-3.5 h-3.5 text-gold" />
             <span className="text-white text-xs font-medium tracking-wide">AIVANA Vision</span>
           </div>
@@ -63,7 +63,7 @@ export default function GalleryPage() {
             ].map(s => (
               <div key={s.l}>
                 <p className="text-xl md:text-3xl font-bold text-gold drop-shadow-sm">{s.v}</p>
-                <p className="text-dark/80 text-[10px] uppercase tracking-widest font-black">{s.l}</p>
+                <p className="text-white/50 text-[10px] uppercase tracking-widest font-black">{s.l}</p>
               </div>
             ))}
           </div>
@@ -72,17 +72,17 @@ export default function GalleryPage() {
 
       {/* Editorial Header */}
       <div className="pt-12 pb-16 px-6 md:px-12 max-w-[1400px] mx-auto z-10 relative">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-dark/10 pb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/10 pb-12">
           <div className="max-w-2xl">
             <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-6 flex items-center gap-4">
               <span className="w-12 h-px bg-gold"></span> L'Œil AIVANA
             </p>
-            <h2 className="font-serif text-3xl md:text-6xl text-dark leading-[1.1] tracking-tight">
+            <h2 className="font-serif text-3xl md:text-6xl text-white leading-[1.1] tracking-tight">
               Instants<br />
-              <span className="italic text-dark/70">Mémorables.</span>
+              <span className="italic text-white/60">Mémorables.</span>
             </h2>
           </div>
-          <p className="text-dark/60 text-sm md:text-base max-w-sm md:text-right font-medium leading-relaxed">
+          <p className="text-white/60 text-sm md:text-base max-w-sm md:text-right font-medium leading-relaxed">
             Cliquez sur une image pour en découvrir le lieu et l'afficher en format majestueux. Laissez-vous porter.
           </p>
         </div>
@@ -95,10 +95,10 @@ export default function GalleryPage() {
             <div
               key={photo.id}
               onClick={() => setSelectedPhoto(photo)}
-              className={`relative overflow-hidden group cursor-pointer ${photo.span} ${photo.height}`}
+              className={`relative overflow-hidden rounded-xl border border-white/5 group cursor-pointer ${photo.span} ${photo.height}`}
             >
               {/* Image Container with slow zoom and pan overlay */}
-              <div className="absolute inset-0 bg-dark">
+              <div className="absolute inset-0 bg-[#0A0D14]">
                 <img
                   src={photo.src}
                   alt={photo.alt}
@@ -108,10 +108,10 @@ export default function GalleryPage() {
               </div>
 
               {/* Luxury Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 via-[#0A0D14]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
               {/* Gold Border Highlight on Hover */}
-              <div className="absolute inset-4 border border-gold/0 group-hover:border-gold/30 transition-colors duration-700 pointer-events-none" />
+              <div className="absolute inset-4 border border-gold/0 group-hover:border-gold/30 transition-colors duration-700 pointer-events-none rounded-xl" />
 
               {/* Caption & Icon */}
               <div className="absolute inset-x-0 bottom-0 p-8 flex items-end justify-between translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700">
@@ -119,9 +119,9 @@ export default function GalleryPage() {
                   <p className="text-gold text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {photo.country}
                   </p>
-                  <p className="text-sand-50 font-serif text-2xl">{photo.alt}</p>
+                  <p className="text-white font-serif text-2xl">{photo.alt}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-dark/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 group-hover:text-gold transition-colors">
+                <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 group-hover:text-gold transition-colors">
                   <Maximize2 className="w-4 h-4" />
                 </div>
               </div>
@@ -132,15 +132,15 @@ export default function GalleryPage() {
 
       {/* Editorial Footer CTA */}
       <div className="mt-32 px-6 md:px-12 max-w-[1400px] mx-auto z-10 relative">
-        <div className="bg-dark text-sand-50 p-12 md:p-24 flex flex-col items-center text-center relative overflow-hidden group">
+        <div className="bg-[#141822] border border-white/10 rounded-3xl text-white p-12 md:p-24 flex flex-col items-center text-center relative overflow-hidden group shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
           {/* Subtle background image */}
           <div className="absolute inset-0">
             <img
               src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=80"
-              className="w-full h-full object-cover opacity-20 group-hover:opacity-30 group-hover:scale-105 transition-all duration-1000 saturate-0 group-hover:saturate-50"
+              className="w-full h-full object-cover opacity-10 group-hover:opacity-20 group-hover:scale-105 transition-all duration-1000 saturate-0 group-hover:saturate-50"
               alt=""
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-dark/50 to-dark" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0A0D14]/80 to-[#141822]/90" />
           </div>
 
           <div className="relative z-10 max-w-2xl">
@@ -150,10 +150,10 @@ export default function GalleryPage() {
               <span className="italic text-gold">réinventé.</span>
             </h2>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-              <Link href="/explore" className="bg-gold hover:bg-[#b58f4a] text-dark font-medium px-8 py-4 uppercase tracking-widest text-xs transition-colors">
+              <Link href="/explore" className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.2)]">
                 Écrire mon histoire
               </Link>
-              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="text-sand-50 hover:text-gold border-b border-sand-50/30 hover:border-gold pb-1 font-medium text-sm transition-colors flex items-center gap-2">
+              <button onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))} className="text-white hover:text-gold border-b border-white/30 hover:border-gold pb-1 font-medium text-sm transition-colors flex items-center gap-2">
                 Consulter l'IA <ArrowUpRight className="w-4 h-4" />
               </button>
             </div>
@@ -163,13 +163,13 @@ export default function GalleryPage() {
 
       {/* ═══ LUXURY PHOTO MODAL ════════════════════════════════════════════ */}
       <div
-        className={`fixed inset-0 z-[100] flex items-center justify-center bg-dark/95 backdrop-blur-xl transition-all duration-500
+        className={`fixed inset-0 z-[100] flex items-center justify-center bg-[#0A0D14]/95 backdrop-blur-xl transition-all duration-500
         ${selectedPhoto ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={() => setSelectedPhoto(null)}
       >
         <button
           onClick={() => setSelectedPhoto(null)}
-          className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors p-2 bg-dark/50 rounded-full z-50 hover:bg-white/10"
+          className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors p-2 bg-white/10 border border-white/20 rounded-full z-50 hover:bg-white/20"
         >
           <X className="w-8 h-8" />
         </button>
@@ -196,14 +196,14 @@ export default function GalleryPage() {
                 <MapPin className="w-4 h-4 text-gold" />
                 <span className="text-gold text-xs font-semibold tracking-widest uppercase">{selectedPhoto.country}</span>
               </div>
-              <h3 className="font-serif text-4xl md:text-5xl text-sand-50 mb-4">{selectedPhoto.location}</h3>
+              <h3 className="font-serif text-4xl md:text-5xl text-white mb-4">{selectedPhoto.location}</h3>
               <p className="text-white/60 text-lg mb-8 italic">{selectedPhoto.alt}</p>
 
               <div className="h-px w-full bg-white/10 mb-8" />
 
               <Link
                 href="/explore"
-                className="inline-flex items-center justify-center gap-3 w-full bg-gold hover:bg-[#b58f4a] text-dark font-medium px-8 py-4 uppercase tracking-widest text-xs transition-colors group"
+                className="btn-gold w-full text-center hover:bg-[#b58f4a] group"
               >
                 Planifier un voyage similaire
                 <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

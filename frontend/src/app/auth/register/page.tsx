@@ -60,19 +60,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-sand-50 flex -mt-20">
+    <div className="min-h-[100vh] bg-[#0A0D14] flex -mt-20">
       {/* Left — decorative panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#141822] overflow-hidden flex-col justify-between p-12 border-r border-white/5 pt-32">
         <div className="relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-sand-50 rounded-xl flex items-center justify-center">
-              <Plane className="w-5 h-5 text-dark -rotate-45" />
+            <div className="w-9 h-9 bg-white/10 border border-white/10 backdrop-blur-md rounded-xl flex items-center justify-center">
+              <Plane className="w-5 h-5 text-gold -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-white">AI<span className="text-gold-400">VANA</span></span>
+            <span className="font-serif text-2xl text-white">AI<span className="text-gold">VANA</span></span>
           </div>
         </div>
         <div className="relative z-10">
-          <p className="text-white/40 text-sm tracking-widest uppercase mb-4">Inscription</p>
+          <p className="text-white/40 text-[10px] tracking-widest uppercase mb-4">Inscription</p>
           <h2 className="font-serif text-5xl text-white leading-tight mb-6">Votre aventure<br />vous attend.</h2>
           <p className="text-white/50 text-sm max-w-xs leading-relaxed">
             Rejoignez des milliers de voyageurs qui font confiance à AIVANA pour planifier leurs escapades.
@@ -84,9 +84,9 @@ export default function RegisterPage() {
             { label: "Islande", sub: "Aurores", img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=120&q=70" },
             { label: "Tokyo", sub: "Japon", img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=120&q=70" },
           ].map((d) => (
-            <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1">
+            <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1 border border-white/5">
               <img src={d.img} alt={d.label} className="w-full h-24 object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 to-transparent" />
               <div className="absolute bottom-2 left-3">
                 <p className="text-white text-xs font-semibold">{d.label}</p>
                 <p className="text-white/50 text-[10px]">{d.sub}</p>
@@ -94,47 +94,47 @@ export default function RegisterPage() {
             </div>
           ))}
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-sand-50/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
       </div>
 
       {/* Right — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
           <div className="flex items-center gap-2 justify-center mb-10 lg:hidden">
-            <div className="w-9 h-9 bg-dark rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-[#141822] border border-white/10 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-white -rotate-45" />
             </div>
-            <span className="font-serif text-2xl text-dark">AI<span className="text-gold">VANA</span></span>
+            <span className="font-serif text-2xl text-white">AI<span className="text-gold">VANA</span></span>
           </div>
-          <p className="section-label mb-3">Inscription</p>
-          <h1 className="font-serif text-4xl text-dark mb-2">Créer un compte</h1>
-          <p className="text-dark-400 text-sm mb-10">
+          <p className="section-label mb-3 text-gold/80">Inscription</p>
+          <h1 className="font-serif text-4xl text-white mb-2">Créer un compte</h1>
+          <p className="text-white/60 text-sm mb-10">
             Déjà inscrit ?{" "}
-            <Link href="/auth/login" className="font-medium hover:underline text-gold">Se connecter</Link>
+            <Link href="/auth/login" className="font-medium hover:text-white transition-colors text-gold">Se connecter</Link>
           </p>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">
+            <div className="bg-[#141822] border border-white/10 text-emerald-400 text-sm px-4 py-3 rounded-xl mb-6 shadow-xl">
               {error}
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Prénom</label>
+              <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Prénom</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
                 placeholder="Votre prénom" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Email</label>
+              <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
                 placeholder="vous@exemple.com" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-dark-400 uppercase tracking-widest mb-2">Mot de passe</label>
+              <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Mot de passe</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
-                className="w-full bg-sand-50 border border-sand-200 rounded-xl px-4 py-3 text-sm text-dark placeholder-dark-200 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+                className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
                 placeholder="8 caractères minimum" />
             </div>
             <button type="submit" disabled={loading}
@@ -142,9 +142,9 @@ export default function RegisterPage() {
               {loading ? "Création…" : (<><span>Créer mon compte</span><ArrowRight className="w-4 h-4" /></>)}
             </button>
           </form>
-          <p className="text-center text-xs text-dark-300 mt-8">
+          <p className="text-center text-[10px] text-white/40 mt-8 leading-relaxed">
             En créant un compte, vous acceptez nos{" "}
-            <a href="#" className="underline text-dark-400">Conditions d&apos;utilisation</a>.
+            <a href="#" className="underline text-white/60 hover:text-white transition-colors">Conditions d&apos;utilisation</a>.
           </p>
         </div>
       </div>

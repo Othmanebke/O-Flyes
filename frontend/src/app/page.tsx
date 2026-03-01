@@ -19,13 +19,6 @@ const HERO_SLIDES = [
   },
 ];
 
-const destinations = [
-  { name: "Bali, Indonésie", tag: "Farniente", price: "À partir de 890€", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80", temp: "☀️ 30°C", period: "Avr – Oct" },
-  { name: "Islande", tag: "Aventure", price: "À partir de 1290€", img: "https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=600&q=80", temp: "❄️ -5°C", period: "Déc – Mar" },
-  { name: "Marrakech, Maroc", tag: "Culture", price: "À partir de 490€", img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80", temp: "🌤 22°C", period: "Mar – Mai" },
-  { name: "Kyoto, Japon", tag: "Dépaysement", price: "À partir de 1490€", img: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=600&q=80", temp: "🌸 18°C", period: "Mar – Avr" },
-];
-
 const faqs = [
   { q: "Comment fonctionne l'IA ?", a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
   { q: "Le chatbot est-il disponible 24h/24 ?", a: "Oui, le chatbot IA est disponible à toute heure pour répondre à vos questions et affiner vos recommandations de voyage." },
@@ -60,7 +53,7 @@ export default function HomePage() {
   }, [next]);
 
   return (
-    <div className="bg-sand-50">
+    <div className="bg-[#0A0D14]">
 
       {/* ── HERO SLIDESHOW ──────────────────────────────────────────────── */}
       <section className="relative min-h-[88vh] flex items-end overflow-hidden -mt-20">
@@ -95,7 +88,7 @@ export default function HomePage() {
                     transition={{ duration: 0.5 }}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-px bg-sand-50/60" />
+                      <div className="w-8 h-px bg-white/40" />
                       <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
                       <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
                         {HERO_SLIDES[slide].location}
@@ -115,7 +108,7 @@ export default function HomePage() {
                 </div>
               </div>
               {/* Right – stats card */}
-              <div className="bg-sand-50/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[200px] flex md:flex-col items-center md:items-start justify-between md:justify-start gap-4 md:gap-0">
+              <div className="bg-[#141822]/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 min-w-[200px] flex md:flex-col items-center md:items-start justify-between md:justify-start gap-4 md:gap-0">
                 <div className="flex md:block items-center md:items-start gap-4 md:gap-0">
                   <div className="md:mb-3">
                     <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Analysées</p>
@@ -138,17 +131,17 @@ export default function HomePage() {
 
             {/* Controls — arrows + dots */}
             <div className="flex items-center gap-4 mt-10">
-              <button onClick={prev} className="w-9 h-9 rounded-full border border-white/30 hover:border-white/70 flex items-center justify-center text-white/70 hover:text-white transition-all">
+              <button onClick={prev} className="w-9 h-9 rounded-full border border-white/20 hover:border-white/50 flex items-center justify-center text-white/50 hover:text-white transition-all">
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="flex gap-2">
                 {HERO_SLIDES.map((_, i) => (
                   <button key={i} onClick={() => goTo(i)}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? "w-8 bg-sand-50" : "w-2 bg-sand-50/40 hover:bg-sand-50/60"}`}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? "w-8 bg-white" : "w-2 bg-white/20 hover:bg-white/40"}`}
                   />
                 ))}
               </div>
-              <button onClick={next} className="w-9 h-9 rounded-full border border-white/30 hover:border-white/70 flex items-center justify-center text-white/70 hover:text-white transition-all">
+              <button onClick={next} className="w-9 h-9 rounded-full border border-white/20 hover:border-white/50 flex items-center justify-center text-white/50 hover:text-white transition-all">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -157,11 +150,11 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-8 bg-white">
+      <section id="how-it-works" className="py-24 px-8 bg-[#0A0D14]">
         <div className="max-w-7xl mx-auto text-center mb-16">
-          <p className="section-label mb-4">Fonctionnement</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-dark">Votre voyage se planifie seul</h2>
-          <p className="text-dark-400 mt-4 max-w-2xl mx-auto">
+          <p className="section-label mb-4 text-gold/80">Fonctionnement</p>
+          <h2 className="font-serif text-4xl md:text-5xl text-white">Votre voyage se planifie seul</h2>
+          <p className="text-white/60 mt-4 max-w-2xl mx-auto">
             AIVANA se connecte à vos confirmations de réservation pour créer automatiquement votre itinéraire centralisé.
           </p>
         </div>
@@ -178,23 +171,24 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: i * 0.2, duration: 0.6 }}
-              className="p-10 rounded-3xl bg-sand-50 border border-sand-200 hover:border-gold/30 transition-all group lg:min-h-[300px]"
+              className="p-10 rounded-3xl bg-[#141822] border border-white/5 hover:border-gold/30 transition-all group lg:min-h-[300px]"
             >
-              <span className="text-5xl font-serif text-gold/50 group-hover:text-gold transition-colors">{s.step}</span>
-              <h3 className="text-xl font-bold text-dark mt-4 mb-3">{s.title}</h3>
-              <p className="text-dark-400 text-sm leading-relaxed">{s.desc}</p>
+              <span className="text-5xl font-serif text-gold/30 group-hover:text-gold transition-colors">{s.step}</span>
+              <h3 className="text-xl font-bold text-white mt-4 mb-3">{s.title}</h3>
+              <p className="text-white/60 text-sm leading-relaxed">{s.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────── */}
-      <section className="py-24 px-8 bg-sand-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-24 px-8 bg-[#0A0D14] overflow-hidden relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <p className="section-label mb-4">L&apos;Expérience AIVANA</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-dark leading-tight mb-6">
+              <p className="section-label mb-4 text-gold/80">L&apos;Expérience AIVANA</p>
+              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-6">
                 Le Dashboard qui prend<br />soin de votre voyage
               </h2>
               <div className="space-y-6">
@@ -208,74 +202,74 @@ export default function HomePage() {
                       <div className="w-2 h-2 rounded-full bg-gold" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-dark text-sm">{f.t}</h4>
-                      <p className="text-dark-400 text-xs mt-1 leading-relaxed">{f.d}</p>
+                      <h4 className="font-bold text-white text-sm">{f.t}</h4>
+                      <p className="text-white/60 text-xs mt-1 leading-relaxed">{f.d}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <Link href="/auth/register" className="btn-dark mt-10">Créer mon espace gratuit</Link>
+              <Link href="/auth/register" className="btn-gold mt-10">Créer mon espace gratuit</Link>
             </div>
 
             {/* Visual Mockup */}
             <div className="relative">
-              <div className="bg-white rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.1)] border border-dark-100 p-8 transform lg:rotate-2 lg:scale-105">
-                <div className="flex items-center justify-between mb-8 border-b border-sand-100 pb-4">
+              <div className="bg-[#141822] rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] border border-white/10 p-8 transform lg:rotate-2 lg:scale-105">
+                <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">🏝️</div>
                     <div>
-                      <p className="text-xs font-bold text-dark">Voyage à Bali</p>
-                      <p className="text-[10px] text-dark-300">12 Mai — 24 Mai 2024</p>
+                      <p className="text-xs font-bold text-white">Voyage à Bali</p>
+                      <p className="text-[10px] text-white/50">12 Mai — 24 Mai 2024</p>
                     </div>
                   </div>
                   <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-sand-200" />
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gold" />
+                    <div className="w-6 h-6 rounded-full border-2 border-[#141822] bg-white/20" />
+                    <div className="w-6 h-6 rounded-full border-2 border-[#141822] bg-gold" />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-sand-50 border border-sand-100 flex items-center justify-between">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white shadow-sm">✈️</div>
+                      <div className="p-2 rounded-lg bg-white/10 shadow-sm">✈️</div>
                       <div>
-                        <p className="text-xs font-bold text-dark">Vol AF256</p>
-                        <p className="text-[10px] text-dark-300">Départ 10:45 Paris CDG</p>
+                        <p className="text-xs font-bold text-white">Vol AF256</p>
+                        <p className="text-[10px] text-white/50">Départ 10:45 Paris CDG</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Confirmé</span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Confirmé</span>
                   </div>
-                  <div className="p-4 rounded-2xl bg-sand-50 border border-sand-100 flex items-center justify-between">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white shadow-sm">🏨</div>
+                      <div className="p-2 rounded-lg bg-white/10 shadow-sm">🏨</div>
                       <div>
-                        <p className="text-xs font-bold text-dark">Alila Villas Uluwatu</p>
-                        <p className="text-[10px] text-dark-300">Check-in 14:00</p>
+                        <p className="text-xs font-bold text-white">Alila Villas Uluwatu</p>
+                        <p className="text-[10px] text-white/50">Check-in 14:00</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Confirmé</span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Confirmé</span>
                   </div>
-                  <div className="p-4 rounded-2xl bg-gold text-dark border border-gold/20 flex items-center justify-between shadow-lg shadow-gold/20">
+                  <div className="p-4 rounded-2xl bg-gold/20 text-white border border-gold/30 flex items-center justify-between shadow-[0_0_20px_rgba(201,168,76,0.1)]">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/20">🏄</div>
+                      <div className="p-2 rounded-lg bg-gold/20">🏄</div>
                       <div>
-                        <p className="text-xs font-bold">Session Surf Kuta</p>
-                        <p className="text-[10px] text-dark/60">Demain 09:00</p>
+                        <p className="text-xs font-bold text-gold-200">Session Surf Kuta</p>
+                        <p className="text-[10px] text-gold-200/60">Demain 09:00</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
               {/* Decorative bubbles */}
-              <div className="absolute -top-6 -right-6 w-24 h-24 bg-gold/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-dark/5 rounded-full blur-3xl" />
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-gold/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-3xl" />
             </div>
           </div>
         </div>
       </section>
 
       {/* ── MARQUEE STRIP ─────────────────────────────────────────────────── */}
-      <div className="bg-dark py-4 overflow-hidden">
+      <div className="bg-[#141822] py-4 overflow-hidden border-y border-white/5">
         <div className="marquee-inner">
           {[...Array(2)].map((_, k) => (
             <div key={k} className="flex items-center gap-10 px-10 whitespace-nowrap">
@@ -291,15 +285,15 @@ export default function HomePage() {
       </div>
 
       {/* ── ABOUT / BRAND BLOCK ───────────────────────────────────────────── */}
-      <section className="py-24 px-8 bg-sand-50">
+      <section className="py-24 px-8 bg-[#0A0D14]">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              <p className="section-label mb-4">Notre approche</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-dark leading-tight mb-6">
+              <p className="section-label mb-4 text-gold/80">Notre approche</p>
+              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-6">
                 Avec l&apos;amour du voyage<br />et de l&apos;exploration
               </h2>
-              <p className="text-dark-400 leading-relaxed mb-8 max-w-md">
+              <p className="text-white/60 leading-relaxed mb-8 max-w-md">
                 Nous créons des itinéraires qui inspirent, connectent et restent
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
@@ -321,17 +315,18 @@ export default function HomePage() {
       </section>
 
       {/* ── AI VIDEO / FEATURE BLOCK ─────────────────────────────────────── */}
-      <section className="py-24 px-8">
+      <section className="py-24 px-8 bg-[#0A0D14]">
         <div className="max-w-7xl mx-auto">
-          <p className="section-label mb-10 text-center">Notre IA</p>
+          <p className="section-label mb-10 text-center text-gold/80">Notre IA</p>
           {/* Banner */}
-          <div className="relative rounded-3xl overflow-hidden h-[420px] mb-6">
+          <div className="relative rounded-3xl overflow-hidden h-[420px] mb-6 border border-white/10 shadow-2xl">
             <img
               src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1400&q=85"
               alt="Voyage nocturne"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-[#0A0D14]/50" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 to-transparent" />
             <div className="relative z-10 h-full flex flex-col md:flex-row items-center md:items-end justify-center md:justify-between p-6 md:p-10 text-center md:text-left">
               <div className="mb-8 md:mb-0">
                 <h2 className="font-serif text-3xl md:text-5xl text-white mb-3 max-w-md leading-tight">
@@ -343,14 +338,14 @@ export default function HomePage() {
                 </p>
               </div>
               {/* Stats bubble */}
-              <div className="bg-sand-50 rounded-2xl p-4 md:p-6 min-w-[140px] md:min-w-[160px] text-center border-b-4 border-gold">
-                <p className="font-bold text-3xl md:text-4xl text-dark mb-1">95%</p>
-                <p className="text-dark-400 text-[10px] md:text-xs">de voyageurs<br />pleinement satisfaits</p>
+              <div className="bg-[#141822]/80 backdrop-blur-md rounded-2xl p-4 md:p-6 min-w-[140px] md:min-w-[160px] text-center border-b-4 border-gold border-x border-t border-white/10">
+                <p className="font-bold text-3xl md:text-4xl text-white mb-1">95%</p>
+                <p className="text-white/60 text-[10px] md:text-xs">de voyageurs<br />pleinement satisfaits</p>
               </div>
             </div>
             {/* CTA button center bottom */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-              <button onClick={triggerChatbot} className="btn-dark">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+              <button onClick={triggerChatbot} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]">
                 <MessageCircle className="w-4 h-4" />
                 Essayer le chatbot
               </button>
@@ -360,21 +355,22 @@ export default function HomePage() {
       </section>
 
       {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
-      <section className="py-20 px-8 bg-sand-50">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-20 px-8 bg-[#0A0D14] relative">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <p className="section-label mb-2">Témoignages</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-dark">
+              <p className="section-label mb-2 text-gold/80">Témoignages</p>
+              <h2 className="font-serif text-4xl md:text-5xl text-white">
                 Ce que disent<br />nos voyageurs
               </h2>
             </div>
             <div className="hidden md:flex flex-col items-end">
-              <p className="font-bold text-5xl text-dark">4.9</p>
+              <p className="font-bold text-5xl text-white">4.9</p>
               <div className="flex gap-0.5 my-1">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-gold text-gold" />)}
               </div>
-              <p className="text-dark-400 text-xs">856 avis vérifiés</p>
+              <p className="text-white/50 text-xs">856 avis vérifiés</p>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -389,19 +385,19 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, duration: 0.5 }}
-                className="bg-sand-50 rounded-2xl p-6 hover:shadow-xl transition-shadow border border-sand-100"
+                className="bg-[#141822] rounded-2xl p-6 hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] transition-shadow border border-white/5"
               >
                 <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold-400 text-gold-300" />)}
+                  {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold text-gold" />)}
                 </div>
-                <p className="text-dark leading-relaxed text-sm mb-5">&ldquo;{t.text}&rdquo;</p>
+                <p className="text-white/80 leading-relaxed text-sm mb-5">&ldquo;{t.text}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-gold-50 rounded-full flex items-center justify-center text-sm font-semibold text-gold-500">
+                  <div className="w-9 h-9 bg-gold/10 rounded-full flex items-center justify-center text-sm font-semibold text-gold">
                     {t.name[0]}
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-dark">{t.name}</p>
-                    <p className="text-dark-400 text-xs">{t.loc}</p>
+                    <p className="font-medium text-sm text-white">{t.name}</p>
+                    <p className="text-white/50 text-xs">{t.loc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -411,33 +407,33 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 bg-[#0A0D14]">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12">
             <div>
-              <p className="section-label mb-3">FAQ</p>
-              <h2 className="font-serif text-4xl text-dark leading-tight">
+              <p className="section-label mb-3 text-gold/80">FAQ</p>
+              <h2 className="font-serif text-4xl text-white leading-tight">
                 Tout ce que vous devez<br />savoir avant de<br />commencer
               </h2>
-              <button onClick={triggerChatbot} className="btn-dark mt-8">
+              <button onClick={triggerChatbot} className="btn-gold mt-8">
                 Poser une question
                 <ArrowUpRight className="w-4 h-4" />
               </button>
             </div>
             <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <div key={i} className="border border-dark-100 rounded-xl overflow-hidden">
+                <div key={i} className="border border-white/10 rounded-xl overflow-hidden bg-[#141822]/50">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-sand-50 transition-colors"
+                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
                   >
-                    <span className="text-sm font-medium text-dark">{faq.q}</span>
+                    <span className="text-sm font-medium text-white">{faq.q}</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-dark-400 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 text-white/50 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}
                     />
                   </button>
                   {openFaq === i && (
-                    <div className="px-5 pb-4 text-sm text-dark-400 leading-relaxed">
+                    <div className="px-5 pb-4 text-sm text-white/60 leading-relaxed">
                       {faq.a}
                     </div>
                   )}
@@ -449,32 +445,33 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA BANNER ────────────────────────────────────────────────────── */}
-      <section className="px-8 pb-0">
+      <section className="px-8 pb-10 bg-[#0A0D14]">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-sand-50 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10">
+          <div className="bg-[#141822] border border-white/10 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10">
             {/* Left */}
             <div className="flex-1">
-              <span className="tag mb-4">Commencer maintenant</span>
-              <h2 className="font-serif text-4xl md:text-5xl text-dark leading-tight mb-3">
+              <span className="tag mb-4 bg-white/5 border-white/10 text-white/80">Commencer maintenant</span>
+              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-3">
                 Découvrez votre prochain<br />voyage idéal
               </h2>
-              <p className="text-dark-400 text-sm mb-8 max-w-sm">
+              <p className="text-white/60 text-sm mb-8 max-w-sm">
                 Planifiez votre voyage en quelques minutes et profitez
                 de chaque instant de votre escapade.
               </p>
               <div className="flex items-center gap-3">
-                <Link href="/explore" className="btn-gold">
+                <Link href="/explore" className="btn-gold shadow-lg shadow-gold/20">
                   Planifier mon voyage
                 </Link>
-                <Link href="/explore" className="w-10 h-10 rounded-full border border-dark flex items-center justify-center hover:bg-dark hover:text-white transition-colors">
-                  <ArrowUpRight className="w-4 h-4" />
+                <Link href="/explore" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <ArrowUpRight className="w-4 h-4 text-white" />
                 </Link>
               </div>
             </div>
             {/* Right – two photos */}
-            <div className="flex gap-3 flex-shrink-0">
-              <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=260&q=80" alt="" className="rounded-2xl h-52 w-44 object-cover" />
-              <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=260&q=80" alt="" className="rounded-2xl h-52 w-44 object-cover mt-6" />
+            <div className="flex gap-3 flex-shrink-0 relative">
+              <div className="absolute inset-0 bg-gold/5 blur-3xl rounded-full" />
+              <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover border border-white/10" />
+              <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover mt-6 border border-white/10" />
             </div>
           </div>
         </div>
