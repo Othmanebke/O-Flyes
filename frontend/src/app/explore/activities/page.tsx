@@ -106,16 +106,18 @@ export default function ActivitiesPage() {
         <div className="min-h-screen bg-[#0A0D14] -mt-20">
 
             {/* ── HERO ──────────────────────────────────────────────── */}
-            <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1800&q=85"
-                    alt="Activites et experiences"
-                    className="absolute inset-0 w-full h-full object-cover scale-105"
-                />
-                <div className="absolute inset-0 bg-[#0A0D14]/50" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-gold/8 blur-[120px] rounded-full pointer-events-none" />
+            <div className="relative h-[70vh] min-h-[500px]">
+                <div className="absolute inset-0 overflow-hidden">
+                    <img
+                        src="https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1800&q=85"
+                        alt="Activites et experiences"
+                        className="absolute inset-0 w-full h-full object-cover scale-105"
+                    />
+                    <div className="absolute inset-0 bg-[#0A0D14]/50" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
+                    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-gold/8 blur-[120px] rounded-full pointer-events-none" />
+                </div>
 
                 <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
@@ -183,7 +185,7 @@ export default function ActivitiesPage() {
             </div>
 
             {/* ── RESULTS ───────────────────────────────────────────── */}
-            <div className="max-w-7xl mx-auto px-6 pt-28 pb-24 relative z-10">
+            <div className="max-w-7xl mx-auto px-6 pt-40 pb-24 relative z-10">
                 <div className="flex items-center justify-between mb-12 pb-8 border-b border-white/[0.06]">
                     <h2 className="text-2xl font-serif text-white">
                         <span className="text-white/30">Decouvertes a</span>{" "}

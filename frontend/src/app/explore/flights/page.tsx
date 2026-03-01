@@ -145,19 +145,21 @@ export default function FlightsPage() {
         <div className="min-h-screen bg-[#0A0D14] -mt-20">
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
-            <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1800&q=85"
-                    alt="Vols"
-                    className="absolute inset-0 w-full h-full object-cover scale-105"
-                />
-                {/* Gradient overlays */}
-                <div className="absolute inset-0 bg-[#0A0D14]/50" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
+            <div className="relative h-[70vh] min-h-[500px]">
+                <div className="absolute inset-0 overflow-hidden">
+                    <img
+                        src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1800&q=85"
+                        alt="Vols"
+                        className="absolute inset-0 w-full h-full object-cover scale-105"
+                    />
+                    {/* Gradient overlays */}
+                    <div className="absolute inset-0 bg-[#0A0D14]/50" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
 
-                {/* Ambient glow */}
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
+                    {/* Ambient glow */}
+                    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
+                </div>
 
                 {/* Hero content */}
                 <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
@@ -253,7 +255,7 @@ export default function FlightsPage() {
             </div>
 
             {/* ── RESULTS ───────────────────────────────────────────────── */}
-            <div className="max-w-7xl mx-auto px-6 pt-28 pb-24 relative z-10">
+            <div className="max-w-7xl mx-auto px-6 pt-40 pb-24 relative z-10">
 
                 {/* Section header */}
                 <div className="flex items-center justify-between mb-12 pb-8 border-b border-white/[0.06]">
