@@ -103,7 +103,7 @@ export default function ActivitiesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0D14]">
+        <div className="min-h-screen bg-[#0A0D14] -mt-20">
 
             {/* ── HERO ──────────────────────────────────────────────── */}
             <div className="relative h-[70vh] min-h-[500px] overflow-hidden">

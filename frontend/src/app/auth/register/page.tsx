@@ -60,7 +60,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-sand-50 flex">
+    <div className="min-h-screen bg-sand-50 flex -mt-20">
       {/* Left — decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-dark overflow-hidden flex-col justify-between p-12">
         <div className="relative z-10">
