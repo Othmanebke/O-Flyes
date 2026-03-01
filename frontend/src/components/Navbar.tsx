@@ -55,81 +55,83 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <nav
-      className={clsx(
-        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-6xl px-6 h-16 flex items-center justify-between",
-        "rounded-[24px] transition-all duration-700 ease-out",
-        scrolled
-          ? [
-            "bg-[#141822]/80 backdrop-blur-2xl px-8",
-            "border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
-          ].join(" ")
-          : [
-            "bg-white/5 backdrop-blur-md px-6",
-            "border border-white/5 shadow-sm",
-          ].join(" ")
-      )}
-    >
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 font-serif text-lg tracking-tight text-white group">
-        <div className="w-10 h-10 bg-gold/10 rounded-2xl flex items-center justify-center border border-gold/20 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(184,134,11,0.1)]">
-          <Plane className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform" />
-        </div>
-        <div className="flex flex-col justify-center">
-          <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
-        </div>
-      </Link>
-
-      {/* Nav links - Desktop */}
-      <div className="hidden lg:flex items-center gap-8">
-        {links.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className={clsx(
-              "text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group py-2",
-              pathname === href ? "text-gold" : "text-white/40 hover:text-white"
-            )}
-          >
-            {label}
-            <span
-              className={clsx(
-                "absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-gold transition-all duration-500 rounded-full",
-                pathname === href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/3 group-hover:opacity-50"
-              )}
-            />
-          </Link>
-        ))}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex items-center gap-4">
-        {isLoggedIn ? (
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 bg-white/5 hover:bg-gold transition-all pl-2 pr-5 py-2 rounded-2xl border border-white/10 group active:scale-95"
-          >
-            <div className="w-8 h-8 bg-gold text-dark rounded-xl flex items-center justify-center text-[10px] font-black">
-              {userName.charAt(0).toUpperCase()}
-            </div>
-            <span className="text-[10px] uppercase font-black tracking-widest text-white group-hover:text-dark">Profil</span>
-          </Link>
-        ) : (
-          <Link
-            href="/auth/login"
-            className="hidden sm:flex items-center gap-2 bg-gold text-dark px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-gold-300 transition-all shadow-xl shadow-gold/10 active:scale-95"
-          >
-            Se connecter
-          </Link>
+    <>
+      <nav
+        className={clsx(
+          "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-6xl px-6 h-16 flex items-center justify-between",
+          "rounded-[24px] transition-all duration-700 ease-out",
+          scrolled
+            ? [
+              "bg-[#141822]/80 backdrop-blur-2xl px-8",
+              "border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+            ].join(" ")
+            : [
+              "bg-white/5 backdrop-blur-md px-6",
+              "border border-white/5 shadow-sm",
+            ].join(" ")
         )}
+      >
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3 font-serif text-lg tracking-tight text-white group">
+          <div className="w-10 h-10 bg-gold/10 rounded-2xl flex items-center justify-center border border-gold/20 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(184,134,11,0.1)]">
+            <Plane className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform" />
+          </div>
+          <div className="flex flex-col justify-center">
+            <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
+          </div>
+        </Link>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden w-10 h-10 flex items-center justify-center text-white bg-white/5 rounded-xl border border-white/10"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
+        {/* Nav links - Desktop */}
+        <div className="hidden lg:flex items-center gap-8">
+          {links.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                "text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group py-2",
+                pathname === href ? "text-gold" : "text-white/40 hover:text-white"
+              )}
+            >
+              {label}
+              <span
+                className={clsx(
+                  "absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-gold transition-all duration-500 rounded-full",
+                  pathname === href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/3 group-hover:opacity-50"
+                )}
+              />
+            </Link>
+          ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4">
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 bg-white/5 hover:bg-gold transition-all pl-2 pr-5 py-2 rounded-2xl border border-white/10 group active:scale-95"
+            >
+              <div className="w-8 h-8 bg-gold text-dark rounded-xl flex items-center justify-center text-[10px] font-black">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-[10px] uppercase font-black tracking-widest text-white group-hover:text-dark">Profil</span>
+            </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="hidden sm:flex items-center gap-2 bg-gold text-dark px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-gold-300 transition-all shadow-xl shadow-gold/10 active:scale-95"
+            >
+              Se connecter
+            </Link>
+          )}
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden w-10 h-10 flex items-center justify-center text-white bg-white/5 rounded-xl border border-white/10"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </nav>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -179,6 +181,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }
