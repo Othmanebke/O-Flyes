@@ -508,58 +508,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
-      <section className="py-20 px-8 bg-[#0A0D14] relative">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <p className="section-label mb-2 text-gold/80">Témoignages</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-white">
-                Ce que disent<br />nos voyageurs
-              </h2>
-            </div>
-            <div className="hidden md:flex flex-col items-end">
-              <p className="font-bold text-5xl text-white">4.9</p>
-              <div className="flex gap-0.5 my-1">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-gold text-gold" />)}
-              </div>
-              <p className="text-white/50 text-xs">856 avis vérifiés</p>
-            </div>
-          </div>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {[
-              { name: "Sophie M.", loc: "Paris", text: "AIVANA m'a trouvé Bali en 30 secondes avec mon budget exact. Le chatbot est bluffant de précision !", stars: 5 },
-              { name: "Thomas B.", loc: "Lyon", text: "J'avais des critères très précis (froid, budget serré, pas trop loin). L'IA a proposé l'Islande en hiver — parfait.", stars: 5 },
-              { name: "Marie L.", loc: "Bordeaux", text: "Interface top, réponses ultra rapides. J'ai planifié mon voyage au Japon en une soirée. Je recommande !", stars: 5 },
-            ].map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.5 }}
-                className="bg-[#141822] rounded-2xl p-6 hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] transition-shadow border border-white/5"
-              >
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.stars)].map((_, j) => <Star key={j} className="w-4 h-4 fill-gold text-gold" />)}
-                </div>
-                <p className="text-white/80 leading-relaxed text-sm mb-5">&ldquo;{t.text}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-gold/10 rounded-full flex items-center justify-center text-sm font-semibold text-gold">
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-white">{t.name}</p>
-                    <p className="text-white/50 text-xs">{t.loc}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ───────────────────────────────────────────────────────────── */}
       <section className="py-20 px-8 bg-[#0A0D14]">
         <div className="max-w-4xl mx-auto">
