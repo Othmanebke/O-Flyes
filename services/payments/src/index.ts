@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
 const PORT = process.env.PAYMENT_PORT || 3005;
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2023-10-16" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyNotProvided", { apiVersion: "2023-10-16" });
 
 console.log(`[payments-service] Starting with:`);
 console.log(` - PORT: ${PORT}`);
