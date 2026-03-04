@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
-import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { RecommendationCards } from "@/components/assistant/RecommendationCards";
+import { getMockRecommendations, Recommendation, RecommendationInput } from "@/lib/mockRecommendations";
 
 const HERO_SLIDES = [
   {
@@ -22,15 +24,86 @@ const HERO_SLIDES = [
 const faqs = [
   { q: "Comment fonctionne l'IA ?", a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
   { q: "Le chatbot est-il disponible 24h/24 ?", a: "Oui, le chatbot IA est disponible à toute heure pour répondre à vos questions et affiner vos recommandations de voyage." },
-  { q: "Peut-on réserver directement ?", a: "Pour l'instant, AIVANA vous propose des recommandations détaillées avec toutes les infos pratiques. La réservation directe arrive bientôt." },
+  { q: "Est-ce que je réserve sur AIVANA ?", a: "Non, vous réservez sur des partenaires. AIVANA centralise et organise tout dans votre dashboard." },
   { q: "Les estimations de prix sont-elles fiables ?", a: "Les prix affichés sont des estimations basées sur les moyennes de marché. Ils varient selon la saison et le délai de réservation." },
 ];
+
+const INTERESTS_LIST = ["Soleil", "Culture", "Nature", "Food", "Luxe", "Petit budget"];
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState(-1);
   const [transitioning, setTransitioning] = useState(false);
+
+  // AI Form State
+  const [budget, setBudget] = useState(1500);
+  const [duration, setDuration] = useState(7);
+  const [period, setPeriod] = useState("Flexible");
+  const [departure, setDeparture] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
+  const [loadingReco, setLoadingReco] = useState(false);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+
+  const triggerChatbotWithPreset = () => {
+    console.log("open_chat_from_home");
+    const text = `Budget ${budget}€, ${period}, ${duration} jours, départ ${departure || "n'importe où"}, envie: ${interests.join(", ") || "découverte"}. Propose 3 destinations + hôtels.`;
+    window.dispatchEvent(
+      new CustomEvent("chatbot-preset", {
+        detail: { text, autoSend: true, open: true }
+      })
+    );
+  };
+
+  const toggleInterest = (i: string) => {
+    setInterests(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
+  };
+
+  const handleGenerate = (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    console.log("generate_reco_click", { budget, duration, period, departure, interests });
+    setLoadingReco(true);
+    setRecommendations([]); // clear previous
+
+    // Add a fake delay for the "AI thinking" effect
+    setTimeout(() => {
+      const recs = getMockRecommendations({ budget, duration, period, departure, interests });
+      setRecommendations(recs);
+      setLoadingReco(false);
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById("reco-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }, 1500);
+  };
+
+  const loadExample = () => {
+    console.log("example_click");
+    setBudget(900);
+    setPeriod("Mai");
+    setDuration(5);
+    setDeparture("Paris");
+    setInterests(["Soleil"]);
+    // React state updates are batched, but we can't reliably read them immediately in the same tick.
+    // So we pass the specific explicit values to mock input to be safe, or just trigger generation 
+    // and rely on the next render. Here we wrap it in a setTimeout to ensure state is flushed.
+    setTimeout(() => {
+      const fakeEvent = { preventDefault: () => { } } as FormEvent;
+      // We need to call the generator with explicit values to avoid race condition with state
+      setLoadingReco(true);
+      setRecommendations([]);
+      setTimeout(() => {
+        const recs = getMockRecommendations({
+          budget: 900, duration: 5, period: "Mai", departure: "Paris", interests: ["Soleil"]
+        });
+        setRecommendations(recs);
+        setLoadingReco(false);
+        setTimeout(() => {
+          document.getElementById("reco-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }, 1500);
+    }, 0);
+  };
 
   const triggerChatbot = () => {
     window.dispatchEvent(new CustomEvent("open-chatbot"));
@@ -91,41 +164,104 @@ export default function HomePage() {
                       <div className="w-8 h-px bg-white/40" />
                       <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
                       <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
-                        {HERO_SLIDES[slide].location}
+                        Assistant IA
                       </span>
                     </div>
-                    <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl text-white leading-[1.1] whitespace-pre-line drop-shadow-lg">
-                      {HERO_SLIDES[slide].title}
+                    <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] drop-shadow-lg">
+                      Trouvez un voyage optimisé selon votre budget.
                     </h1>
-                    <p className="text-white/70 text-sm mt-4 mb-8 max-w-sm">{HERO_SLIDES[slide].sub}</p>
+                    <p className="text-white/70 text-sm md:text-base mt-4 mb-4 max-w-lg leading-relaxed">
+                      Destination, meilleure période et hôtels recommandés. Vous réservez sur des sites partenaires, tout reste centralisé dans votre dashboard.
+                    </p>
                   </motion.div>
                 </AnimatePresence>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Link href="/auth/register" className="btn-gold text-sm whitespace-nowrap px-8">Créer mon espace</Link>
-                  <a href="#how-it-works" className="inline-flex items-center gap-2 text-white hover:text-gold transition-colors text-sm font-medium">
-                    <ChevronDown className="w-4 h-4 animate-bounce" />Voir comment ça marche
-                  </a>
-                </div>
               </div>
-              {/* Right – stats card */}
-              <div className="bg-[#141822]/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 min-w-[200px] flex md:flex-col items-center md:items-start justify-between md:justify-start gap-4 md:gap-0">
-                <div className="flex md:block items-center md:items-start gap-4 md:gap-0">
-                  <div className="md:mb-3">
-                    <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Analysées</p>
-                    <p className="text-white font-semibold text-lg md:text-2xl">500+</p>
+
+              {/* Right - Form Container */}
+              <div id="assistant" className="w-full lg:w-[480px] bg-[#141822]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none" />
+
+                <form onSubmit={handleGenerate} className="relative z-10 space-y-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-gold" />
+                    <h3 className="text-white font-bold text-lg">Où partir ?</h3>
                   </div>
-                  <div className="md:mb-3">
-                    <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Voyageurs</p>
-                    <p className="text-white font-semibold text-lg md:text-2xl">12k+</p>
+
+                  <div className="space-y-4">
+                    {/* Budget */}
+                    <div>
+                      <div className="flex justify-between items-end mb-2">
+                        <label className="text-xs text-white/70 uppercase tracking-widest font-semibold text-shadow-sm">Budget Total</label>
+                        <span className="text-xl font-bold text-gold">{budget} €</span>
+                      </div>
+                      <input
+                        type="range" min="200" max="8000" step="50" value={budget} onChange={(e) => setBudget(Number(e.target.value))}
+                        className="w-full accent-gold h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Ligne 2: Durée & Période */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Durée</label>
+                        <select
+                          value={duration} onChange={(e) => setDuration(Number(e.target.value))}
+                          className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold/50 appearance-none"
+                        >
+                          {[3, 5, 7, 10, 14, 21].map(d => <option key={d} value={d}>{d} jours</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Période</label>
+                        <select
+                          value={period} onChange={(e) => setPeriod(e.target.value)}
+                          className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold/50 appearance-none"
+                        >
+                          <option value="Flexible">Flexible</option>
+                          {["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"].map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Départ */}
+                    <div>
+                      <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Départ (Optionnel)</label>
+                      <input
+                        type="text" placeholder="Ex: Paris, Lyon..." value={departure} onChange={(e) => setDeparture(e.target.value)}
+                        className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold/50"
+                      />
+                    </div>
+
+                    {/* Envies */}
+                    <div>
+                      <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Envies</label>
+                      <div className="flex flex-wrap gap-2">
+                        {INTERESTS_LIST.map(interest => (
+                          <button
+                            key={interest} type="button" onClick={() => toggleInterest(interest)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${interests.includes(interest)
+                              ? "bg-gold text-dark-900 border-gold"
+                              : "bg-dark-900 text-white/70 border-white/10 hover:border-white/30"
+                              }`}
+                          >
+                            {interest}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">Note moy.</p>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-gold text-gold" />
-                    <span className="text-white font-semibold text-base md:text-lg">4.9</span>
+
+                  <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                    <button type="submit" disabled={loadingReco} className="flex-1 btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)] disabled:opacity-70 disabled:cursor-not-allowed py-3.5">
+                      {loadingReco ? "Analyse en cours..." : "Générer ma recommandation"}
+                    </button>
+                    <button type="button" onClick={loadExample} className="sm:w-auto px-6 py-3.5 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition-colors">
+                      Voir un exemple
+                    </button>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
 
@@ -148,6 +284,24 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── RECOMMENDATIONS RESULTS ─────────────────────────────────────── */}
+      {recommendations.length > 0 && (
+        <section id="reco-results" className="py-24 px-8 bg-[#141822] border-t border-white/5 scroll-mt-20">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-12 text-center">
+              <p className="section-label mb-4 text-gold/80">Recommandations sur mesure</p>
+              <h2 className="font-serif text-3xl md:text-5xl text-white">Vos 3 destinations idéales</h2>
+              <p className="text-white/60 mt-4 max-w-2xl mx-auto text-sm">
+                Basé sur votre budget de {budget}€ et vos envies. Sélectionnez la destination qui vous
+                correspond le plus et ajoutez-la à votre dashboard pour commencer la planification.
+              </p>
+            </div>
+
+            <RecommendationCards recommendations={recommendations} />
+          </div>
+        </section>
+      )}
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section id="how-it-works" className="py-24 px-8 bg-[#0A0D14]">
@@ -298,7 +452,7 @@ export default function HomePage() {
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
               </p>
-              <button onClick={triggerChatbot} className="btn-gold">
+              <button onClick={triggerChatbotWithPreset} className="btn-gold">
                 Parler à notre IA
                 <ArrowUpRight className="w-4 h-4" />
               </button>
@@ -345,9 +499,9 @@ export default function HomePage() {
             </div>
             {/* CTA button center bottom */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
-              <button onClick={triggerChatbot} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]">
-                <MessageCircle className="w-4 h-4" />
-                Essayer le chatbot
+              <button onClick={() => document.getElementById("assistant")?.scrollIntoView({ behavior: "smooth" })} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]">
+                <Sparkles className="w-4 h-4" />
+                Démarrer la planification
               </button>
             </div>
           </div>
@@ -415,7 +569,7 @@ export default function HomePage() {
               <h2 className="font-serif text-4xl text-white leading-tight">
                 Tout ce que vous devez<br />savoir avant de<br />commencer
               </h2>
-              <button onClick={triggerChatbot} className="btn-gold mt-8">
+              <button onClick={triggerChatbotWithPreset} className="btn-gold mt-8">
                 Poser une question
                 <ArrowUpRight className="w-4 h-4" />
               </button>

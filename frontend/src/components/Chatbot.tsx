@@ -173,8 +173,23 @@ export default function Chatbot() {
 
   useEffect(() => {
     const handleOpen = () => setOpen(true);
+
+    // Listen for preset event
+    const handlePreset = (e: any) => {
+      if (e.detail?.open) setOpen(true);
+      if (e.detail?.text) setInput(e.detail.text);
+      if (e.detail?.autoSend && e.detail?.text) {
+        setTimeout(() => send(e.detail.text), 150);
+      }
+    };
+
     window.addEventListener("open-chatbot", handleOpen);
-    return () => window.removeEventListener("open-chatbot", handleOpen);
+    window.addEventListener("chatbot-preset", handlePreset);
+
+    return () => {
+      window.removeEventListener("open-chatbot", handleOpen);
+      window.removeEventListener("chatbot-preset", handlePreset);
+    };
   }, []);
 
   useEffect(() => {

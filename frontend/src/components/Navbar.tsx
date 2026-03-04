@@ -172,11 +172,11 @@ export default function Navbar() {
             </div>
 
             <Link
-              href="/auth/login"
+              href={isLoggedIn ? "/dashboard" : "/auth/login"}
               onClick={() => setMobileMenuOpen(false)}
               className="mt-12 bg-gold text-dark px-16 py-5 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-gold/20 flex items-center gap-3"
             >
-              <Sparkles className="w-4 h-4" /> Accès Membre
+              <Sparkles className="w-4 h-4" /> Dashboard
             </Link>
           </motion.div>
         )}
