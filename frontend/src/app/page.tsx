@@ -129,7 +129,7 @@ export default function HomePage() {
     <div className="bg-[#0A0D14]">
 
       {/* ── HERO SLIDESHOW ──────────────────────────────────────────────── */}
-      <section className="relative min-h-[88vh] flex items-end overflow-hidden -mt-20">
+      <section className="relative min-h-[88vh] flex items-center overflow-hidden -mt-20">
         {/* Slides — crossfade */}
         {HERO_SLIDES.map((s, i) => (
           <div
@@ -148,8 +148,8 @@ export default function HomePage() {
 
         {/* Content */}
         <div className="relative z-20 w-full pt-32 md:pt-40">
-          <div className="max-w-7xl mx-auto px-8 pb-16">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="max-w-6xl mx-auto px-8 pb-16">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
               {/* Left – dynamic title */}
               <div className="max-w-lg">
                 <AnimatePresence mode="wait">
@@ -288,7 +288,7 @@ export default function HomePage() {
       {/* ── RECOMMENDATIONS RESULTS ─────────────────────────────────────── */}
       {recommendations.length > 0 && (
         <section id="reco-results" className="py-24 px-8 bg-[#141822] border-t border-white/5 scroll-mt-20">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="mb-12 text-center">
               <p className="section-label mb-4 text-gold/80">Recommandations sur mesure</p>
               <h2 className="font-serif text-3xl md:text-5xl text-white">Vos 3 destinations idéales</h2>
@@ -305,7 +305,7 @@ export default function HomePage() {
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section id="how-it-works" className="py-24 px-8 bg-[#0A0D14]">
-        <div className="max-w-7xl mx-auto text-center mb-16">
+        <div className="max-w-6xl mx-auto text-center mb-16">
           <p className="section-label mb-4 text-gold/80">Fonctionnement</p>
           <h2 className="font-serif text-4xl md:text-5xl text-white">Votre voyage se planifie seul</h2>
           <p className="text-white/60 mt-4 max-w-2xl mx-auto">
@@ -313,7 +313,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           {[
             { step: "01", title: "Inscription", desc: "Créez votre compte AIVANA en quelques secondes pour accéder à votre espace personnel." },
             { step: "02", title: "Connexion Email", desc: "Connectez votre boîte Gmail ou Outlook en toute sécurité. Notre IA fait le reste." },
@@ -338,7 +338,7 @@ export default function HomePage() {
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────── */}
       <section className="py-24 px-8 bg-[#0A0D14] overflow-hidden relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-label mb-4 text-gold/80">L&apos;Expérience AIVANA</p>
@@ -440,7 +440,7 @@ export default function HomePage() {
 
       {/* ── ABOUT / BRAND BLOCK ───────────────────────────────────────────── */}
       <section className="py-24 px-8 bg-[#0A0D14]">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-label mb-4 text-gold/80">Notre approche</p>
@@ -470,7 +470,7 @@ export default function HomePage() {
 
       {/* ── AI VIDEO / FEATURE BLOCK ─────────────────────────────────────── */}
       <section className="py-24 px-8 bg-[#0A0D14]">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="section-label mb-10 text-center text-gold/80">Notre IA</p>
           {/* Banner */}
           <div className="relative rounded-3xl overflow-hidden h-[420px] mb-6 border border-white/10 shadow-2xl">
@@ -548,7 +548,7 @@ export default function HomePage() {
 
       {/* ── CTA BANNER ────────────────────────────────────────────────────── */}
       <section className="px-8 pb-10 bg-[#0A0D14]">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="bg-[#141822] border border-white/10 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10">
             {/* Left */}
             <div className="flex-1">

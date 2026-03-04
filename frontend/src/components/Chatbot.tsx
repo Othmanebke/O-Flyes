@@ -73,38 +73,38 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
   };
 
   return (
-    <div className="mt-2 rounded-2xl overflow-hidden border border-[#C9A84C]/20 bg-[#faf8f4]">
+    <div className="mt-2 rounded-2xl overflow-hidden border border-white/10 bg-[#141822]">
       {/* Top */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-[#C9A84C]/10">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center text-xl flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-xl flex-shrink-0">
             {dest.emoji}
           </div>
           <div>
-            <p className="font-semibold text-dark-900 text-sm">{dest.name}</p>
-            <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
-              <MapPin className="w-2.5 h-2.5 text-[#C9A84C]" />{dest.country}
+            <p className="font-semibold text-white text-sm">{dest.name}</p>
+            <p className="text-white/50 text-xs flex items-center gap-1 mt-0.5">
+              <MapPin className="w-2.5 h-2.5 text-gold" />{dest.country}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-gray-400">Budget estimé</p>
-          <p className="text-[#C9A84C] font-bold text-base">{dest.price_estimate.toLocaleString("fr-FR")} €</p>
-          <p className="text-gray-400 text-[9px]">vol + hôtel / 2 pers.</p>
+          <p className="text-[10px] text-white/30">Budget estimé</p>
+          <p className="text-gold font-bold text-base">{dest.price_estimate.toLocaleString("fr-FR")} €</p>
+          <p className="text-white/30 text-[9px]">vol + hôtel / 2 pers.</p>
         </div>
       </div>
 
       {/* Activities */}
       {dest.activities?.length > 0 && (
         <div className="px-4 py-3">
-          <p className="text-[9px] text-gray-400 uppercase tracking-widest mb-2">Activités</p>
+          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-2">Activités</p>
           <div className="space-y-1">
             {dest.activities.slice(0, 3).map((act, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
-                <span className="text-gray-500 flex items-center gap-1.5">
+                <span className="text-white/70 flex items-center gap-1.5">
                   <span>{act.emoji}</span>{act.name}
                 </span>
-                <span className="text-[#C9A84C] font-medium ml-2 whitespace-nowrap">~{act.price} €</span>
+                <span className="text-gold font-medium ml-2 whitespace-nowrap">~{act.price} €</span>
               </div>
             ))}
           </div>
@@ -115,16 +115,16 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
       <div className="px-4 pb-3 flex gap-2">
         {localDest && (
           <button onClick={handleSave} disabled={saving || saved}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-dark-900 hover:bg-dark-800 disabled:opacity-50 disabled:hover:bg-dark-900 text-white text-xs font-medium py-2 rounded-xl transition-colors">
+            className="flex-1 flex items-center justify-center gap-1.5 bg-gold hover:bg-gold-600 disabled:opacity-50 text-dark-900 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : (saved ? "✓ Enregistré" : <><Sparkles className="w-3 h-3" /> Enregistrer</>)}
           </button>
         )}
         <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#C9A84C]/10 hover:bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/20 text-xs font-medium py-2 rounded-xl transition-colors">
+          className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
           <Hotel className="w-3 h-3" /> Hôtels
         </a>
         <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-dark-700 text-xs font-medium py-2 rounded-xl transition-colors">
+          className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
           <Plane className="w-3 h-3" /> Vols
         </a>
       </div>

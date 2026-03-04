@@ -177,7 +177,7 @@ export default function HotelsPage() {
             </div>
 
             {/* ── RESULTS ───────────────────────────────────────────── */}
-            <div className="max-w-7xl mx-auto px-6 pt-40 pb-24 relative z-10">
+            <div className="max-w-6xl mx-auto px-6 pt-40 pb-24 relative z-10">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 pb-8 border-b border-white/[0.06] gap-4">
                     <h2 className="text-2xl font-serif text-white">
                         <span className="text-white/30">Selection a</span>{" "}

@@ -349,7 +349,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ TOP 5 ═══════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-8 mb-16 relative z-20">
+      <div className="max-w-6xl mx-auto px-8 mb-16 relative z-20">
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="section-label mb-2 text-gold/80">Sélection</p>
@@ -403,7 +403,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ FILTRES ═════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10 sticky top-[72px] z-40">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 mb-10 sticky top-[72px] z-40">
         <div className="bg-[#141822]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="text-xs text-white/50 font-medium uppercase tracking-widest mr-2">Budget</span>
@@ -449,7 +449,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ GRILLE ══════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-8 pb-16">
+      <div className="max-w-6xl mx-auto px-8 pb-16">
         {filtered.length === 0 ? (
           <div className="text-center py-24 text-white/60">
             <p className="text-4xl mb-4">🌍</p>
@@ -518,7 +518,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ═══ IA CTA ══════════════════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-8 pb-16">
+      <div className="max-w-6xl mx-auto px-8 pb-16">
         <div className="relative bg-[#141822] rounded-3xl p-10 md:p-14 overflow-hidden border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 rounded-full -translate-y-1/3 translate-x-1/3 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/3 blur-xl" />
