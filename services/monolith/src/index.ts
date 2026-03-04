@@ -1,3 +1,4 @@
+import './setup';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -6,17 +7,6 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 const PORT = process.env.PORT || 3000;
-
-// Tells other services not to call app.listen() when imported
-process.env.IS_MONOLITH = "true";
-
-// Force local URLs so any axios calls land back on this exactly same process!
-process.env.DB_URL = `http://localhost:${PORT}`;
-process.env.AI_URL = `http://localhost:${PORT}`;
-process.env.NOTIF_URL = `http://localhost:${PORT}`;
-process.env.METRICS_URL = `http://localhost:${PORT}`;
-process.env.AUTH_SERVICE_URL = `http://localhost:${PORT}`;
-process.env.IS_MONOLITH = "true";
 
 // Import all service routers/apps
 // To avoid path resolution issues with nested TS files, we use the tsconfig paths
