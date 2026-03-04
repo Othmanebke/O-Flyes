@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy generic config
-COPY package*.json tsconfig.json ./
+COPY package*.json ./
 
 # Copy monolith specific config
 COPY services/monolith/package*.json ./services/monolith/
