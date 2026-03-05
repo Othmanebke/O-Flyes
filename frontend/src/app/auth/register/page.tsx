@@ -2,8 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plane, ArrowRight } from "lucide-react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/browser";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,42 +17,34 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const supabase = createClient();
     try {
-      const res = await axios.post("/api/auth/register", { name, email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
 
-      // If the backend response indicates an auto-verification (dev mode) or we just want to attempt login
-      try {
-        const loginRes = await axios.post("/api/auth/login", { email, password });
-        if (loginRes.data.token) {
-          localStorage.setItem("token", loginRes.data.token);
-          router.push("/onboarding");
-          return;
-        }
-      } catch (loginErr: any) {
-        // If login fails (e.g. email needs verification in prod), we show the register success message
-        console.log("Auto-login post-register failed/skipped:", loginErr?.response?.data || loginErr.message);
+      if (signUpError) {
+        throw signUpError;
       }
 
-      // If we didn't redirect (because login failed due to EMAIL_NOT_VERIFIED or other), show the message
-      const msg = res.data.message || "Inscription réussie. Veuillez vérifier votre email.";
-      setError(msg); // We use the error state to show the message for simplicity, or ideally a new success state.
-      // For this MVP, let's keep it simple and redirect to login with a message if not auto-logged in.
-      if (!localStorage.getItem("token")) {
+      // Check if email confirmation is required
+      if (data?.session) {
+        // Auto-login succeeded
+        router.push("/onboarding");
+      } else {
+        // Registration succeeded but requires email confirmation
         router.push("/auth/login?registered=1");
       }
 
     } catch (err: any) {
-      console.error("Register Error Details:", {
-        status: err?.response?.status,
-        data: err?.response?.data,
-        message: err?.message,
-        config: err?.config?.url
-      });
-      const debugInfo = err?.response
-        ? `Status: ${err.response.status} - ${JSON.stringify(err.response.data)}`
-        : `Network Error: ${err.message}`;
-
-      const msg = err?.response?.data?.error || `Erreur technique: ${debugInfo}`;
+      console.error("Register Error Details:", err);
+      const msg = err?.message || "Une erreur est survenue lors de l'inscription.";
       setError(msg);
     } finally {
       setLoading(false);

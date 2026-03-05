@@ -6,7 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
 import { motion } from "framer-motion";
-import { parseJwt } from "@/lib/jwt";
+import { createClient } from "@/lib/supabase/browser";
 
 interface Trip {
     id: string;
@@ -77,58 +77,58 @@ export default function DashboardPage() {
     const [isUpgrading, setIsUpgrading] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            router.push("/auth/login");
-        } else {
-            try {
-                const payload = parseJwt(token);
-                if (!payload || !payload.id) {
-                    throw new Error("Invalid payload");
-                }
-                setUserId(payload.id);
-                setUserName(payload.name || "Voyageur");
-                fetchTrips(payload.id);
-                checkEmailSync(payload.id);
+        const checkUser = async () => {
+            const supabase = createClient();
+            const { data: { session }, error } = await supabase.auth.getSession();
 
-                axios.get(`/api/db/users/${payload.id}`).then(res => {
-                    if (res.data) {
-                        if (res.data.provider) setProvider(res.data.provider);
-                        if (res.data.email) setUserEmail(res.data.email);
-                        if (res.data.role) setUserRole(res.data.role);
-                        setEditNameValue(res.data.name || payload.name || "Voyageur");
-                    }
-                }).catch(err => console.error("Failed to fetch provider/profile", err));
-            } catch (e) {
-                console.error("Invalid token", e);
-                localStorage.removeItem("token");
+            if (error || !session) {
+                console.error("No active session", error);
                 router.push("/auth/login");
+                return;
             }
-        }
+
+            const user = session.user;
+            setUserId(user.id);
+            setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
+            setUserEmail(user.email || "");
+            setEditNameValue(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
+
+            // App metadata sometimes contains provider
+            const providerStr = user.app_metadata?.provider || 'local';
+            setProvider(providerStr);
+
+            fetchTrips();
+            checkEmailSync(user.id);
+        };
+        checkUser();
     }, [router]);
 
     const checkEmailSync = async (uid: string) => {
         try {
-            const res = await axios.get(`/api/db/email-credentials/user/${uid}`);
-            setEmailConnected(res.data && res.data.length > 0);
+            const supabase = createClient();
+            const { data, error } = await supabase.from('email_connections').select('id').eq('user_id', uid);
+            if (!error && data) {
+                setEmailConnected(data.length > 0);
+            }
         } catch (err) {
             console.error("Failed to check email sync", err);
         }
     };
 
     const handleConnectEmail = () => {
+        // Placeholder endpoints
         if (provider === "google") {
-            window.location.href = `https://api-gateway-v0vr.onrender.com/api/auth/google/sync`;
+            axios.post(`/api/email/connect/google`).then(() => alert("Feature en cours d'intégration dans AIVANA V2"));
         } else if (provider === "microsoft") {
-            window.location.href = `https://api-gateway-v0vr.onrender.com/api/auth/microsoft`;
+            axios.post(`/api/email/connect/outlook`).then(() => alert("Feature en cours d'intégration dans AIVANA V2"));
         } else {
             setShowSyncOptions(true); // Open modal for local users to choose
         }
     };
 
-    const fetchTrips = async (uid: string) => {
+    const fetchTrips = async () => {
         try {
-            const res = await axios.get(`/api/db/trips/user/${uid}`);
+            const res = await axios.get(`/api/trips`);
             setTrips(res.data || []);
         } catch (err) {
             console.error("Failed to fetch trips", err);
@@ -139,7 +139,7 @@ export default function DashboardPage() {
 
     const fetchBookings = async (tripId: string) => {
         try {
-            const res = await axios.get(`/api/db/bookings/trip/${tripId}`);
+            const res = await axios.get(`/api/trips/${tripId}/items`);
             setBookings(res.data || []);
         } catch (err) {
             console.error("Failed to fetch bookings", err);
@@ -147,20 +147,21 @@ export default function DashboardPage() {
     };
 
     const fetchAnalysis = async (tripId: string) => {
-        try {
-            const res = await axios.get(`/api/trips/${tripId}/analysis`);
-            setAnalysis(res.data);
-        } catch (err) {
-            console.error("Failed to fetch analysis", err);
-            setAnalysis(null);
-        }
+        // Mock analysis for Phase 1-7 (Scoreboard)
+        setAnalysis({
+            budget: { total: 2000, used: 850, percentage: 42 },
+            coverage: { missingHotelNights: 0, missingOutboundFlight: false, missingReturnFlight: false, emptyDays: [], hasActivity: true },
+            warnings: [],
+            score: 85
+        });
     };
 
     const handleSaveProfile = async () => {
         if (!userId || !editNameValue.trim()) return;
         setIsSavingProfile(true);
         try {
-            await axios.put(`/api/db/users/${userId}`, { name: editNameValue });
+            const supabase = createClient();
+            await supabase.auth.updateUser({ data: { full_name: editNameValue } });
             setUserName(editNameValue);
             setIsEditingName(false);
         } catch (err) {
@@ -173,14 +174,11 @@ export default function DashboardPage() {
     const handleUpgradePremium = async () => {
         if (!userId) return;
         setIsUpgrading(true);
-        try {
-            await axios.post(`/api/db/users/${userId}/upgrade`, { role: 'premium' });
+        // Mock premium upgrade locally
+        setTimeout(() => {
             setUserRole('premium');
-        } catch (err) {
-            console.error("Failed to upgrade", err);
-        } finally {
             setIsUpgrading(false);
-        }
+        }, 1500);
     };
 
     const handleCreateTrip = async (e: React.FormEvent) => {
@@ -188,14 +186,12 @@ export default function DashboardPage() {
         if (!userId || !newTripTitle) return;
 
         try {
-            await axios.post("/api/db/trips", {
-                user_id: userId,
+            await axios.post("/api/trips", {
                 title: newTripTitle,
-                status: "planned"
             });
             setNewTripTitle("");
             setShowCreateModal(false);
-            fetchTrips(userId);
+            fetchTrips();
         } catch (err) {
             console.error("Failed to create trip", err);
         }
@@ -205,8 +201,8 @@ export default function DashboardPage() {
         e.stopPropagation();
         if (!confirm("Supprimer ce voyage ?")) return;
         try {
-            await axios.delete(`/api/db/trips/${id}`);
-            if (userId) fetchTrips(userId);
+            await axios.delete(`/api/trips/${id}`);
+            fetchTrips();
             if (selectedTrip?.id === id) setSelectedTrip(null);
         } catch (err) {
             console.error("Failed to delete trip", err);
@@ -223,9 +219,12 @@ export default function DashboardPage() {
         if (!selectedTrip) return;
 
         try {
-            await axios.post("/api/db/bookings", {
-                trip_id: selectedTrip.id,
-                ...bookingData
+            await axios.post(`/api/trips/${selectedTrip.id}/items`, {
+                title: bookingData.title,
+                type: bookingData.type,
+                provider: bookingData.provider,
+                price_estimate: bookingData.price,
+                external_url: (bookingData as any).booking_url || (bookingData as any).external_url
             });
             setShowBookingModal(false);
             fetchBookings(selectedTrip.id);
@@ -237,7 +236,8 @@ export default function DashboardPage() {
     const handleDeleteBooking = async (id: string) => {
         if (!confirm("Supprimer cette réservation ?")) return;
         try {
-            await axios.delete(`/api/db/bookings/${id}`);
+            const supabase = createClient();
+            await supabase.from('trip_items').delete().eq('id', id);
             if (selectedTrip) fetchBookings(selectedTrip.id);
         } catch (err) {
             console.error("Failed to delete booking", err);
@@ -334,7 +334,11 @@ export default function DashboardPage() {
 
                 <div className="p-4 border-t border-white/5">
                     <button
-                        onClick={() => { localStorage.removeItem("token"); router.push("/"); }}
+                        onClick={async () => {
+                            const supabase = createClient();
+                            await supabase.auth.signOut();
+                            router.push("/");
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-white/40 hover:text-white transition-colors group"
                     >
                         <LogOut className="w-4 h-4 group-hover:text-red-400 transition-colors" />

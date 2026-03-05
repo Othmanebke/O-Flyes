@@ -2,8 +2,8 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Plane, ArrowRight, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
-import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/browser";
 
 function LoginContent() {
   const router = useRouter();
@@ -17,23 +17,32 @@ function LoginContent() {
   const [showResend, setShowResend] = useState(false);
   const [resendStatus, setResendStatus] = useState<"idle" | "loading" | "sent">("idle");
 
+  const supabase = createClient();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setShowResend(false);
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        if (signInError.message.includes("Email not confirmed")) {
+          setError("Votre email n'a pas encore été vérifié.");
+          setShowResend(true);
+        } else {
+          setError(signInError.message || "Identifiants invalides.");
+        }
+        return;
+      }
+
       router.push("/dashboard");
     } catch (err: any) {
-      const data = err?.response?.data;
-      if (data?.code === "EMAIL_NOT_VERIFIED") {
-        setError("Votre email n'a pas encore été vérifié.");
-        setShowResend(true);
-      } else {
-        setError(data?.error || "Connexion au serveur impossible. Vérifiez que les services (Auth & DB) sont lancés.");
-      }
+      setError(err?.message || "Une erreur est survenue lors de la connexion.");
     } finally {
       setLoading(false);
     }
@@ -42,11 +51,24 @@ function LoginContent() {
   const handleResend = async () => {
     setResendStatus("loading");
     try {
-      await axios.post("/api/auth/resend-verification", { email });
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
       setResendStatus("sent");
     } catch {
       setResendStatus("idle");
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   };
 
   return (
@@ -128,7 +150,7 @@ function LoginContent() {
         <hr className="flex-1 border-white/10" />
       </div>
 
-      <a href="https://api-gateway-v0vr.onrender.com/api/auth/google"
+      <button type="button" onClick={handleGoogleSignIn}
         className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-xl text-sm font-medium text-white/80 hover:border-white/30 hover:bg-[#141822] transition-colors">
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -137,18 +159,19 @@ function LoginContent() {
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
         Continuer avec Google
-      </a>
+      </button>
 
-      <a href="https://api-gateway-v0vr.onrender.com/api/auth/microsoft"
-        className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-white/10 rounded-xl text-sm font-medium text-white/80 hover:border-white/30 hover:bg-[#141822] transition-colors">
-        <svg className="w-5 h-5" viewBox="0 0 21 21">
+      <button type="button" disabled
+        className="w-full flex items-center justify-center gap-3 py-3 mt-3 border border-white/10 rounded-xl text-sm font-medium text-white/50 cursor-not-allowed bg-[#141822]/50 transition-colors"
+        title="Bientôt disponible">
+        <svg className="w-5 h-5 opacity-50" viewBox="0 0 21 21">
           <path fill="#f25022" d="M0 0h10v10H0z" />
           <path fill="#7fba00" d="M11 0h10v10H11z" />
           <path fill="#00a4ef" d="M0 11h10v10H0z" />
           <path fill="#ffb900" d="M11 11h10v10H11z" />
         </svg>
-        Continuer avec Outlook
-      </a>
+        Continuer avec Outlook (Bientôt)
+      </button>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Plane, Mail, RefreshCw, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/browser";
 
 function VerifyEmailContent() {
     const params = useSearchParams();
@@ -10,17 +11,18 @@ function VerifyEmailContent() {
     const [resendEmail, setResendEmail] = useState("");
     const [resendStatus, setResendStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
 
+    const supabase = createClient();
+
     const handleResend = async (e: React.FormEvent) => {
         e.preventDefault();
         setResendStatus("loading");
         try {
-            const res = await fetch("/api/auth/auth/resend-verification", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: resendEmail }),
+            const { error: resendError } = await supabase.auth.resend({
+                type: 'signup',
+                email: resendEmail,
             });
-            if (res.ok) setResendStatus("sent");
-            else setResendStatus("error");
+            if (resendError) throw resendError;
+            setResendStatus("sent");
         } catch {
             setResendStatus("error");
         }

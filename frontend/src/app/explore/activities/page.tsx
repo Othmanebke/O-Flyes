@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Search, MapPin, Star, ArrowRight, Sparkles, Compass } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { parseJwt } from "@/lib/jwt";
+import { createClient } from "@/lib/supabase/browser";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Activity {
@@ -36,13 +36,15 @@ export default function ActivitiesPage() {
     const [debouncedTerm, setDebouncedTerm] = useState("");
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const payload = parseJwt(token);
-                if (payload && payload.id) { setUserId(payload.id); fetchTrips(payload.id); }
-            } catch (e) { console.error("Invalid token", e); }
-        }
+        const checkAuth = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+                fetchTrips();
+            }
+        };
+        checkAuth();
         fetchActivities("Paris");
     }, []);
 
@@ -59,8 +61,8 @@ export default function ActivitiesPage() {
         } else { setSuggestions([]); setShowSuggestions(false); }
     }, [debouncedTerm]);
 
-    const fetchTrips = async (uid: string) => {
-        try { const res = await axios.get(`/api/db/trips/user/${uid}`); setTrips(res.data || []); }
+    const fetchTrips = async () => {
+        try { const res = await axios.get(`/api/trips`); setTrips(res.data || []); }
         catch (err) { console.error("Failed to fetch trips", err); }
     };
     const fetchActivities = async (city: string) => {
@@ -91,10 +93,9 @@ export default function ActivitiesPage() {
     const confirmBooking = async (tripId: string) => {
         if (!selectedActivity || !userId) return;
         try {
-            await axios.post("/api/db/bookings", {
-                trip_id: tripId, type: "activity", title: selectedActivity.title, provider: "Partner",
-                price: selectedActivity.price, currency: selectedActivity.currency,
-                status: "pending", external_url: selectedActivity.booking_url
+            await axios.post(`/api/trips/${tripId}/items`, {
+                type: "activity", title: selectedActivity.title, provider: "Partner",
+                price_estimate: selectedActivity.price, external_url: selectedActivity.booking_url
             });
             setShowTripSelector(false); trackClick("activity"); window.open(selectedActivity.booking_url, "_blank");
         } catch (err) {

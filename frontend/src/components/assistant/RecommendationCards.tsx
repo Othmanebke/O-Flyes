@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Recommendation } from "@/lib/mockRecommendations";
 import { Plane, Hotel, Calendar, CreditCard, Sparkles, Loader2, ArrowUpRight } from "lucide-react";
 import axios from "axios";
+import { createClient } from "@/lib/supabase/browser";
 
 interface RecommendationCardsProps {
     recommendations: Recommendation[];
@@ -14,8 +15,10 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
     const handleSaveToDashboard = async (rec: Recommendation) => {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
             // Not logged in -> Redirect to login
             window.location.href = "/auth/login";
             return;
@@ -25,26 +28,17 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
             setSavingId(rec.id);
             console.log("add_to_dashboard", rec);
 
-            // Parse JWT to get user ID
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-            ).join(''));
-            const payload = JSON.parse(jsonPayload);
-
             // We don't have exact dates from the mock yet, just a period, so we make some up locally for the DB
             const startDate = new Date();
             startDate.setDate(startDate.getDate() + 30); // 1 month from now
             const endDate = new Date(startDate);
             endDate.setDate(endDate.getDate() + 7); // 1 week duration
 
-            await axios.post("/api/db/trips", {
-                user_id: payload.id,
+            await axios.post("/api/trips", {
                 title: `Voyage à ${rec.destination}`,
-                start_date: startDate.toISOString(),
-                end_date: endDate.toISOString(),
-                budget: rec.budgetTotal,
+                destination_id: null, // Since this is a generated rec, we don't have matching local id
+                start_date: startDate.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0]
             });
 
             setSavedIds((prev) => new Set(prev).add(rec.id));

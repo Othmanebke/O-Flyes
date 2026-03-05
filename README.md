@@ -1,100 +1,48 @@
-# ✈️ O-Flyes – Votre assistant voyage intelligent
+# ✈️ AIVANA (formerly O-Flyes)
 
-> Plateforme de conseils de voyage propulsée par l'IA. Trouvez votre destination idéale selon votre budget, vos envies (chaud/froid, plage/montagne/ville…) et votre période de voyage.
+> AI-powered scalable SaaS platform built with Next.js and Supabase.
 
----
-
-## Architecture microservices
+## Architecture: Option B (Simple Scalable SaaS)
 
 ```text
-O-Flyes/
+AIVANA/
 ├── frontend/                  # Next.js 14 + TypeScript + Tailwind
-│   └── src/
-│       ├── app/               # Pages (/, /explore, /chat, /pricing, /auth/…)
-│       └── components/        # Navbar, Chatbot, SearchForm, DestinationCard
-│
-├── services/
-│   ├── auth/          :3001   # OAuth2 (Google) + JWT + login/register local
-│   ├── database/      :3002   # CRUD PostgreSQL (users, destinations, trips, chat)
-│   ├── ai/            :3003   # Chatbot + recommandations (OpenAI GPT-4o-mini)
-│   ├── notifications/ :3004   # Email (Nodemailer) + SMS (Twilio)
-│   ├── payments/      :3005   # Abonnements Stripe (plan Pro)
-│   └── metrics/       :3006   # Prometheus metrics + événements
-│
-├── monitoring/
-│   └── prometheus.yml         # Config Prometheus
-│
-├── docker-compose.yml         # Orchestration complète
-└── .env.example               # Variables d'environnement (à copier en .env)
+│   ├── src/app/               # App Router pages
+│   ├── src/components/        # UI Components
+│   ├── src/app/api/           # Serverless Route Handlers (Backend)
+│   └── supabase/              # Supabase migrations & seed data
 ```
 
-## Stack technique
+## Tech Stack
 
-| Couche          | Technologie                          |
+| Layer           | Technology                           |
 |-----------------|--------------------------------------|
-| Frontend        | Next.js 14, TypeScript, Tailwind CSS |
-| Auth            | Passport.js, OAuth2/Google, JWT      |
-| Base de données | PostgreSQL 16, Drizzle ORM           |
-| IA / Chatbot    | OpenAI GPT-4o-mini                   |
-| Notifications   | Nodemailer (SMTP), Twilio (SMS)      |
-| Paiements       | Stripe (abonnements)                 |
-| Métriques       | Prometheus + Grafana                 |
-| Conteneurs      | Docker, Docker Compose               |
+| Frontend        | Next.js 14, React, Tailwind CSS      |
+| Backend & API   | Next.js Route Handlers               |
+| Auth & DB       | Supabase (PostgreSQL + RLS + OAuth)  |
+| AI Engine       | Groq API                             |
+| Deployment      | Vercel / Render                      |
 
-## Démarrage rapide
+## Local Development Setup
 
-### 1. Variables d'environnement
-
+### 1. Environment Variables
+Create `.env.local` in `frontend/`:
 ```bash
-cp .env.example .env
-# Remplissez : OPENAI_API_KEY, OAUTH_GOOGLE_*, STRIPE_*, SMTP_*, etc.
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role
+GROQ_API_KEY=your_groq_api_key
 ```
 
-### 2. Lancer avec Docker
-
+### 2. Install Dependencies & Run
 ```bash
-docker-compose up --build
+cd frontend
+npm install
+npm run dev
 ```
 
-| Service       | URL                              |
-|---------------|----------------------------------|
-| Frontend      | `http://localhost:3000`          |
-| Auth          | `http://localhost:3001/health`   |
-| Database      | `http://localhost:3002/health`   |
-| AI            | `http://localhost:3003/health`   |
-| Notifications | `http://localhost:3004/health`   |
-| Payments      | `http://localhost:3005/health`   |
-| Metrics       | `http://localhost:3006/metrics`  |
-| Grafana       | `http://localhost:3007`          |
-| Prometheus    | `http://localhost:9090`          |
+### 3. Database (Supabase)
+Ensure your Supabase project is set up and run the migrations found in `frontend/supabase/migrations`.
 
-### 3. Initialiser la base de données
-
-```bash
-# Après docker-compose up, exécutez le schéma SQL
-docker exec -i o-flyes-postgres-1 psql -U oflyes -d oflyes_db < services/database/src/schema.sql
-```
-
-### 4. Développement local (sans Docker)
-
-```bash
-npm install          # installe les dépendances racine (workspaces)
-npm run dev          # lance tous les services en parallèle
-```
-
-## Fonctionnalités
-
-- **Page d'accueil** – Hero animé avec CTA vers Explore et Chat
-- **Explore** – Recherche filtrée par climat, budget/jour et période avec grille de destinations
-- **Chatbot IA** – Conversation naturelle, suggestions rapides, historique de session
-- **Auth** – Inscription / connexion locale + OAuth Google
-- **Pricing** – Plans Gratuit et Pro avec checkout Stripe
-- **Métriques** – Dashboard Grafana + compteurs Prometheus custom
-
-## Prochaines étapes
-
-- [ ] Page détail destination + carte interactive (Mapbox)
-- [ ] Profil utilisateur & voyages sauvegardés
-- [ ] Recommandation IA structurée (endpoint `/recommend`)
-- [ ] Push notifications (FCM)
-- [ ] Tests unitaires & e2e (Vitest + Playwright)
+---
+*Refactored to Option B: Removed legacy Express microservices in favor of Next.js Route Handlers + Supabase.*

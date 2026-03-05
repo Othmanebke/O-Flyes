@@ -37,7 +37,7 @@ const Autocompleter = ({ value, onChange, placeholder, onSelect }: any) => {
         const delay = setTimeout(async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`/api/search/locations?keyword=${value}`);
+                const res = await axios.get(`/api/partner/locations/suggest?q=${value}`);
                 setSuggestions(res.data);
             } catch (err) {
                 console.error(err);
@@ -116,7 +116,7 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
         e.preventDefault();
         setIsSearching(true);
         try {
-            const res = await axios.get(`/api/search/flights?origin=${originId || originKeyword}&destination=${destId || destKeyword}&date=${flightDate}`);
+            const res = await axios.get(`/api/partner/flights/search?origin=${originId || originKeyword}&destination=${destId || destKeyword}&date=${flightDate}`);
             setFlights(res.data);
         } catch (err) {
             console.error(err);
@@ -129,7 +129,7 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
         e.preventDefault();
         setIsSearching(true);
         try {
-            const res = await axios.get(`/api/search/hotels?cityCode=${cityCode || destId || 'PAR'}&checkIn=${checkIn}&checkOut=${checkOut}`);
+            const res = await axios.get(`/api/partner/hotels/search?city=${cityCode || destId || 'PAR'}`);
             setHotels(res.data);
         } catch (err) {
             console.error(err);
@@ -142,7 +142,7 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
         e.preventDefault();
         setIsSearching(true);
         try {
-            const res = await axios.get(`/api/search/activities?cityCode=${cityCode || destId || 'PAR'}`);
+            const res = await axios.get(`/api/partner/activities/search?city=${cityCode || destId || 'PAR'}`);
             setActivities(res.data);
         } catch (err) {
             console.error(err);
@@ -173,11 +173,11 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
     const handleSelectFlight = (flight: any) => {
         onAddBooking({
             type: 'flight',
-            title: `Vol ${flight.flightNumber} ${flight.departure.iata} ➔ ${flight.arrival.iata}`,
+            title: `Vol ${flight.flightNumber || flight.airline} ${flight.originCode || flight.origin} ➔ ${flight.destinationCode || flight.destination}`,
             provider: flight.airline,
-            start_datetime: flight.departure.time,
-            end_datetime: flight.arrival.time,
-            location: flight.arrival.iata,
+            start_datetime: flight.departure,
+            end_datetime: flight.arrival,
+            location: flight.destinationCode || flight.destination,
             price: flight.price,
             currency: flight.currency,
             status: 'confirmed'
@@ -188,12 +188,12 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
         onAddBooking({
             type: 'hotel',
             title: hotel.name,
-            provider: hotel.provider,
-            start_datetime: `${checkIn}T14:00:00Z`,
-            end_datetime: `${checkOut}T11:00:00Z`,
-            location: hotel.location,
-            price: hotel.pricePerNight, // simplifé
-            currency: hotel.currency,
+            provider: hotel.provider || "Booking.com",
+            start_datetime: checkIn ? `${checkIn}T14:00:00Z` : new Date().toISOString(),
+            end_datetime: checkOut ? `${checkOut}T11:00:00Z` : new Date(Date.now() + 86400000).toISOString(),
+            location: hotel.location || hotel.city,
+            price: hotel.price_per_night || hotel.pricePerNight, // simplifé
+            currency: hotel.currency || 'EUR',
             status: 'confirmed'
         });
     };
@@ -415,23 +415,23 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 rounded-xl bg-[#0A0D14] flex items-center justify-center border border-white/10 group-hover:border-gold/30 transition-colors">
-                                                    <img src={f.airlineLogo} alt={f.airline} className="w-7 h-7 object-contain grayscale group-hover:grayscale-0 transition-all" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                                    <Plane className="w-6 h-6 text-gold/50" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black text-white uppercase tracking-widest">{f.airline}</p>
-                                                    <p className="text-[9px] text-white/30 uppercase tracking-widest mt-0.5">{f.flightNumber}</p>
+                                                    <p className="text-[9px] text-white/30 uppercase tracking-widest mt-0.5">{f.flightNumber || f.class}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xl font-serif text-white">{f.price}€</p>
+                                                <p className="text-xl font-serif text-white">{f.price} {f.currency}</p>
                                                 <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Meilleur Prix</p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center justify-between mb-8 px-2">
                                             <div className="text-center">
-                                                <p className="text-xl font-serif text-white">{new Date(f.departure.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                                <p className="text-[10px] text-white/30 font-black mt-1">{f.departure.iata}</p>
+                                                <p className="text-xl font-serif text-white">{new Date(f.departure).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                <p className="text-[10px] text-white/30 font-black mt-1">{f.originCode || f.origin}</p>
                                             </div>
                                             <div className="flex-1 px-4 flex flex-col items-center gap-1">
                                                 <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">{f.duration}</p>
@@ -440,11 +440,11 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                                                         <Plane className="w-3 h-3" />
                                                     </div>
                                                 </div>
-                                                <p className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">Direct</p>
+                                                <p className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">{f.type || "Direct"}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-xl font-serif text-white">{new Date(f.arrival.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                                <p className="text-[10px] text-white/30 font-black mt-1">{f.arrival.iata}</p>
+                                                <p className="text-xl font-serif text-white">{new Date(f.arrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                <p className="text-[10px] text-white/30 font-black mt-1">{f.destinationCode || f.destination}</p>
                                             </div>
                                         </div>
 
@@ -464,9 +464,9 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
                                         className="bg-[#141822] rounded-[32px] border border-white/5 overflow-hidden hover:border-gold/30 transition-all duration-500 group flex flex-col shadow-xl"
                                     >
                                         <div className="h-44 relative overflow-hidden">
-                                            <img src={h.image} alt={h.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                                            <img src={h.image_url || h.image} alt={h.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                                             <div className="absolute top-4 left-4 bg-[#0A0D14]/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black text-white border border-white/10 shadow-2xl flex items-center gap-2">
-                                                <Star className="w-3 h-3 text-gold fill-gold" /> {h.rating} <span className="text-white/30 font-medium">({h.reviewsCount})</span>
+                                                <Star className="w-3 h-3 text-gold fill-gold" /> {h.rating} <span className="text-white/30 font-medium">({h.reviewsCount || h.stars})</span>
                                             </div>
                                             <div className="absolute bottom-4 right-4 bg-gold text-dark px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl">
                                                 Special Deal
@@ -488,7 +488,7 @@ export default function BookingShoppingModal({ tripId, onClose, onAddBooking }: 
 
                                             <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
                                                 <div className="flex flex-col">
-                                                    <p className="text-xl font-serif text-white">{h.pricePerNight}€</p>
+                                                    <p className="text-xl font-serif text-white">{h.price_per_night || h.pricePerNight} {h.currency}</p>
                                                     <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Par nuit</p>
                                                 </div>
                                                 <button onClick={() => handleSelectHotel(h)} className="px-6 py-3 btn-gold text-[9px] font-black uppercase tracking-widest shadow-xl shadow-gold/10">

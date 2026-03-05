@@ -56,12 +56,11 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
       }
       const userId = payload.id;
 
-      await axios.post("/api/db/trips", {
-        user_id: userId,
+      await axios.post("/api/trips", {
+        title: "Voyage : " + dest.name,
         destination_id: localDest.id,
-        start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 days
-        budget: dest.price_estimate
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +7 days
       });
       setSaved(true);
     } catch (err) {
@@ -201,7 +200,9 @@ export default function Chatbot() {
         const token = localStorage.getItem("token");
         if (token) {
           try {
-            const res = await axios.get(`/api/chat/history/${tId}`);
+            // In the new architecture, chat history is not stored by default in Phase 4
+            // const res = await axios.get(`/api/chat/history/${tId}`);
+            const res = { data: [] };
             if (res.data && Array.isArray(res.data)) {
               const formatted = res.data.map((m: any) => ({
                 role: m.role,
@@ -257,8 +258,8 @@ export default function Chatbot() {
         } catch (e) { }
       }
 
-      const res = await axios.post("/api/chat/message", { messages: history, userId, tripId });
-      setMessages(prev => [...prev, { role: "assistant", content: res.data.reply, enriched: res.data.enriched }]);
+      const res = await axios.post("/api/chat", { messages: history });
+      setMessages(prev => [...prev, { role: "assistant", content: res.data.content, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
     } catch (err: any) {
       console.error("Chat Error Details:", {

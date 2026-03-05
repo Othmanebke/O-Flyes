@@ -1,76 +1,18 @@
-databases:
-  - name: "oflyes-db-instance"
-    plan: "free"
-    databaseName: "oflyes_db"
-    user: "oflyes"
-
 services:
-  # ── Redis ──────────────────────────────────────────────────────────────────
-  - type: "redis"
-    name: "oflyes-redis-instance"
-    plan: "free"
-    ipAllowList: []
-
-  # ── AIVANA Monolith Service ────────────────────────────────────────────────
-  # This single service replaces Gateway, Auth, AI, Database, Sync Worker,
-  # metrics, notifications, travel-engine, and partner-service to bypass
-  # Render's 750 free hours limits.
-  - type: "web"
-    name: "api-gateway"
-    plan: "free"
-    env: "docker"
-    dockerContext: "."
-    dockerfilePath: "services/monolith/Dockerfile"
+  - type: web
+    name: aivana
+    env: node
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start"
     envVars:
-      - key: "PORT"
-        value: "3000"
-      - key: "NODE_ENV"
-        value: "production"
-      
-      # Core Infrastructure
-      - key: "DATABASE_URL"
-        value: "postgresql://oflyes:R5WjzwxqPs35QBIdlLnaGAev1QnUALro@dpg-d6egaig8tnhs738m6mkg-a/oflyes_db"
-      - key: "REDIS_URL"
-        value: "redis://red-d6egai88tnhs738m6mig:6379"
-      - key: "FRONTEND_URL"
-        value: "https://aivanaflyes.vercel.app"
-      - key: "JWT_SECRET"
-        value: "oflyes_production_secret_2026"
-
-      # Core Internal APIs Context (Loopbacked in code, but kept for clarity if needed)
-      - key: "AUTH_SERVICE_URL"
-        value: "https://api-gateway-v0vr.onrender.com/api"
-
-      # OAuth Google
-      - key: "OAUTH_GOOGLE_CLIENT_ID"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "OAUTH_GOOGLE_CLIENT_SECRET"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "OAUTH_CALLBACK_URL"
-        value: "https://api-gateway-v0vr.onrender.com/api/auth/callback"
-
-      # OAuth Microsoft
-      - key: "OAUTH_MICROSOFT_CLIENT_ID"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "OAUTH_MICROSOFT_CLIENT_SECRET"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "OAUTH_MICROSOFT_CALLBACK_URL"
-        value: "https://api-gateway-v0vr.onrender.com/api/auth/microsoft/callback"
-
-      # 3rd Party APIs
-      - key: "GROQ_API_KEY"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      
-      # Nodemailer
-      - key: "SMTP_HOST"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "SMTP_USER"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "SMTP_PASS"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-
-      # Stripe
-      - key: "STRIPE_SECRET_KEY"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
-      - key: "STRIPE_WEBHOOK_SECRET"
-        value: "TO_BE_REPLACED_IN_RENDER_DASHBOARD"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: TO_BE_REPLACED_IN_RENDER_DASHBOARD
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: TO_BE_REPLACED_IN_RENDER_DASHBOARD
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: TO_BE_REPLACED_IN_RENDER_DASHBOARD
+      - key: GROQ_API_KEY
+        value: TO_BE_REPLACED_IN_RENDER_DASHBOARD

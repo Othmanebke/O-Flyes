@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Search, MapPin, Star, ArrowRight, Sparkles, Plane, Clock, ChevronRight, Compass, Globe, Luggage } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { parseJwt } from "@/lib/jwt";
+import { createClient } from "@/lib/supabase/browser";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Flight {
@@ -39,18 +39,15 @@ export default function FlightsPage() {
     const [debouncedDest, setDebouncedDest] = useState("");
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const payload = parseJwt(token);
-                if (payload && payload.id) {
-                    setUserId(payload.id);
-                    fetchTrips(payload.id);
-                }
-            } catch (e) {
-                console.error("Invalid token", e);
+        const checkAuth = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+                fetchTrips();
             }
-        }
+        };
+        checkAuth();
         fetchFlights("Paris", "New York");
     }, []);
 
@@ -75,9 +72,9 @@ export default function FlightsPage() {
         }
     }, [debouncedOrigin, debouncedDest, activeSearch]);
 
-    const fetchTrips = async (uid: string) => {
+    const fetchTrips = async () => {
         try {
-            const res = await axios.get(`/api/db/trips/user/${uid}`);
+            const res = await axios.get(`/api/trips`);
             setTrips(res.data || []);
         } catch (err) {
             console.error("Failed to fetch trips", err);
@@ -123,14 +120,11 @@ export default function FlightsPage() {
     const confirmBooking = async (tripId: string) => {
         if (!selectedFlight || !userId) return;
         try {
-            await axios.post("/api/db/bookings", {
-                trip_id: tripId,
+            await axios.post(`/api/trips/${tripId}/items`, {
                 type: 'flight',
                 title: `Vol ${selectedFlight.airline} : ${selectedFlight.originCode} → ${selectedFlight.destinationCode}`,
                 provider: selectedFlight.airline,
-                price: selectedFlight.price,
-                currency: selectedFlight.currency,
-                status: 'pending',
+                price_estimate: selectedFlight.price,
                 external_url: selectedFlight.booking_url
             });
             setShowTripSelector(false);

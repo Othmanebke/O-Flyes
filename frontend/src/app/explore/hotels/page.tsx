@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { parseJwt } from "@/lib/jwt";
+import { createClient } from "@/lib/supabase/browser";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Hotel {
@@ -27,13 +27,15 @@ export default function HotelsPage() {
     const [debouncedTerm, setDebouncedTerm] = useState("");
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const payload = parseJwt(token);
-                if (payload && payload.id) { setUserId(payload.id); fetchTrips(payload.id); }
-            } catch (e) { console.error("Invalid token", e); }
-        }
+        const checkAuth = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+                fetchTrips();
+            }
+        };
+        checkAuth();
         fetchHotels("Paris");
     }, []);
 
@@ -50,8 +52,8 @@ export default function HotelsPage() {
         } else { setSuggestions([]); setShowSuggestions(false); }
     }, [debouncedTerm]);
 
-    const fetchTrips = async (uid: string) => {
-        try { const res = await axios.get(`/api/db/trips/user/${uid}`); setTrips(res.data || []); }
+    const fetchTrips = async () => {
+        try { const res = await axios.get(`/api/trips`); setTrips(res.data || []); }
         catch (err) { console.error("Failed to fetch trips", err); }
     };
     const fetchHotels = async (city: string) => {
@@ -82,10 +84,9 @@ export default function HotelsPage() {
     const confirmBooking = async (tripId: string) => {
         if (!selectedHotel || !userId) return;
         try {
-            await axios.post("/api/db/bookings", {
-                trip_id: tripId, type: "hotel", title: selectedHotel.name, provider: "Partner",
-                price: selectedHotel.price_per_night, currency: selectedHotel.currency,
-                status: "pending", external_url: selectedHotel.booking_url
+            await axios.post(`/api/trips/${tripId}/items`, {
+                type: "hotel", title: selectedHotel.name, provider: "Partner",
+                price_estimate: selectedHotel.price_per_night, external_url: selectedHotel.booking_url
             });
             setShowTripSelector(false); trackClick("hotel"); window.open(selectedHotel.booking_url, "_blank");
         } catch (err) {

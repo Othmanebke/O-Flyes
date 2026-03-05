@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plane, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
-import axios from "axios";
+import { createClient } from "@/lib/supabase/browser";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -13,13 +13,17 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         setStatus("loading");
         setMessage("");
+        const supabase = createClient();
         try {
-            const res = await axios.post("/api/auth/forgot-password", { email });
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth/reset-password`,
+            });
+            if (error) throw error;
             setStatus("success");
-            setMessage(res.data.message || "Si un compte existe à cette adresse, un email de réinitialisation vous a été envoyé.");
+            setMessage("Si un compte existe à cette adresse, un email de réinitialisation vous a été envoyé.");
         } catch (err: any) {
             setStatus("error");
-            setMessage(err.response?.data?.error || "Une erreur est survenue.");
+            setMessage(err.message || "Une erreur est survenue.");
         }
     };
 

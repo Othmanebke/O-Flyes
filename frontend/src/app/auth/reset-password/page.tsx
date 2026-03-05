@@ -2,8 +2,8 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { Plane, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
-import axios from "axios";
 import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/browser";
 
 function ResetPasswordForm() {
     const params = useSearchParams();
@@ -22,6 +22,8 @@ function ResetPasswordForm() {
         );
     }
 
+    const supabase = createClient();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password !== confirmPassword) {
@@ -39,12 +41,13 @@ function ResetPasswordForm() {
         setMessage("");
 
         try {
-            await axios.post("/api/auth/reset-password", { token, password });
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) throw error;
             setStatus("success");
             setMessage("Votre mot de passe a été réinitialisé avec succès.");
         } catch (err: any) {
             setStatus("error");
-            setMessage(err.response?.data?.error || "Le lien est expiré ou invalide.");
+            setMessage(err.message || "Le lien est expiré ou invalide.");
         }
     };
 
