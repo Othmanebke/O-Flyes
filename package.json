@@ -1,11 +1,10 @@
 {
-  "name": "o-flyes",
-  "version": "1.0.0",
+  "name": "aivana",
   "private": true,
-  "description": "AI-powered travel recommendation platform",
   "scripts": {
-    "dev": "npm run dev --workspace=frontend",
-    "build": "npm run build --workspace=frontend",
-    "start": "npm run start --workspace=frontend"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run start",
+    "lint": "cd frontend && npm run lint"
   }
 }
