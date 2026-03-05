@@ -1,8 +1,8 @@
-# ✈️ AIVANA (formerly O-Flyes)
+# ✈️ AIVANA 
 
 > AI-powered scalable SaaS platform built with Next.js and Supabase.
 
-## Architecture: Option B (Simple Scalable SaaS)
+## Architecture:
 
 ```text
 AIVANA/
