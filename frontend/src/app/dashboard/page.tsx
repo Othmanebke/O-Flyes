@@ -986,21 +986,21 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <a href="https://api-gateway-v0vr.onrender.com/api/auth/google/sync"
+                            <button onClick={() => alert("La synchronisation des emails via Supabase arrive bientôt !")}
                                 className="w-full flex items-center justify-center gap-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all group">
                                 <svg className="w-5 h-5 grayscale group-hover:grayscale-0 transition-all" viewBox="0 0 24 24">
                                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                 </svg>
                                 Via Google Cloud
-                            </a>
+                            </button>
 
-                            <a href="https://api-gateway-v0vr.onrender.com/api/auth/microsoft"
+                            <button onClick={() => alert("La synchronisation des emails via Supabase arrive bientôt !")}
                                 className="w-full flex items-center justify-center gap-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all group">
                                 <svg className="w-5 h-5 grayscale group-hover:grayscale-0 transition-all" viewBox="0 0 21 21">
                                     <path fill="currentColor" d="M0 0h10v10H0z" /><path fill="currentColor" opacity="0.6" d="M11 0h10v10H11z" />
                                 </svg>
                                 Via Microsoft AI
-                            </a>
+                            </button>
                         </div>
 
                         <button onClick={() => setShowSyncOptions(false)} className="w-full mt-10 py-2 text-[10px] font-black text-white/20 hover:text-white/40 uppercase tracking-widest transition-colors">Fermer la fenêtre</button>
