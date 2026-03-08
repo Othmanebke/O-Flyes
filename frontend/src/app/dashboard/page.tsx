@@ -293,17 +293,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex font-sans selection:bg-white/10 selection:text-white">
+        <div className="fixed inset-0 z-40 bg-zinc-950 text-zinc-100 flex font-sans selection:bg-white/10 selection:text-white">
             {/* Sidebar */}
-            <aside className="w-64 bg-zinc-950/50 border-r border-white-[0.02] hidden md:flex flex-col">
-                <div className="p-8">
-                    <Link href="/" className="flex items-center gap-3 font-medium text-lg tracking-tight group">
-                        <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-colors">
-                            <Plane className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
-                        </div>
-                        <span className="font-semibold text-lg">AIVANA</span>
-                    </Link>
-                </div>
+            <aside className="w-64 bg-zinc-950/50 border-r border-white/[0.02] hidden md:flex flex-col pt-24">
+
 
                 <nav className="flex-1 px-4 space-y-1">
                     {[
@@ -348,7 +341,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-zinc-950">
+            <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-zinc-950 pt-24">
                 {/* Subtle top gradient */}
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none z-0" />
 
