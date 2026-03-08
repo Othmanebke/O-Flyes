@@ -1,7 +1,7 @@
 import { getGroqChatCompletion } from './groq';
 
 export async function generateRecommendationsJson(context: string): Promise<string> {
-    const prompt = `Based on the following user context, recommend some travel destinations.
+  const prompt = `Based on the following user context, recommend some travel destinations.
 You MUST respond strictly in valid JSON format matching exactly this structure without any markdown formatting or surrounding text:
 {
   "destinations": [
@@ -21,24 +21,24 @@ User context:
 ${context}
 `;
 
-    const messages = [
-        { role: 'system', content: 'You are an expert travel assistant. You only output valid raw JSON.' },
-        { role: 'user', content: prompt }
-    ];
+  const messages = [
+    { role: 'system', content: 'You are an expert travel assistant. You only output valid raw JSON.' },
+    { role: 'user', content: prompt }
+  ];
 
-    // Request a JSON response from Groq
-    // Some Groq models natively support response_format: { type: "json_object" }
-    // we will try to extract the JSON from text just in case.
-    const completion = await getGroqChatCompletion(messages, "llama3-70b-8192", 1500);
+  // Request a JSON response from Groq
+  // Some Groq models natively support response_format: { type: "json_object" }
+  // we will try to extract the JSON from text just in case.
+  const completion = await getGroqChatCompletion(messages, "llama-3.3-70b-versatile", 1500);
 
-    return completion.choices[0]?.message?.content || "{}";
+  return completion.choices[0]?.message?.content || "{}";
 }
 
 export function extractJsonFromText(text: string): string {
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        return text.substring(firstBrace, lastBrace + 1);
-    }
-    return text;
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return text.substring(firstBrace, lastBrace + 1);
+  }
+  return text;
 }

@@ -1,4 +1,4 @@
-export async function getGroqChatCompletion(messages: any[], model: string = "llama3-70b-8192", maxTokens: number = 1000) {
+export async function getGroqChatCompletion(messages: any[], model: string = "llama-3.3-70b-versatile", maxTokens: number = 1000) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         throw new Error("GROQ_API_KEY is not set in the environment variables.");
