@@ -285,17 +285,17 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center space-y-4">
-                <div className="w-8 h-8 rounded-full border-t-2 border-r-2 border-white animate-spin"></div>
-                <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Initialisation de l'espace de travail...</p>
+            <div className="min-h-screen flex flex-col items-center justify-center space-y-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                <div className="w-8 h-8 rounded-full border-t-2 border-r-2 animate-spin" style={{ borderColor: 'var(--text-primary)' }}></div>
+                <p className="text-xs font-mono uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Initialisation de l'espace de travail...</p>
             </div>
         );
     }
 
     return (
-        <div className="fixed inset-0 z-40 bg-zinc-950 text-zinc-100 flex font-sans selection:bg-white/10 selection:text-white">
+        <div className="fixed inset-0 z-40 flex font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Sidebar */}
-            <aside className="w-64 bg-zinc-950/50 border-r border-white/[0.02] hidden md:flex flex-col pt-24">
+            <aside className="w-64 hidden md:flex flex-col pt-24" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
 
 
                 <nav className="flex-1 px-4 space-y-1">
@@ -315,9 +315,10 @@ export default function DashboardPage() {
                             key={item.label}
                             onClick={item.onClick}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${item.active
-                                ? "bg-white/10 text-white font-medium shadow-sm ring-1 ring-white/5"
-                                : "text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+                                ? "font-medium shadow-sm"
+                                : ""
                                 }`}
+                            style={item.active ? { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' } : { color: 'var(--text-muted)' }}
                         >
                             <item.icon className={`w-4 h-4 ${item.color || ""}`} />
                             <span>{item.label}</span>
@@ -325,14 +326,15 @@ export default function DashboardPage() {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-white/[0.02]">
+                <div className="p-4" style={{ borderTop: '1px solid var(--border-light)' }}>
                     <button
                         onClick={async () => {
                             const supabase = createClient();
                             await supabase.auth.signOut();
                             router.push("/");
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors text-sm"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors text-sm"
+                        style={{ color: 'var(--text-muted)' }}
                     >
                         <LogOut className="w-4 h-4" />
                         <span>Déconnexion</span>
@@ -341,21 +343,21 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-zinc-950 pt-24">
+            <main className="flex-1 flex flex-col h-screen overflow-hidden relative pt-24" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 {/* Subtle top gradient */}
-                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none z-0" />
+                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none z-0" />
 
                 {/* Header */}
-                <header className="h-16 px-8 flex items-center justify-between flex-shrink-0 z-10 border-b border-white/[0.02] backdrop-blur-md">
+                <header className="h-16 px-8 flex items-center justify-between flex-shrink-0 z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-sm font-medium text-zinc-100">
+                        <h1 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                             {showSettings ? "Paramètres du compte" : (selectedTrip ? selectedTrip.title : "Vue Générale")}
                         </h1>
                         {/* Breadcrumb style path for trips */}
                         {selectedTrip && (
                             <>
                                 <ChevronRight className="w-4 h-4 text-zinc-700" />
-                                <span className="text-sm text-zinc-500 capitalize">{activeTab === 'overview' ? 'Aperçu' : activeTab === 'itinerary' ? 'Itinéraire' : activeTab === 'discover' ? 'Découvrir' : 'Documents'}</span>
+                                <span className="text-sm capitalize" style={{ color: 'var(--text-muted)' }}>{activeTab === 'overview' ? 'Aperçu' : activeTab === 'itinerary' ? 'Itinéraire' : activeTab === 'discover' ? 'Découvrir' : 'Documents'}</span>
                             </>
                         )}
                     </div>
@@ -368,14 +370,14 @@ export default function DashboardPage() {
                         )}
                         <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
                         <div className="text-right hidden sm:block">
-                            <p className="text-xs font-medium text-zinc-300">{userName}</p>
-                            <p className="text-[10px] text-zinc-500">
+                            <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{userName}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                                 {userRole === 'premium' ?
                                     <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-white" /> Pro</span>
                                     : "Basic"}
                             </p>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center font-medium text-sm">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                             {userName[0]?.toUpperCase()}
                         </div>
                     </div>
@@ -390,14 +392,14 @@ export default function DashboardPage() {
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* Left Content - Profil */}
                                     <div className="lg:col-span-2 space-y-6">
-                                        <div className="bg-zinc-900/50 rounded-2xl p-8 border border-white/[0.04] relative overflow-hidden">
+                                        <div className="rounded-2xl p-8 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                                             <div className="flex items-center gap-6 mb-8 relative z-10">
                                                 <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 text-white flex items-center justify-center text-3xl font-medium">
                                                     {userName[0]?.toUpperCase() || "U"}
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <h2 className="text-xl font-medium text-white tracking-tight">Profil Public</h2>
-                                                    <p className="text-sm text-zinc-500">Gérez vos informations personnelles et préférences.</p>
+                                                    <h2 className="text-xl font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>Profil Public</h2>
+                                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Gérez vos informations personnelles et préférences.</p>
                                                 </div>
                                             </div>
 
@@ -510,18 +512,18 @@ export default function DashboardPage() {
                                 {/* Welcome */}
                                 <div className="mb-12 flex items-end justify-between">
                                     <div className="space-y-1">
-                                        <h2 className="text-4xl font-serif text-white">Bonjour, {userName} 👋</h2>
-                                        <p className="text-white/40 uppercase text-[10px] font-black tracking-[0.2em]">Prêt pour votre prochaine aventure ?</p>
+                                        <h2 className="text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
+                                        <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
                                     </div>
                                 </div>
 
                                 {trips.length === 0 ? (
-                                    <div className="bg-zinc-900/50 rounded-2xl p-12 border border-white/[0.04] text-center mb-10 relative overflow-hidden">
+                                    <div className="rounded-2xl p-12 text-center mb-10 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                                         <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-white/10">
                                             📬
                                         </div>
-                                        <h3 className="text-xl font-medium text-white mb-3">Créez votre premier voyage</h3>
-                                        <p className="text-zinc-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-normal">
+                                        <h3 className="text-xl font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Créez votre premier voyage</h3>
+                                        <p className="text-sm max-w-md mx-auto mb-10 leading-relaxed font-normal" style={{ color: 'var(--text-secondary)' }}>
                                             Connectez votre email ou ajoutez un voyage manuellement pour que l'IA commence à organiser vos escapades.
                                         </p>
                                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -554,9 +556,10 @@ export default function DashboardPage() {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.1 }}
                                                 onClick={() => handleSelectTrip(trip)}
-                                                className="group cursor-pointer bg-zinc-900/50 rounded-2xl border border-white/[0.04] overflow-hidden hover:border-white/20 hover:bg-zinc-800/50 hover:shadow-lg transition-all duration-300"
+                                                className="group cursor-pointer rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                                                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
                                             >
-                                                <div className="h-40 bg-zinc-950 relative overflow-hidden">
+                                                <div className="h-40 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                                                     {trip.img ? (
                                                         <img src={trip.img} alt={trip.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
                                                     ) : (
@@ -649,10 +652,11 @@ export default function DashboardPage() {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.98 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-8 flex flex-col md:flex-row gap-8 items-stretch relative overflow-hidden"
+                                                className="rounded-2xl p-8 flex flex-col md:flex-row gap-8 items-stretch relative overflow-hidden"
+                                                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
                                             >
                                                 {/* Score Scoreboard */}
-                                                <div className="flex-shrink-0 flex flex-col items-center justify-center p-8 bg-zinc-950/50 rounded-xl border border-white/5 min-w-[220px] relative z-10">
+                                                <div className="flex-shrink-0 flex flex-col items-center justify-center p-8 rounded-xl min-w-[220px] relative z-10" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
                                                     <span className="text-xs font-medium text-zinc-400 mb-6">Indice de complétion</span>
                                                     <div className="relative w-28 h-28 flex items-center justify-center mb-4">
                                                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">

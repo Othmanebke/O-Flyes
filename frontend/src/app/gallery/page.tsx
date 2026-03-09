@@ -20,7 +20,7 @@ export default function GalleryPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<typeof photos[0] | null>(null);
 
   return (
-    <div className="bg-[#0A0D14] min-h-screen pb-24 relative overflow-hidden -mt-20">
+    <div className="min-h-screen pb-24 relative overflow-hidden -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Decorative planes */}
       <div className="absolute top-40 left-12 opacity-[0.03] rotate-[-30deg] pointer-events-none">
         <Plane className="w-32 h-32 text-white" />
@@ -98,7 +98,7 @@ export default function GalleryPage() {
               className={`relative overflow-hidden rounded-xl border border-white/5 group cursor-pointer ${photo.span} ${photo.height}`}
             >
               {/* Image Container with slow zoom and pan overlay */}
-              <div className="absolute inset-0 bg-[#0A0D14]">
+              <div className="absolute inset-0" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 <img
                   src={photo.src}
                   alt={photo.alt}

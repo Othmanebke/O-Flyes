@@ -95,7 +95,7 @@ export default function HotelsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0D14] -mt-20">
+        <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ──────────────────────────────────────────────── */}
             <div className="relative h-[70vh] min-h-[500px]">

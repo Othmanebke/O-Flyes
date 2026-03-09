@@ -84,12 +84,7 @@ export default function HomePage() {
     setDuration(5);
     setDeparture("Paris");
     setInterests(["Soleil"]);
-    // React state updates are batched, but we can't reliably read them immediately in the same tick.
-    // So we pass the specific explicit values to mock input to be safe, or just trigger generation 
-    // and rely on the next render. Here we wrap it in a setTimeout to ensure state is flushed.
     setTimeout(() => {
-      const fakeEvent = { preventDefault: () => { } } as FormEvent;
-      // We need to call the generator with explicit values to avoid race condition with state
       setLoadingReco(true);
       setRecommendations([]);
       setTimeout(() => {
@@ -126,7 +121,7 @@ export default function HomePage() {
   }, [next]);
 
   return (
-    <div className="bg-[#0A0D14]">
+    <div style={{ backgroundColor: 'var(--bg-primary)' }}>
 
       {/* ── HERO SLIDESHOW ──────────────────────────────────────────────── */}
       <section className="relative min-h-[88vh] flex items-center overflow-hidden -mt-20">
@@ -178,44 +173,47 @@ export default function HomePage() {
               </div>
 
               {/* Right - Form Container */}
-              <div id="assistant" className="w-full lg:w-[480px] bg-[#141822]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+              <div id="assistant" className="w-full lg:w-[480px] backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden" style={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none" />
 
                 <form onSubmit={handleGenerate} className="relative z-10 space-y-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-5 h-5 text-gold" />
-                    <h3 className="text-white font-bold text-lg">Où partir ?</h3>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Où partir ?</h3>
                   </div>
 
                   <div className="space-y-4">
                     {/* Budget */}
                     <div>
                       <div className="flex justify-between items-end mb-2">
-                        <label className="text-xs text-white/70 uppercase tracking-widest font-semibold text-shadow-sm">Budget Total</label>
+                        <label className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'var(--text-secondary)' }}>Budget Total</label>
                         <span className="text-xl font-bold text-gold">{budget} €</span>
                       </div>
                       <input
                         type="range" min="200" max="8000" step="50" value={budget} onChange={(e) => setBudget(Number(e.target.value))}
-                        className="w-full accent-gold h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-gold h-1.5 rounded-lg appearance-none cursor-pointer"
+                        style={{ backgroundColor: 'var(--border-color)' }}
                       />
                     </div>
 
                     {/* Ligne 2: Durée & Période */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Durée</label>
+                        <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Durée</label>
                         <select
                           value={duration} onChange={(e) => setDuration(Number(e.target.value))}
-                          className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold/50 appearance-none"
+                          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50 appearance-none"
+                          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                         >
                           {[3, 5, 7, 10, 14, 21].map(d => <option key={d} value={d}>{d} jours</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Période</label>
+                        <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Période</label>
                         <select
                           value={period} onChange={(e) => setPeriod(e.target.value)}
-                          className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold/50 appearance-none"
+                          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50 appearance-none"
+                          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                         >
                           <option value="Flexible">Flexible</option>
                           {["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"].map(m => (
@@ -227,24 +225,26 @@ export default function HomePage() {
 
                     {/* Départ */}
                     <div>
-                      <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Départ (Optionnel)</label>
+                      <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Départ (Optionnel)</label>
                       <input
                         type="text" placeholder="Ex: Paris, Lyon..." value={departure} onChange={(e) => setDeparture(e.target.value)}
-                        className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold/50"
+                        className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50"
+                        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                       />
                     </div>
 
                     {/* Envies */}
                     <div>
-                      <label className="block text-xs text-white/70 uppercase tracking-widest font-semibold mb-2">Envies</label>
+                      <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Envies</label>
                       <div className="flex flex-wrap gap-2">
                         {INTERESTS_LIST.map(interest => (
                           <button
                             key={interest} type="button" onClick={() => toggleInterest(interest)}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${interests.includes(interest)
-                              ? "bg-gold text-dark-900 border-gold"
-                              : "bg-dark-900 text-white/70 border-white/10 hover:border-white/30"
+                              ? "bg-gold border-gold"
+                              : ""
                               }`}
+                            style={interests.includes(interest) ? { color: 'var(--text-inverse)' } : { backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', borderColor: 'var(--border-color)' }}
                           >
                             {interest}
                           </button>
@@ -257,7 +257,7 @@ export default function HomePage() {
                     <button type="submit" disabled={loadingReco} className="flex-1 btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)] disabled:opacity-70 disabled:cursor-not-allowed py-3.5">
                       {loadingReco ? "Analyse en cours..." : "Générer ma recommandation"}
                     </button>
-                    <button type="button" onClick={loadExample} className="sm:w-auto px-6 py-3.5 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition-colors">
+                    <button type="button" onClick={loadExample} className="sm:w-auto px-6 py-3.5 rounded-xl text-sm font-bold hover:bg-gold/10 transition-colors" style={{ border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                       Voir un exemple
                     </button>
                   </div>
@@ -287,12 +287,12 @@ export default function HomePage() {
 
       {/* ── RECOMMENDATIONS RESULTS ─────────────────────────────────────── */}
       {recommendations.length > 0 && (
-        <section id="reco-results" className="py-24 px-8 bg-[#141822] border-t border-white/5 scroll-mt-20">
+        <section id="reco-results" className="py-24 px-8 scroll-mt-20" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)' }}>
           <div className="max-w-6xl mx-auto">
             <div className="mb-12 text-center">
               <p className="section-label mb-4 text-gold/80">Recommandations sur mesure</p>
-              <h2 className="font-serif text-3xl md:text-5xl text-white">Vos 3 destinations idéales</h2>
-              <p className="text-white/60 mt-4 max-w-2xl mx-auto text-sm">
+              <h2 className="font-serif text-3xl md:text-5xl" style={{ color: 'var(--text-primary)' }}>Vos 3 destinations idéales</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Basé sur votre budget de {budget}€ et vos envies. Sélectionnez la destination qui vous
                 correspond le plus et ajoutez-la à votre dashboard pour commencer la planification.
               </p>
@@ -304,11 +304,11 @@ export default function HomePage() {
       )}
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-8 bg-[#0A0D14]">
+      <section id="how-it-works" className="py-24 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto text-center mb-16">
           <p className="section-label mb-4 text-gold/80">Fonctionnement</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white">Votre voyage se planifie seul</h2>
-          <p className="text-white/60 mt-4 max-w-2xl mx-auto">
+          <h2 className="font-serif text-4xl md:text-5xl" style={{ color: 'var(--text-primary)' }}>Votre voyage se planifie seul</h2>
+          <p className="mt-4 max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
             AIVANA se connecte à vos confirmations de réservation pour créer automatiquement votre itinéraire centralisé.
           </p>
         </div>
@@ -325,39 +325,40 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: i * 0.2, duration: 0.6 }}
-              className="p-10 rounded-3xl bg-[#141822] border border-white/5 hover:border-gold/30 transition-all group lg:min-h-[300px]"
+              className="p-10 rounded-3xl transition-all group lg:min-h-[300px] hover:border-gold/30"
+              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
             >
               <span className="text-5xl font-serif text-gold/30 group-hover:text-gold transition-colors">{s.step}</span>
-              <h3 className="text-xl font-bold text-white mt-4 mb-3">{s.title}</h3>
-              <p className="text-white/60 text-sm leading-relaxed">{s.desc}</p>
+              <h3 className="text-xl font-bold mt-4 mb-3" style={{ color: 'var(--text-primary)' }}>{s.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{s.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────── */}
-      <section className="py-24 px-8 bg-[#0A0D14] overflow-hidden relative">
+      <section className="py-24 px-8 overflow-hidden relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-label mb-4 text-gold/80">L&apos;Expérience AIVANA</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-6">
+              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6" style={{ color: 'var(--text-primary)' }}>
                 Le Dashboard qui prend<br />soin de votre voyage
               </h2>
               <div className="space-y-6">
                 {[
                   { t: "Centralisation Totale", d: "Plus besoin de chercher vos PDFs. Tout est au même endroit, trié par voyage." },
                   { t: "Synchronisation Temps Réel", d: "Dès que vous recevez une confirmation, elle apparaît dans votre Dashboard." },
-                  { t: "Zéro Effort", d: "L&apos;IA extrait les dates, lieux et numéros de dossier pour vous." },
+                  { t: "Zéro Effort", d: "L'IA extrait les dates, lieux et numéros de dossier pour vous." },
                 ].map((f, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0 mt-1">
                       <div className="w-2 h-2 rounded-full bg-gold" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">{f.t}</h4>
-                      <p className="text-white/60 text-xs mt-1 leading-relaxed">{f.d}</p>
+                      <h4 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{f.t}</h4>
+                      <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{f.d}</p>
                     </div>
                   </div>
                 ))}
@@ -367,43 +368,43 @@ export default function HomePage() {
 
             {/* Visual Mockup */}
             <div className="relative">
-              <div className="bg-[#141822] rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] border border-white/10 p-8 transform lg:rotate-2 lg:scale-105">
-                <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+              <div className="rounded-3xl shadow-[0_40px_80px_var(--shadow-color)] p-8 transform lg:rotate-2 lg:scale-105" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-color)' }}>
+                <div className="flex items-center justify-between mb-8 pb-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">🏝️</div>
                     <div>
-                      <p className="text-xs font-bold text-white">Voyage à Bali</p>
-                      <p className="text-[10px] text-white/50">12 Mai — 24 Mai 2024</p>
+                      <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Voyage à Bali</p>
+                      <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>12 Mai — 24 Mai 2024</p>
                     </div>
                   </div>
                   <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-[#141822] bg-white/20" />
-                    <div className="w-6 h-6 rounded-full border-2 border-[#141822] bg-gold" />
+                    <div className="w-6 h-6 rounded-full border-2" style={{ borderColor: 'var(--bg-elevated)', backgroundColor: 'var(--border-color)' }} />
+                    <div className="w-6 h-6 rounded-full border-2 bg-gold" style={{ borderColor: 'var(--bg-elevated)' }} />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                  <div className="p-4 rounded-2xl flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/10 shadow-sm">✈️</div>
+                      <div className="p-2 rounded-lg shadow-sm" style={{ backgroundColor: 'var(--bg-secondary)' }}>✈️</div>
                       <div>
-                        <p className="text-xs font-bold text-white">Vol AF256</p>
-                        <p className="text-[10px] text-white/50">Départ 10:45 Paris CDG</p>
+                        <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Vol AF256</p>
+                        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Départ 10:45 Paris CDG</p>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Confirmé</span>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                  <div className="p-4 rounded-2xl flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/10 shadow-sm">🏨</div>
+                      <div className="p-2 rounded-lg shadow-sm" style={{ backgroundColor: 'var(--bg-secondary)' }}>🏨</div>
                       <div>
-                        <p className="text-xs font-bold text-white">Alila Villas Uluwatu</p>
-                        <p className="text-[10px] text-white/50">Check-in 14:00</p>
+                        <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Alila Villas Uluwatu</p>
+                        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Check-in 14:00</p>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Confirmé</span>
                   </div>
-                  <div className="p-4 rounded-2xl bg-gold/20 text-white border border-gold/30 flex items-center justify-between shadow-[0_0_20px_rgba(201,168,76,0.1)]">
+                  <div className="p-4 rounded-2xl bg-gold/20 border border-gold/30 flex items-center justify-between shadow-[0_0_20px_rgba(201,168,76,0.1)]">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-gold/20">🏄</div>
                       <div>
@@ -416,19 +417,19 @@ export default function HomePage() {
               </div>
               {/* Decorative bubbles */}
               <div className="absolute -top-6 -right-6 w-24 h-24 bg-gold/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: 'var(--border-color)', opacity: 0.3 }} />
             </div>
           </div>
         </div>
       </section>
 
       {/* ── MARQUEE STRIP ─────────────────────────────────────────────────── */}
-      <div className="bg-[#141822] py-4 overflow-hidden border-y border-white/5">
+      <div className="py-4 overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)' }}>
         <div className="marquee-inner">
           {[...Array(2)].map((_, k) => (
             <div key={k} className="flex items-center gap-10 px-10 whitespace-nowrap">
               {["Bali", "Islande", "Japon", "Maroc", "Thaïlande", "Pérou", "Norvège", "Mexique", "Vietnam", "Portugal"].map((c) => (
-                <span key={c} className="text-white/50 text-sm tracking-wider uppercase flex items-center gap-4">
+                <span key={c} className="text-sm tracking-wider uppercase flex items-center gap-4" style={{ color: 'var(--text-muted)' }}>
                   {c}
                   <span className="text-gold text-lg">❖</span>
                 </span>
@@ -439,15 +440,15 @@ export default function HomePage() {
       </div>
 
       {/* ── ABOUT / BRAND BLOCK ───────────────────────────────────────────── */}
-      <section className="py-24 px-8 bg-[#0A0D14]">
+      <section className="py-24 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-label mb-4 text-gold/80">Notre approche</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-6">
+              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6" style={{ color: 'var(--text-primary)' }}>
                 Avec l&apos;amour du voyage<br />et de l&apos;exploration
               </h2>
-              <p className="text-white/60 leading-relaxed mb-8 max-w-md">
+              <p className="leading-relaxed mb-8 max-w-md" style={{ color: 'var(--text-secondary)' }}>
                 Nous créons des itinéraires qui inspirent, connectent et restent
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
@@ -469,11 +470,11 @@ export default function HomePage() {
       </section>
 
       {/* ── AI VIDEO / FEATURE BLOCK ─────────────────────────────────────── */}
-      <section className="py-24 px-8 bg-[#0A0D14]">
+      <section className="py-24 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto">
           <p className="section-label mb-10 text-center text-gold/80">Notre IA</p>
           {/* Banner */}
-          <div className="relative rounded-3xl overflow-hidden h-[420px] mb-6 border border-white/10 shadow-2xl">
+          <div className="relative rounded-3xl overflow-hidden h-[420px] mb-6 shadow-2xl" style={{ border: '1px solid var(--border-color)' }}>
             <img
               src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1400&q=85"
               alt="Voyage nocturne"
@@ -492,9 +493,9 @@ export default function HomePage() {
                 </p>
               </div>
               {/* Stats bubble */}
-              <div className="bg-[#141822]/80 backdrop-blur-md rounded-2xl p-4 md:p-6 min-w-[140px] md:min-w-[160px] text-center border-b-4 border-gold border-x border-t border-white/10">
-                <p className="font-bold text-3xl md:text-4xl text-white mb-1">95%</p>
-                <p className="text-white/60 text-[10px] md:text-xs">de voyageurs<br />pleinement satisfaits</p>
+              <div className="backdrop-blur-md rounded-2xl p-4 md:p-6 min-w-[140px] md:min-w-[160px] text-center border-b-4 border-gold" style={{ backgroundColor: 'var(--glass-bg)', borderLeft: '1px solid var(--glass-border)', borderRight: '1px solid var(--glass-border)', borderTop: '1px solid var(--glass-border)' }}>
+                <p className="font-bold text-3xl md:text-4xl mb-1" style={{ color: 'var(--text-primary)' }}>95%</p>
+                <p className="text-[10px] md:text-xs" style={{ color: 'var(--text-secondary)' }}>de voyageurs<br />pleinement satisfaits</p>
               </div>
             </div>
             {/* CTA button center bottom */}
@@ -509,12 +510,12 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-8 bg-[#0A0D14]">
+      <section className="py-20 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12">
             <div>
               <p className="section-label mb-3 text-gold/80">FAQ</p>
-              <h2 className="font-serif text-4xl text-white leading-tight">
+              <h2 className="font-serif text-4xl leading-tight" style={{ color: 'var(--text-primary)' }}>
                 Tout ce que vous devez<br />savoir avant de<br />commencer
               </h2>
               <button onClick={triggerChatbotWithPreset} className="btn-gold mt-8">
@@ -524,18 +525,19 @@ export default function HomePage() {
             </div>
             <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <div key={i} className="border border-white/10 rounded-xl overflow-hidden bg-[#141822]/50">
+                <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gold/5 transition-colors"
                   >
-                    <span className="text-sm font-medium text-white">{faq.q}</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{faq.q}</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-white/50 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}
+                      style={{ color: 'var(--text-muted)' }}
                     />
                   </button>
                   {openFaq === i && (
-                    <div className="px-5 pb-4 text-sm text-white/60 leading-relaxed">
+                    <div className="px-5 pb-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                       {faq.a}
                     </div>
                   )}
@@ -547,16 +549,16 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA BANNER ────────────────────────────────────────────────────── */}
-      <section className="px-8 pb-10 bg-[#0A0D14]">
+      <section className="px-8 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="bg-[#141822] border border-white/10 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10">
+          <div className="rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             {/* Left */}
             <div className="flex-1">
-              <span className="tag mb-4 bg-white/5 border-white/10 text-white/80">Commencer maintenant</span>
-              <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight mb-3">
+              <span className="tag mb-4">Commencer maintenant</span>
+              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-3" style={{ color: 'var(--text-primary)' }}>
                 Découvrez votre prochain<br />voyage idéal
               </h2>
-              <p className="text-white/60 text-sm mb-8 max-w-sm">
+              <p className="text-sm mb-8 max-w-sm" style={{ color: 'var(--text-secondary)' }}>
                 Planifiez votre voyage en quelques minutes et profitez
                 de chaque instant de votre escapade.
               </p>
@@ -564,16 +566,16 @@ export default function HomePage() {
                 <Link href="/explore" className="btn-gold shadow-lg shadow-gold/20">
                   Planifier mon voyage
                 </Link>
-                <Link href="/explore" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-white" />
+                <Link href="/explore" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold/10 transition-colors" style={{ border: '1px solid var(--border-color)' }}>
+                  <ArrowUpRight className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
                 </Link>
               </div>
             </div>
             {/* Right – two photos */}
             <div className="flex gap-3 flex-shrink-0 relative">
               <div className="absolute inset-0 bg-gold/5 blur-3xl rounded-full" />
-              <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover border border-white/10" />
-              <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover mt-6 border border-white/10" />
+              <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover" style={{ border: '1px solid var(--border-color)' }} />
+              <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=260&q=80" alt="" className="relative z-10 rounded-2xl h-52 w-44 object-cover mt-6" style={{ border: '1px solid var(--border-color)' }} />
             </div>
           </div>
         </div>

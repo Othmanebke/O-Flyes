@@ -126,7 +126,8 @@ function LoginContent() {
         <div>
           <label className="block text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Email</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-            className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            className="w-full rounded-xl px-4 py-3 text-sm placeholder-current/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
             placeholder="vous@exemple.com" />
         </div>
         <div>
@@ -135,7 +136,8 @@ function LoginContent() {
             <Link href="/auth/forgot-password" className="text-xs text-gold hover:text-white transition-colors">Oublié ?</Link>
           </div>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-            className="w-full bg-[#0A0D14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            className="w-full rounded-xl px-4 py-3 text-sm placeholder-current/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-colors"
+            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
             placeholder="••••••••" />
         </div>
         <button type="submit" disabled={loading}
@@ -178,7 +180,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[100vh] bg-[#0A0D14] flex -mt-20">
+    <div className="min-h-[100vh] flex -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Left — decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-[#141822] overflow-hidden flex-col justify-between p-12 pt-32 border-r border-white/5">
         <div className="relative z-10">

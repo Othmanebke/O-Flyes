@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Chatbot from "@/components/Chatbot";
 import PlaneBackground from "@/components/PlaneBackground";
+import ThemeProvider from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "AIVANA – Votre assistant voyage intelligent",
@@ -12,13 +13,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className="min-h-screen flex flex-col bg-[#0A0D14] text-white">
-        <PlaneBackground />
-        <Navbar />
-        <main className="flex-1 pt-20">{children}</main>
-        <Footer />
-        <Chatbot />
+    <html lang="fr" className="dark">
+      <body className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <ThemeProvider>
+          <PlaneBackground />
+          <Navbar />
+          <main className="flex-1 pt-20">{children}</main>
+          <Footer />
+          <Chatbot />
+        </ThemeProvider>
       </body>
     </html>
   );

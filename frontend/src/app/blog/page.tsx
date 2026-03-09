@@ -44,7 +44,7 @@ const posts = [
 export default function BlogPage() {
   const [featured, ...rest] = posts;
   return (
-    <div className="bg-[#0A0D14] min-h-screen -mt-20 pt-32">
+    <div className="min-h-screen -mt-20 pt-32" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-7xl mx-auto px-8 py-4">
 
         {/* Header */}

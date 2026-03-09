@@ -16,6 +16,47 @@
   --gold: #C5A059;
   --gold-light: #e3d0ad;
   --gold-bg: #fbf8f1;
+
+  /* Theme tokens — light mode default */
+  --bg-primary: #FDFCF8;
+  --bg-secondary: #F5F3EC;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9f7f2;
+  --bg-elevated: #FDFCF8;
+  --text-primary: #0a1128;
+  --text-secondary: #4a4a4a;
+  --text-muted: #8a8a8a;
+  --text-inverse: #ffffff;
+  --border-color: #e6e0d1;
+  --border-light: #f0ece3;
+  --glass-bg: rgba(255, 255, 255, 0.80);
+  --glass-border: rgba(230, 224, 209, 0.50);
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-gold: rgba(197, 160, 89, 0.15);
+  --overlay-light: rgba(253, 252, 248, 0.9);
+  --scrollbar-track: #f5f5f5;
+  --scrollbar-thumb: #d4a96a;
+}
+
+.dark {
+  --bg-primary: #0A0D14;
+  --bg-secondary: #141822;
+  --bg-card: rgba(20, 24, 34, 0.5);
+  --bg-card-hover: rgba(30, 34, 48, 0.7);
+  --bg-elevated: #141822;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-muted: rgba(255, 255, 255, 0.40);
+  --text-inverse: #0A0D14;
+  --border-color: rgba(255, 255, 255, 0.10);
+  --border-light: rgba(255, 255, 255, 0.05);
+  --glass-bg: rgba(20, 24, 34, 0.80);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --shadow-color: rgba(0, 0, 0, 0.40);
+  --shadow-gold: rgba(201, 168, 76, 0.20);
+  --overlay-light: rgba(10, 13, 20, 0.9);
+  --scrollbar-track: #111318;
+  --scrollbar-thumb: #d4a96a;
 }
 
 * {
@@ -23,10 +64,11 @@
 }
 
 body {
-  background-color: var(--sand-50);
-  color: var(--dark);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom scrollbar */
@@ -35,11 +77,11 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4a96a;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 
@@ -57,8 +99,8 @@ body {
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--mid);
-  border: 1px solid #e0e0e0;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 999px;
   padding: 3px 10px;
 }
@@ -303,12 +345,12 @@ body {
 
 /* Sand background */
 .bg-sand {
-  background-color: var(--sand-50);
+  background-color: var(--bg-primary);
 }
 
 /* Dark footer */
 .bg-footer {
-  background: var(--dark);
+  background: var(--bg-primary);
 }
 
 /* Image overlay */
