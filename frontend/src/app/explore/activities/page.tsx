@@ -99,7 +99,9 @@ export default function ActivitiesPage() {
                 type: "activity", title: selectedActivity.title, provider: "Partner",
                 price_estimate: selectedActivity.price, external_url: selectedActivity.booking_url
             });
-            setShowTripSelector(false); trackClick("activity"); window.open(selectedActivity.booking_url, "_blank");
+            setShowTripSelector(false);
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
+            trackClick("activity"); window.open(selectedActivity.booking_url, "_blank");
         } catch (err) {
             console.error("Failed booking", err); window.open(selectedActivity.booking_url, "_blank");
         }

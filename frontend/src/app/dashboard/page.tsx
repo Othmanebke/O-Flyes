@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plane, LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Star, Check, Sparkles, Folder, Map, FileText, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
@@ -145,22 +145,53 @@ export default function DashboardPage() {
         return () => window.removeEventListener("trip-saved", handleTripSaved);
     }, []);
 
+    // Refresh bookings when explore pages add a booking
+    useEffect(() => {
+        const handleBookingsUpdated = (e: Event) => {
+            const { tripId } = (e as CustomEvent).detail || {};
+            if (selectedTrip && tripId === selectedTrip.id) {
+                fetchBookings(selectedTrip.id);
+            }
+        };
+        window.addEventListener("bookings-updated", handleBookingsUpdated);
+        return () => window.removeEventListener("bookings-updated", handleBookingsUpdated);
+    }, [selectedTrip]);
+
     const fetchBookings = async (tripId: string) => {
         try {
             const res = await axios.get(`/api/trips/${tripId}/items`);
-            setBookings(res.data || []);
+            const items: Booking[] = res.data || [];
+            setBookings(items);
+            calculateAnalysis(items);
         } catch (err) {
             console.error("Failed to fetch bookings", err);
         }
     };
 
-    const fetchAnalysis = async (tripId: string) => {
-        // Mock analysis for Phase 1-7 (Scoreboard)
+    const calculateAnalysis = (items: Booking[]) => {
+        const flights = items.filter(b => b.type === 'flight');
+        const hotels = items.filter(b => b.type === 'hotel');
+        const activities = items.filter(b => b.type === 'activity');
+        const totalCost = items.reduce((sum, b) => sum + (b.price || 0), 0);
+        const hasOutbound = flights.length > 0;
+        const hasReturn = flights.length >= 2;
+        const hasHotel = hotels.length > 0;
+        const hasActivity = activities.length > 0;
+        let score = 0;
+        if (hasOutbound) score += 30;
+        if (hasReturn) score += 20;
+        if (hasHotel) score += 30;
+        if (hasActivity) score += 20;
+        const warnings: string[] = [];
+        if (!hasOutbound) warnings.push("Aucun vol aller réservé");
+        else if (!hasReturn) warnings.push("Vol retour manquant");
+        if (!hasHotel) warnings.push("Hébergement non réservé");
+        if (!hasActivity) warnings.push("Aucune activité planifiée");
         setAnalysis({
-            budget: { total: 2000, used: 850, percentage: 42 },
-            coverage: { missingHotelNights: 0, missingOutboundFlight: false, missingReturnFlight: false, emptyDays: [], hasActivity: true },
-            warnings: [],
-            score: 85
+            budget: { total: 0, used: totalCost, percentage: totalCost > 0 ? 100 : 0 },
+            coverage: { missingHotelNights: hasHotel ? 0 : 1, missingOutboundFlight: !hasOutbound, missingReturnFlight: !hasReturn, emptyDays: [], hasActivity },
+            warnings,
+            score,
         });
     };
 
@@ -220,7 +251,6 @@ export default function DashboardPage() {
     const handleSelectTrip = (trip: Trip) => {
         setSelectedTrip(trip);
         fetchBookings(trip.id);
-        fetchAnalysis(trip.id);
     };
 
     const handleAddBooking = async (bookingData: BookingData) => {
@@ -733,11 +763,23 @@ export default function DashboardPage() {
                                 {activeTab === 'overview' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                                         <div className="lg:col-span-2 space-y-8">
-                                            {/* We can put important bookings summary or map here in future */}
-                                            <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-8 h-full flex items-center justify-center min-h-[300px]">
-                                                <div className="text-center">
-                                                    <MapPin className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                                                    <p className="text-sm font-medium text-zinc-400">Carte du voyage à venir</p>
+                                            <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6">
+                                                <h4 className="text-sm font-medium text-zinc-300 mb-5">Compléter votre voyage</h4>
+                                                <div className="space-y-3">
+                                                    {[
+                                                        { href: "/explore/flights", emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres" },
+                                                        { href: "/explore/hotels", emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet" },
+                                                        { href: "/explore/activities", emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques à chaque destination" },
+                                                    ].map(item => (
+                                                        <Link key={item.href} href={item.href} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
+                                                            <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{item.label}</p>
+                                                                <p className="text-xs text-zinc-500 mt-0.5">{item.sub}</p>
+                                                            </div>
+                                                            <ChevronRight className="w-4 h-4 text-zinc-600 flex-shrink-0 group-hover:text-zinc-300 group-hover:translate-x-1 transition-all" />
+                                                        </Link>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
@@ -910,13 +952,20 @@ export default function DashboardPage() {
                                             </Link>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 opacity-50 select-none grayscale">
-                                            {[1, 2, 3].map((_, i) => (
-                                                <div key={i} className="bg-zinc-950 rounded-xl p-5 border border-white/[0.04]">
-                                                    <div className="w-full h-32 bg-white/5 rounded-lg mb-4 animate-pulse"></div>
-                                                    <div className="h-4 bg-white/5 rounded w-3/4 mb-2 animate-pulse"></div>
-                                                    <div className="h-3 bg-white/5 rounded w-1/2 animate-pulse"></div>
-                                                </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                                            {[
+                                                { href: "/explore/flights", emoji: "✈️", label: "Vols", sub: "Comparez les prix en temps réel" },
+                                                { href: "/explore/hotels", emoji: "🏨", label: "Hôtels", sub: "Les meilleures adresses du monde" },
+                                                { href: "/explore/activities", emoji: "🎒", label: "Activités", sub: "Expériences locales exclusives" },
+                                            ].map(item => (
+                                                <Link key={item.href} href={item.href} className="block p-6 rounded-xl bg-zinc-950 border border-white/[0.04] hover:border-white/10 hover:bg-white/[0.02] transition-all group">
+                                                    <span className="text-3xl mb-4 block">{item.emoji}</span>
+                                                    <h4 className="text-sm font-semibold text-white mb-1">{item.label}</h4>
+                                                    <p className="text-xs text-zinc-500 leading-relaxed">{item.sub}</p>
+                                                    <div className="mt-4 flex items-center gap-1 text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">
+                                                        Explorer <ChevronRight className="w-3 h-3" />
+                                                    </div>
+                                                </Link>
                                             ))}
                                         </div>
                                     </div>
@@ -997,7 +1046,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-widest">Settings</span>
                 </button>
-                <button onClick={() => { localStorage.removeItem("token"); router.push("/"); }} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-red-500 transition-colors">
+                <button onClick={async () => { const supabase = createClient(); await supabase.auth.signOut(); router.push("/"); }} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-red-500 transition-colors">
                     <div className="p-2">
                         <LogOut className="w-5 h-5" />
                     </div>

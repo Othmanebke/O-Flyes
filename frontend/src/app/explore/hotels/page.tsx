@@ -109,7 +109,9 @@ export default function HotelsPage() {
                 type: "hotel", title: selectedHotel.name, provider: "Partner",
                 price_estimate: selectedHotel.price_per_night, external_url: selectedHotel.booking_url
             });
-            setShowTripSelector(false); trackClick("hotel"); window.open(selectedHotel.booking_url, "_blank");
+            setShowTripSelector(false);
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
+            trackClick("hotel"); window.open(selectedHotel.booking_url, "_blank");
         } catch (err) {
             console.error("Failed booking", err); window.open(selectedHotel.booking_url, "_blank");
         }

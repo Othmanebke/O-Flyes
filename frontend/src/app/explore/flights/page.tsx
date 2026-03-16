@@ -149,6 +149,7 @@ export default function FlightsPage() {
                 external_url: selectedFlight.booking_url
             });
             setShowTripSelector(false);
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
             window.open(selectedFlight.booking_url, "_blank");
         } catch (err) {
             console.error("Failed to create pending flight booking", err);
