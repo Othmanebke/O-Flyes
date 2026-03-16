@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plane } from "lucide-react";
+import { motion } from "framer-motion";
 
 const posts = [
   {
@@ -44,19 +45,37 @@ const posts = [
 export default function BlogPage() {
   const [featured, ...rest] = posts;
   return (
-    <div className="min-h-screen -mt-20 pt-32" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="max-w-7xl mx-auto px-8 py-4">
+    <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
-        {/* Header */}
-        <div className="mb-12">
-          <p className="section-label mb-2 text-gold/80">Blog</p>
-          <div className="flex items-end justify-between">
-            <h1 className="font-serif text-5xl md:text-6xl text-white">AIVANA Journal</h1>
-            <p className="hidden md:block text-white/50 text-sm max-w-xs text-right">
-              Votre guide pour explorer le monde —<br />les meilleures saisons et itinéraires.
-            </p>
-          </div>
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <div className="relative h-[70vh] min-h-[500px]">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1501426026826-31c667bdf23d?w=1800&q=85"
+            alt="AIVANA Journal"
+            className="absolute inset-0 w-full h-full object-cover scale-105"
+          />
+          <div className="absolute inset-0 bg-[#0A0D14]/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
         </div>
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
+              <Plane className="w-3 h-3" /> AIVANA Journal
+            </div>
+            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-5 leading-[1.05]">
+              Le journal du<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold italic">voyageur moderne</span>
+            </h1>
+            <p className="text-white/50 text-lg max-w-xl mx-auto">
+              Conseils, guides et inspirations pour explorer le monde avec style.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-8 py-12">
 
         {/* Featured post */}
         <div className="relative rounded-3xl overflow-hidden mb-6 card-hover cursor-pointer group border border-white/5">

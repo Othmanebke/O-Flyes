@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Maximize2, Plane, X, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 
 // Add country and location to photos for the modal
 const photos = [
@@ -20,53 +21,33 @@ export default function GalleryPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<typeof photos[0] | null>(null);
 
   return (
-    <div className="min-h-screen pb-24 relative overflow-hidden -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      {/* Decorative planes */}
-      <div className="absolute top-40 left-12 opacity-[0.03] rotate-[-30deg] pointer-events-none">
-        <Plane className="w-32 h-32 text-white" />
-      </div>
-      <div className="absolute top-[60vh] right-12 opacity-[0.02] rotate-[45deg] pointer-events-none">
-        <Plane className="w-48 h-48 text-white" />
-      </div>
-      <div className="absolute bottom-[20vh] left-10 opacity-[0.04] rotate-[15deg] pointer-events-none z-0">
-        <Plane className="w-64 h-64 text-white" />
-      </div>
+    <div className="min-h-screen pb-24 -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
-      {/* ═══ HERO IMAGE ════════════════════════════════════════════════════════════ */}
-      <div className="relative min-h-[580px] md:min-h-[70vh] overflow-hidden mb-16">
-        <div className="absolute inset-0">
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <div className="relative h-[70vh] min-h-[500px]">
+        <div className="absolute inset-0 overflow-hidden">
           <img
-            src="https://plus.unsplash.com/premium_photo-1697730034915-1a8b88f57257?q=80&w=1814&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Coucher de soleil majestueux sur le désert (4K)"
-            className="w-full h-full object-cover"
+            src="https://plus.unsplash.com/premium_photo-1697730034915-1a8b88f57257?q=80&w=1814&auto=format&fit=crop"
+            alt="Galerie AIVANA"
+            className="absolute inset-0 w-full h-full object-cover scale-105"
           />
-          {/* Enhanced overlay: Darker transition to protect the text areas */}
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0D14]/80 via-[#0A0D14]/50 to-[#0A0D14]" />
+          <div className="absolute inset-0 bg-[#0A0D14]/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-8 pt-40 pb-0">
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 mb-6">
-            <Plane className="w-3.5 h-3.5 text-gold" />
-            <span className="text-white text-xs font-medium tracking-wide">AIVANA Vision</span>
-          </div>
-          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-tight mb-4 max-w-2xl drop-shadow-xl">
-            L'Évasion<br /><span className="italic text-gold">en images.</span>
-          </h1>
-          <p className="text-white text-sm md:text-base max-w-lg mb-8 font-bold leading-relaxed drop-shadow-md">
-            Une curation d'images saisissantes pour inspirer vos prochains voyages. La beauté du monde se trouve dans les détails.
-          </p>
-          <div className="flex flex-wrap gap-4 md:gap-8 pb-24 md:pb-32">
-            {[
-              { v: "15k+", l: "Photos" },
-              { v: "120", l: "Destinations" },
-              { v: "100%", l: "Inspiration" }
-            ].map(s => (
-              <div key={s.l}>
-                <p className="text-xl md:text-3xl font-bold text-gold drop-shadow-sm">{s.v}</p>
-                <p className="text-white/50 text-[10px] uppercase tracking-widest font-black">{s.l}</p>
-              </div>
-            ))}
-          </div>
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
+              <Plane className="w-3 h-3" /> AIVANA Vision
+            </div>
+            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-5 leading-[1.05]">
+              L&apos;Évasion<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold italic">en images</span>
+            </h1>
+            <p className="text-white/50 text-lg max-w-xl mx-auto">
+              Une curation d&apos;images saisissantes pour inspirer vos prochains voyages.
+            </p>
+          </motion.div>
         </div>
       </div>
 

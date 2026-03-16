@@ -320,31 +320,26 @@ export default function ExplorePage() {
     <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
       {/* ═══ HERO ════════════════════════════════════════════════════════════ */}
-      <div className="relative min-h-[580px] overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=90" alt="Voyage" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90" />
+      <div className="relative h-[70vh] min-h-[500px]">
+        <div className="absolute inset-0 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1800&q=85" alt="Destinations" className="absolute inset-0 w-full h-full object-cover scale-105" />
+          <div className="absolute inset-0 bg-[#0A0D14]/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-8 pt-32 pb-0 z-10">
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-6">
-            <Plane className="w-3.5 h-3.5 text-gold" />
-            <span className="text-white/90 text-xs font-medium tracking-wide">AIVANA Destinations</span>
-          </div>
-          <h1 className="font-serif text-5xl md:text-7xl text-white leading-tight mb-4 max-w-2xl">
-            Le monde entier<br /><span className="italic text-gold">à votre portée.</span>
-          </h1>
-          <p className="text-white/80 text-sm md:text-base max-w-lg mb-8 font-extrabold drop-shadow-sm">
-            De Marrakech à la Polynésie — des destinations pour tous les budgets, toutes les envies.
-          </p>
-          <div className="flex flex-wrap gap-6 pb-36">
-            {[{ v: "22+", l: "Destinations" }, { v: "5", l: "Continents" }, { v: "650€", l: "À partir de" }, { v: "14k€", l: "Luxe absolu" }].map(s => (
-              <div key={s.l}>
-                <p className="text-2xl md:text-3xl font-extrabold text-gold drop-shadow-sm">{s.v}</p>
-                <p className="text-white/50 text-xs uppercase tracking-widest font-extrabold mt-1">{s.l}</p>
-              </div>
-            ))}
-          </div>
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
+              <MapPin className="w-3 h-3" /> Destinations du Monde
+            </div>
+            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-5 leading-[1.05]">
+              Le monde entier,<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold italic">à votre portée</span>
+            </h1>
+            <p className="text-white/50 text-lg max-w-xl mx-auto">
+              De Marrakech à la Polynésie — des destinations pour tous les budgets, toutes les envies.
+            </p>
+          </motion.div>
         </div>
       </div>
 
