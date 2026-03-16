@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass, Calendar, Users } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
@@ -10,6 +10,7 @@ interface Hotel {
     id: string; name: string; city: string; country: string;
     price_per_night: number; currency: string; rating: number; stars: number;
     category?: string; image_url: string; description: string; booking_url: string;
+    amenities?: string[];
 }
 
 export default function HotelsPage() {
@@ -25,6 +26,15 @@ export default function HotelsPage() {
     const [showTripSelector, setShowTripSelector] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
     const [debouncedTerm, setDebouncedTerm] = useState("");
+    const [checkin, setCheckin] = useState(() => {
+        const d = new Date(); d.setDate(d.getDate() + 30);
+        return d.toISOString().split('T')[0];
+    });
+    const [checkout, setCheckout] = useState(() => {
+        const d = new Date(); d.setDate(d.getDate() + 37);
+        return d.toISOString().split('T')[0];
+    });
+    const [guests, setGuests] = useState(2);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -56,9 +66,18 @@ export default function HotelsPage() {
         try { const res = await axios.get(`/api/trips`); setTrips(res.data || []); }
         catch (err) { console.error("Failed to fetch trips", err); }
     };
-    const fetchHotels = async (city: string) => {
+    const fetchHotels = async (city: string, ci?: string, co?: string, g?: number) => {
         setLoading(true);
-        try { const res = await axios.get(`/api/partner/hotels/search?city=${city}`); setHotels(res.data); }
+        try {
+            const params = new URLSearchParams({
+                city,
+                checkin: ci || checkin,
+                checkout: co || checkout,
+                adults: String(g ?? guests),
+            });
+            const res = await axios.get(`/api/partner/hotels/search?${params}`);
+            setHotels(res.data);
+        }
         catch (err) { console.error("Failed to fetch hotels", err); }
         finally { setLoading(false); }
     };
@@ -68,7 +87,9 @@ export default function HotelsPage() {
     };
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault(); setShowSuggestions(false);
-        if (searchTerm.trim()) { setSelectedLocation(searchTerm); fetchHotels(searchTerm); }
+        const city = searchTerm.trim() || selectedLocation;
+        setSelectedLocation(city);
+        fetchHotels(city, checkin, checkout, guests);
     };
     const handleSelectSuggestion = (suggestion: any) => {
         setSearchTerm(suggestion.label);
@@ -130,13 +151,14 @@ export default function HotelsPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="max-w-3xl mx-auto">
                         <form onSubmit={handleSearch} className="relative">
                             <div className="flex flex-col md:flex-row gap-0 bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+                                {/* Destination */}
                                 <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
                                     <MapPin className="w-4 h-4 text-gold shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Destination</p>
                                         <input
                                             type="text"
-                                            placeholder="Une ville, un hotel..."
+                                            placeholder="Une ville, un hôtel..."
                                             value={searchTerm}
                                             className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/15 text-base font-light"
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -145,7 +167,51 @@ export default function HotelsPage() {
                                         />
                                     </div>
                                 </div>
-                                <button type="submit" className="bg-gold text-[#0A0D14] font-black px-10 py-5 m-2 rounded-[20px] hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shrink-0">
+                                {/* Checkin */}
+                                <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                    <Calendar className="w-4 h-4 text-gold/60 shrink-0" />
+                                    <div>
+                                        <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Arrivée</p>
+                                        <input
+                                            type="date"
+                                            value={checkin}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            onChange={(e) => setCheckin(e.target.value)}
+                                            className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                                {/* Checkout */}
+                                <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                    <Calendar className="w-4 h-4 text-white/20 shrink-0" />
+                                    <div>
+                                        <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Départ</p>
+                                        <input
+                                            type="date"
+                                            value={checkout}
+                                            min={checkin}
+                                            onChange={(e) => setCheckout(e.target.value)}
+                                            className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                                {/* Guests */}
+                                <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                    <Users className="w-4 h-4 text-gold/60 shrink-0" />
+                                    <div>
+                                        <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Voyageurs</p>
+                                        <select
+                                            value={guests}
+                                            onChange={(e) => setGuests(parseInt(e.target.value))}
+                                            className="bg-transparent border-none outline-none text-white text-sm font-light cursor-pointer"
+                                        >
+                                            {[1,2,3,4,5,6].map(n => (
+                                                <option key={n} value={n} className="bg-[#141822]">{n} {n === 1 ? 'voyageur' : 'voyageurs'}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" className="bg-gold text-[#0A0D14] font-black px-8 py-5 m-2 rounded-[20px] hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shrink-0">
                                     <Search className="w-4 h-4" /> Explorer
                                 </button>
                             </div>
@@ -240,7 +306,14 @@ export default function HotelsPage() {
                                         {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 fill-current" />)}
                                     </div>
                                     <h3 className="font-serif text-xl text-white mb-2 group-hover:text-gold transition-colors line-clamp-1">{hotel.name}</h3>
-                                    <p className="text-white/30 text-xs leading-relaxed line-clamp-2 mb-6">{hotel.description}</p>
+                                    <p className="text-white/30 text-xs leading-relaxed line-clamp-2 mb-3">{hotel.description}</p>
+                                    {hotel.amenities && hotel.amenities.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mb-4">
+                                            {hotel.amenities.slice(0, 3).map((a) => (
+                                                <span key={a} className="text-[9px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2 py-0.5 rounded-full">{a}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between pt-5 border-t border-white/[0.06]">
                                         <div>
                                             <p className="text-[8px] text-white/20 uppercase tracking-[0.15em] mb-1">Prix / nuit</p>
@@ -248,7 +321,7 @@ export default function HotelsPage() {
                                         </div>
                                         <button onClick={() => handleBook(hotel)}
                                             className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
-                                            Reserver <ArrowRight className="w-3 h-3" />
+                                            Booking.com <ArrowRight className="w-3 h-3" />
                                         </button>
                                     </div>
                                 </div>

@@ -7,7 +7,6 @@ import {
 import Link from "next/link";
 import axios from "axios";
 import { DESTINATIONS } from "@/lib/destinations";
-import { parseJwt } from "@/lib/jwt";
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Activity { name: string; price: number; emoji: string; }
@@ -41,31 +40,23 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
 
   const handleSave = async () => {
     if (!localDest) return;
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Vous devez être connecté pour enregistrer un voyage.");
-      return;
-    }
-
     try {
       setSaving(true);
-      const payload = parseJwt(token);
-      if (!payload || !payload.id) {
-        alert("Jeton invalide.");
-        return;
-      }
-      const userId = payload.id;
-
       await axios.post("/api/trips", {
         title: "Voyage : " + dest.name,
         destination_id: localDest.id,
         start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +7 days
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       });
       setSaved(true);
-    } catch (err) {
-      console.error("Erreur lors de la sauvegarde du voyage:", err);
-      alert("Erreur lors de la sauvegarde du voyage.");
+      window.dispatchEvent(new Event("trip-saved"));
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        alert("Vous devez être connecté pour enregistrer un voyage.");
+      } else {
+        console.error("Erreur lors de la sauvegarde du voyage:", err);
+        alert("Erreur lors de la sauvegarde du voyage.");
+      }
     } finally {
       setSaving(false);
     }
@@ -197,25 +188,7 @@ export default function Chatbot() {
       const tripIdx = pathParts.indexOf("trips");
       if (tripIdx !== -1 && pathParts[tripIdx + 1]) {
         const tId = pathParts[tripIdx + 1];
-        const token = localStorage.getItem("token");
-        if (token) {
-          try {
-            // In the new architecture, chat history is not stored by default in Phase 4
-            // const res = await axios.get(`/api/chat/history/${tId}`);
-            const res = { data: [] };
-            if (res.data && Array.isArray(res.data)) {
-              const formatted = res.data.map((m: any) => ({
-                role: m.role,
-                content: m.content
-              }));
-              if (formatted.length > 0) {
-                setMessages(formatted);
-              }
-            }
-          } catch (e) {
-            console.error("Failed to load history:", e);
-          }
-        }
+        // Chat history not persisted in current architecture
       }
     };
 
@@ -240,40 +213,19 @@ export default function Chatbot() {
         ? allMsgs.slice(firstUserIdx).map(({ role, content }) => ({ role, content }))
         : [{ role: "user" as const, content: text }];
 
-      let userId: string | undefined;
-      let tripId: string | undefined;
-
-      // Extract tripId from URL if on a trip page (e.g. /trips/[id])
-      const pathParts = window.location.pathname.split("/");
-      const tripIdx = pathParts.indexOf("trips");
-      if (tripIdx !== -1 && pathParts[tripIdx + 1]) {
-        tripId = pathParts[tripIdx + 1];
-      }
-
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const payload = parseJwt(token);
-          if (payload) userId = payload.id;
-        } catch (e) { }
-      }
-
       const res = await axios.post("/api/chat", { messages: history });
       setMessages(prev => [...prev, { role: "assistant", content: res.data.content, enriched: res.data.enriched }]);
       if (!open) setUnread(n => n + 1);
     } catch (err: any) {
-      console.error("Chat Error Details:", {
-        status: err?.response?.status,
-        data: err?.response?.data,
-        message: err?.message,
-        config: err?.config?.url
-      });
-      const debugInfo = err?.response
-        ? `Status: ${err.response.status} - ${JSON.stringify(err.response.data)}`
-        : `Network Error: ${err.message}`;
-
-      const msg = err?.response?.data?.error || `Erreur IA: ${debugInfo}`;
-      setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+      if (err?.response?.status === 401) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Vous devez être connecté pour utiliser l'assistant voyage. [Se connecter](/auth/login)"
+        }]);
+      } else {
+        const msg = err?.response?.data?.error || "Une erreur est survenue. Veuillez réessayer.";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+      }
     } finally {
       setLoading(false);
     }

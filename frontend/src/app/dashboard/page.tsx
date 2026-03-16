@@ -138,6 +138,13 @@ export default function DashboardPage() {
         }
     };
 
+    // Refresh trips when chatbot saves a new destination
+    useEffect(() => {
+        const handleTripSaved = () => fetchTrips();
+        window.addEventListener("trip-saved", handleTripSaved);
+        return () => window.removeEventListener("trip-saved", handleTripSaved);
+    }, []);
+
     const fetchBookings = async (tripId: string) => {
         try {
             const res = await axios.get(`/api/trips/${tripId}/items`);

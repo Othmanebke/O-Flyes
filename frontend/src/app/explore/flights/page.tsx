@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Star, ArrowRight, Sparkles, Plane, Clock, ChevronRight, Compass, Globe, Luggage } from "lucide-react";
+import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
@@ -37,6 +37,15 @@ export default function FlightsPage() {
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [debouncedOrigin, setDebouncedOrigin] = useState("");
     const [debouncedDest, setDebouncedDest] = useState("");
+    const [departDate, setDepartDate] = useState(() => {
+        const d = new Date(); d.setDate(d.getDate() + 30);
+        return d.toISOString().split('T')[0];
+    });
+    const [returnDate, setReturnDate] = useState(() => {
+        const d = new Date(); d.setDate(d.getDate() + 37);
+        return d.toISOString().split('T')[0];
+    });
+    const [passengers, setPassengers] = useState(1);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -48,7 +57,7 @@ export default function FlightsPage() {
             }
         };
         checkAuth();
-        fetchFlights("Paris", "New York");
+        fetchFlights("Paris", "New York", departDate, returnDate, passengers);
     }, []);
 
     useEffect(() => {
@@ -81,10 +90,17 @@ export default function FlightsPage() {
         }
     };
 
-    const fetchFlights = async (org: string, dst: string) => {
+    const fetchFlights = async (org: string, dst: string, dep?: string, ret?: string, adults?: number) => {
         setLoading(true);
         try {
-            const res = await axios.get(`/api/partner/flights/search?origin=${org}&destination=${dst}`);
+            const params = new URLSearchParams({
+                origin: org,
+                destination: dst,
+                ...(dep ? { depart: dep } : {}),
+                ...(ret ? { return: ret } : {}),
+                adults: String(adults || 1),
+            });
+            const res = await axios.get(`/api/partner/flights/search?${params}`);
             setFlights(res.data);
         } catch (err) {
             console.error("Failed to fetch flights", err);
@@ -96,7 +112,12 @@ export default function FlightsPage() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setActiveSearch(null);
-        fetchFlights(originSearch, destSearch);
+        fetchFlights(originSearch, destSearch, departDate, returnDate, passengers);
+    };
+
+    const handleSwap = () => {
+        setOriginSearch(destSearch);
+        setDestSearch(originSearch);
     };
 
     const handleSelectSuggestion = (suggestion: any) => {
@@ -176,7 +197,7 @@ export default function FlightsPage() {
                         <form onSubmit={handleSearch} className="relative flex flex-col md:flex-row gap-0 bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden backdrop-blur-2xl">
 
                             {/* Origin */}
-                            <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
+                            <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] relative">
                                 <MapPin className="w-4 h-4 text-gold/60 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Départ</p>
@@ -193,9 +214,9 @@ export default function FlightsPage() {
 
                             {/* Swap icon */}
                             <div className="hidden md:flex items-center justify-center px-3">
-                                <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-gold/30">
-                                    <Globe className="w-3.5 h-3.5" />
-                                </div>
+                                <button type="button" onClick={handleSwap} className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-gold/40 hover:text-gold hover:border-gold/40 transition-colors">
+                                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                                </button>
                             </div>
 
                             {/* Destination */}
@@ -214,7 +235,54 @@ export default function FlightsPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" className="bg-gold text-[#0A0D14] font-black px-10 py-5 m-2 rounded-[20px] hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shrink-0">
+                            {/* Départ date */}
+                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                <Calendar className="w-4 h-4 text-gold/60 shrink-0" />
+                                <div>
+                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Aller</p>
+                                    <input
+                                        type="date"
+                                        value={departDate}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        onChange={(e) => setDepartDate(e.target.value)}
+                                        className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Retour date */}
+                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                <Calendar className="w-4 h-4 text-white/20 shrink-0" />
+                                <div>
+                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Retour</p>
+                                    <input
+                                        type="date"
+                                        value={returnDate}
+                                        min={departDate}
+                                        onChange={(e) => setReturnDate(e.target.value)}
+                                        className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Passengers */}
+                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                                <Users className="w-4 h-4 text-gold/60 shrink-0" />
+                                <div>
+                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Passagers</p>
+                                    <select
+                                        value={passengers}
+                                        onChange={(e) => setPassengers(parseInt(e.target.value))}
+                                        className="bg-transparent border-none outline-none text-white text-sm font-light cursor-pointer"
+                                    >
+                                        {[1,2,3,4,5,6,7,8].map(n => (
+                                            <option key={n} value={n} className="bg-[#141822]">{n} {n === 1 ? 'passager' : 'passagers'}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="bg-gold text-[#0A0D14] font-black px-8 py-5 m-2 rounded-[20px] hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shrink-0">
                                 <Search className="w-4 h-4" /> Rechercher
                             </button>
 
@@ -345,8 +413,18 @@ export default function FlightsPage() {
                                             onClick={() => handleBook(flight)}
                                             className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95"
                                         >
-                                            Réserver <ArrowRight className="w-3.5 h-3.5" />
+                                            Skyscanner <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
+                                        {(flight as any).google_flights_url && (
+                                            <a
+                                                href={(flight as any).google_flights_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="border border-white/10 text-white/50 hover:border-white/30 hover:text-white/80 transition-all px-5 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2"
+                                            >
+                                                <Globe className="w-3 h-3" /> Google
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>

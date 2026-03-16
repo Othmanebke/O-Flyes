@@ -18,7 +18,9 @@ interface Activity {
     image_url: string;
     description: string;
     booking_url: string;
+    viator_url?: string;
     category?: string;
+    duration?: string;
 }
 
 export default function ActivitiesPage() {
@@ -240,19 +242,31 @@ export default function ActivitiesPage() {
                                 </div>
 
                                 <div className="p-7">
-                                    <h3 className="font-serif text-xl text-white mb-3 group-hover:text-gold transition-colors line-clamp-2 leading-tight">
+                                    <h3 className="font-serif text-xl text-white mb-2 group-hover:text-gold transition-colors line-clamp-2 leading-tight">
                                         {activity.title}
                                     </h3>
-                                    <p className="text-white/30 text-xs mb-6 line-clamp-2 leading-relaxed">{activity.description}</p>
-                                    <div className="flex items-center justify-between pt-5 border-t border-white/[0.06]">
+                                    <div className="flex items-center gap-3 mb-3 text-[10px] text-white/30">
+                                        {activity.duration && <span>⏱ {activity.duration}</span>}
+                                        {activity.reviews && <span>· {activity.reviews.toLocaleString('fr-FR')} avis</span>}
+                                    </div>
+                                    <p className="text-white/30 text-xs mb-4 line-clamp-2 leading-relaxed">{activity.description}</p>
+                                    <div className="flex items-center justify-between pt-4 border-t border-white/[0.06]">
                                         <div>
-                                            <p className="text-[8px] text-white/20 uppercase tracking-widest mb-1">A partir de</p>
+                                            <p className="text-[8px] text-white/20 uppercase tracking-widest mb-1">À partir de</p>
                                             <p className="text-2xl font-serif text-white">{activity.price} <span className="text-base text-gold">{activity.currency}</span></p>
                                         </div>
-                                        <button onClick={() => handleBook(activity)}
-                                            className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
-                                            Reserver <ArrowRight className="w-3 h-3" />
-                                        </button>
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => handleBook(activity)}
+                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-5 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
+                                                GetYourGuide <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                            {activity.viator_url && (
+                                                <a href={activity.viator_url} target="_blank" rel="noopener noreferrer"
+                                                    className="border border-white/10 text-white/40 hover:border-white/30 hover:text-white/70 transition-all px-5 py-2 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-1.5">
+                                                    Viator <ArrowRight className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
