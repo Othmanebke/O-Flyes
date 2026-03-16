@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./ThemeProvider";
+import { createClient } from "@/lib/supabase/browser";
 
 const links = [
   { href: "/explore", label: "Destinations" },
@@ -32,17 +33,27 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         setIsLoggedIn(true);
-        setUserName(payload.name || "");
-      } catch {
-        localStorage.removeItem("token");
+        setUserName(session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "");
+      } else {
+        setIsLoggedIn(false);
+        setUserName("");
       }
-    }
-  }, [pathname]);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setIsLoggedIn(true);
+        setUserName(session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "");
+      } else {
+        setIsLoggedIn(false);
+        setUserName("");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);
