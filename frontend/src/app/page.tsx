@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/browser";
 import { RecommendationCards } from "@/components/assistant/RecommendationCards";
 import { getMockRecommendations, Recommendation, RecommendationInput } from "@/lib/mockRecommendations";
 
@@ -31,6 +33,23 @@ const faqs = [
 const INTERESTS_LIST = ["Soleil", "Culture", "Nature", "Food", "Luxe", "Petit budget"];
 
 export default function HomePage() {
+  const router = useRouter();
+
+  // Redirect to dashboard if user already has a session (e.g. after OAuth)
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+    // Also listen for OAuth implicit flow (hash-based token)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+        router.replace("/dashboard");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [router]);
+
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState(-1);
