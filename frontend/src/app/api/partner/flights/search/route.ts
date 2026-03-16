@@ -128,7 +128,7 @@ async function getAmadeusToken(): Promise<string | null> {
     }
 }
 
-async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number) {
+async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string) {
     const token = await getAmadeusToken();
     if (!token) return null;
 
@@ -165,7 +165,7 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
                 currency: 'EUR',
                 type: offer.itineraries[0].segments.length === 1 ? 'Direct' : 'Escale',
                 class: offer.travelerPricings[0].fareDetailsBySegment[0].cabin === 'BUSINESS' ? 'Business' : 'Economy',
-                booking_url: skyscannerFlightUrl({ origin, destination, depart: departDate, adults }),
+                booking_url: skyscannerFlightUrl({ origin: originCity, destination: destCity, depart: departDate, adults }),
             };
         });
     } catch {
@@ -186,7 +186,7 @@ export async function GET(request: Request) {
     const destCode = getIATA(destination);
 
     // ── Try Amadeus first ──────────────────────────────────────────────────
-    const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults);
+    const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults, origin, destination);
     if (amadeusFlights && amadeusFlights.length > 0) {
         return NextResponse.json(amadeusFlights);
     }

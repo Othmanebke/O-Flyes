@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight } from "lucide-react";
+import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight, ChevronRight } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
