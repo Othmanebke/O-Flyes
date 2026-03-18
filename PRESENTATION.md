@@ -1,5 +1,5 @@
-# AIVANA — O-Flyes
-## Présentation de Projet — Étude de Fin d'Année
+# AIVANA 
+## Présentation de Projet
 
 ---
 
@@ -251,6 +251,4 @@ Utilisateur
 Le choix de technologies actuelles (Next.js 14, Groq, Supabase) garantit une application performante, scalable et économiquement viable dès son lancement.
 
 ---
-
-*Projet réalisé dans le cadre du cursus — 2025/2026*
 *Stack : Next.js 14 · TypeScript · Supabase · Groq API · Tailwind CSS*
