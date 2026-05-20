@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { generateRecommendationsJson, extractJsonFromText } from '@/lib/ai/recommendations';
 import { recommendationResultSchema, generateRecommendationRequestSchema } from '@/lib/validation/recommendations';
 
@@ -76,11 +77,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json(insertedRec, { status: 201 });
 
-    } catch (err: any) {
-        if (err.name === 'ZodError') {
-            return NextResponse.json({ error: 'AI output validation failed or invalid request', details: err.errors }, { status: 400 });
+    } catch (err: unknown) {
+        if (err instanceof z.ZodError) {
+            return NextResponse.json({ error: 'AI output validation failed or invalid request', details: err.issues }, { status: 400 });
         }
         console.error("Recommendations API Error", err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: (err as Error).message || 'Internal Server Error' }, { status: 500 });
     }
 }

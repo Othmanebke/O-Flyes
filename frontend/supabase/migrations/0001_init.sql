@@ -34,6 +34,7 @@ CREATE TABLE public.trips (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   destination_id uuid REFERENCES public.destinations(id) ON DELETE SET NULL,
+  title text,
   start_date date,
   end_date date,
   created_at timestamptz DEFAULT now(),

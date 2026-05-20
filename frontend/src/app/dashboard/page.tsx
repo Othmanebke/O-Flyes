@@ -13,9 +13,9 @@ interface Trip {
     title: string;
     destination_name?: string;
     country?: string;
-    start_date: string;
-    end_date: string;
-    status: string;
+    start_date?: string;
+    end_date?: string;
+    status?: string;
     img?: string;
 }
 
@@ -31,7 +31,7 @@ interface Booking {
     price_estimate?: number;
     currency?: string;
     location?: string;
-    status: string;
+    status?: string;
     external_reference?: string;
     external_url?: string;
     booking_url?: string;
@@ -155,6 +155,24 @@ export default function DashboardPage() {
         return () => window.removeEventListener("trip-saved", handleTripSaved);
     }, []);
 
+    // Supabase Realtime — sync trips instantly from any source
+    useEffect(() => {
+        if (!userId) return;
+        const supabase = createClient();
+        const channel = supabase
+            .channel(`trips-realtime-${userId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'trips',
+                filter: `user_id=eq.${userId}`,
+            }, () => {
+                fetchTrips();
+            })
+            .subscribe();
+        return () => { supabase.removeChannel(channel); };
+    }, [userId]);
+
     // Refresh bookings when explore pages add a booking
     useEffect(() => {
         const handleBookingsUpdated = (e: Event) => {
@@ -213,6 +231,7 @@ export default function DashboardPage() {
             await supabase.auth.updateUser({ data: { full_name: editNameValue } });
             setUserName(editNameValue);
             setIsEditingName(false);
+            showNotification("Profil mis à jour !");
         } catch (err) {
             console.error("Failed to save profile", err);
         } finally {
@@ -292,7 +311,7 @@ export default function DashboardPage() {
                 type: bookingData.type,
                 provider: bookingData.provider,
                 price_estimate: bookingData.price,
-                external_url: (bookingData as any).booking_url || (bookingData as any).external_url
+                external_url: bookingData.booking_url || bookingData.external_url
             });
             setShowBookingModal(false);
             fetchBookings(selectedTrip.id);
@@ -304,9 +323,9 @@ export default function DashboardPage() {
     const handleDeleteBooking = async (id: string) => {
         if (!confirm("Supprimer cette réservation ?")) return;
         try {
-            const supabase = createClient();
-            await supabase.from('trip_items').delete().eq('id', id);
-            if (selectedTrip) fetchBookings(selectedTrip.id);
+            if (!selectedTrip) return;
+            await axios.delete(`/api/trips/${selectedTrip.id}/items/${id}`);
+            fetchBookings(selectedTrip.id);
         } catch (err) {
             console.error("Failed to delete booking", err);
         }
@@ -624,6 +643,14 @@ export default function DashboardPage() {
                                         <h2 className="text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
                                         <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
                                     </div>
+                                    {trips.length > 0 && (
+                                        <button
+                                            onClick={() => setShowCreateModal(true)}
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-white text-zinc-950 text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" /> Nouveau voyage
+                                        </button>
+                                    )}
                                 </div>
 
                                 {trips.length === 0 ? (
@@ -658,25 +685,39 @@ export default function DashboardPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                                        {trips.map((trip, i) => (
+                                        {trips.map((trip, i) => {
+                                            const gradients = [
+                                                "from-indigo-900/80 via-purple-900/60 to-zinc-900",
+                                                "from-emerald-900/80 via-teal-900/60 to-zinc-900",
+                                                "from-amber-900/80 via-orange-900/60 to-zinc-900",
+                                                "from-rose-900/80 via-pink-900/60 to-zinc-900",
+                                                "from-sky-900/80 via-blue-900/60 to-zinc-900",
+                                                "from-violet-900/80 via-fuchsia-900/60 to-zinc-900",
+                                            ];
+                                            const grad = gradients[i % gradients.length];
+                                            return (
                                             <motion.div
                                                 key={trip.id}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.1 }}
+                                                transition={{ delay: i * 0.08 }}
                                                 onClick={() => handleSelectTrip(trip)}
-                                                className="group cursor-pointer rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                                                className="group cursor-pointer rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-black/40 transition-all duration-300"
                                                 style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
                                             >
-                                                <div className="h-40 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                                                <div className="h-40 relative overflow-hidden">
                                                     {trip.img ? (
                                                         <img src={trip.img} alt={trip.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
                                                     ) : (
-                                                        <div className="absolute inset-0 bg-zinc-900 border-b border-white/[0.04]" />
+                                                        <div className={`absolute inset-0 bg-gradient-to-br ${grad} group-hover:opacity-90 transition-opacity`}>
+                                                            <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[80px] font-black select-none">
+                                                                {trip.title[0]?.toUpperCase()}
+                                                            </div>
+                                                        </div>
                                                     )}
 
                                                     {/* Gradient overlay for text readability */}
-                                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-zinc-900 to-transparent z-10" />
+                                                    <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-zinc-900 to-transparent z-10" />
 
                                                     <div className="absolute top-3 right-3 flex gap-2 z-20">
                                                         <button
@@ -689,7 +730,7 @@ export default function DashboardPage() {
 
                                                     <div className="absolute bottom-4 left-5 z-20 transition-transform duration-300 group-hover:-translate-y-1">
                                                         <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-1 block">
-                                                            {trip.status === 'planned' ? 'Plannifié' : trip.status}
+                                                            Planifié
                                                         </span>
                                                         <h3 className="text-lg font-medium text-white leading-tight drop-shadow-md">{trip.title}</h3>
                                                     </div>
@@ -710,7 +751,8 @@ export default function DashboardPage() {
                                                     </button>
                                                 </div>
                                             </motion.div>
-                                        ))}
+                                        ); })}
+
 
                                         {/* Add card */}
                                         <button

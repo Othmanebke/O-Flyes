@@ -5,7 +5,7 @@ import { sendTripConfirmationSMS } from '@/lib/sms';
 
 const createTripSchema = z.object({
     title: z.string().min(1, 'Title is required'),
-    destination_id: z.string().optional(),
+    destination_id: z.string().uuid().optional().nullable(),
     start_date: z.string().optional(),
     end_date: z.string().optional(),
 });

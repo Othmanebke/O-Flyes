@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
         // Inject a system prompt to guide the AI and force a JSON structure
         const systemPrompt = {
-            role: 'system',
+            role: 'system' as const,
             content: `Tu es AIVANA, un assistant de voyage expert, luxueux et intelligent. 
 Ton objectif est de planifier des voyages parfaits selon le budget et les envies de l'utilisateur.
 Tu dois TOUJOURS répondre au format JSON valide.

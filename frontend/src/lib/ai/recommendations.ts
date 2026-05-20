@@ -22,8 +22,8 @@ ${context}
 `;
 
   const messages = [
-    { role: 'system', content: 'You are an expert travel assistant. You only output valid raw JSON.' },
-    { role: 'user', content: prompt }
+    { role: 'system' as const, content: 'You are an expert travel assistant. You only output valid raw JSON.' },
+    { role: 'user' as const, content: prompt }
   ];
 
   // Request a JSON response from Groq

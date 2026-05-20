@@ -1,10 +1,23 @@
-export async function getGroqChatCompletion(messages: any[], model: string = "llama-3.3-70b-versatile", maxTokens: number = 2000, jsonMode: boolean = false) {
+interface GroqMessage {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+
+interface GroqRequestBody {
+    messages: GroqMessage[];
+    model: string;
+    temperature: number;
+    max_tokens: number;
+    response_format?: { type: string };
+}
+
+export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "llama-3.3-70b-versatile", maxTokens: number = 2000, jsonMode: boolean = false) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         throw new Error("GROQ_API_KEY is not set in the environment variables.");
     }
 
-    const body: any = {
+    const body: GroqRequestBody = {
         messages,
         model,
         temperature: 0.7,
@@ -21,7 +34,8 @@ export async function getGroqChatCompletion(messages: any[], model: string = "ll
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {

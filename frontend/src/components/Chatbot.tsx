@@ -44,7 +44,6 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
       setSaving(true);
       await axios.post("/api/trips", {
         title: "Voyage : " + dest.name,
-        destination_id: localDest.id,
         start_date: new Date().toISOString().split('T')[0],
         end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       });

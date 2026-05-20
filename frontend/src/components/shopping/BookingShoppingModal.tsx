@@ -16,6 +16,8 @@ export interface BookingData {
     price: number;
     currency: string;
     status: string;
+    external_url?: string;
+    booking_url?: string;
 }
 
 interface BookingShoppingModalProps {

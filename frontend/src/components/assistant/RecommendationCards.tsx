@@ -42,6 +42,7 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
             });
 
             setSavedIds((prev) => new Set(prev).add(rec.id));
+            window.dispatchEvent(new Event("trip-saved"));
         } catch (err: any) {
             console.error("Erreur lors de l'ajout au dashboard", err.message);
             alert("Erreur lors de l'ajout au dashboard.");
