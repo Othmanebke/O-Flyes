@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
@@ -78,6 +78,11 @@ export default function DashboardPage() {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isUpgrading, setIsUpgrading] = useState(false);
 
+    const [phoneValue, setPhoneValue] = useState("");
+    const [isEditingPhone, setIsEditingPhone] = useState(false);
+    const [isSavingPhone, setIsSavingPhone] = useState(false);
+    const [notification, setNotification] = useState<string | null>(null);
+
     useEffect(() => {
         const checkUser = async () => {
             const supabase = createClient();
@@ -94,6 +99,7 @@ export default function DashboardPage() {
             setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
             setUserEmail(user.email || "");
             setEditNameValue(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
+            setPhoneValue(user.user_metadata?.phone || "");
 
             // App metadata sometimes contains provider
             const providerStr = user.app_metadata?.provider || 'local';
@@ -141,7 +147,10 @@ export default function DashboardPage() {
 
     // Refresh trips when chatbot saves a new destination
     useEffect(() => {
-        const handleTripSaved = () => fetchTrips();
+        const handleTripSaved = () => {
+            fetchTrips();
+            showNotification("Voyage enregistré dans votre dashboard !");
+        };
         window.addEventListener("trip-saved", handleTripSaved);
         return () => window.removeEventListener("trip-saved", handleTripSaved);
     }, []);
@@ -211,6 +220,25 @@ export default function DashboardPage() {
         }
     };
 
+    const showNotification = (msg: string) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(null), 5000);
+    };
+
+    const handleSavePhone = async () => {
+        if (!userId || !phoneValue.trim()) return;
+        setIsSavingPhone(true);
+        try {
+            const supabase = createClient();
+            await supabase.auth.updateUser({ data: { phone: phoneValue.trim() } });
+            setIsEditingPhone(false);
+        } catch (err) {
+            console.error("Failed to save phone", err);
+        } finally {
+            setIsSavingPhone(false);
+        }
+    };
+
     const handleUpgradePremium = async () => {
         if (!userId) return;
         setIsUpgrading(true);
@@ -232,6 +260,7 @@ export default function DashboardPage() {
             setNewTripTitle("");
             setShowCreateModal(false);
             fetchTrips();
+            showNotification("Voyage créé ! SMS de confirmation en route.");
         } catch (err) {
             console.error("Failed to create trip", err);
         }
@@ -482,6 +511,48 @@ export default function DashboardPage() {
                                                         <span className="text-zinc-300 text-sm">{userEmail || "Non renseigné"}</span>
                                                         <Shield className="w-4 h-4 text-emerald-500" />
                                                     </div>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="block text-xs font-medium text-zinc-400">
+                                                        Téléphone <span className="text-zinc-600 font-normal">(notifications SMS)</span>
+                                                    </label>
+                                                    {isEditingPhone ? (
+                                                        <div className="flex items-center gap-3">
+                                                            <input
+                                                                type="tel"
+                                                                value={phoneValue}
+                                                                onChange={(e) => setPhoneValue(e.target.value)}
+                                                                placeholder="+33612345678"
+                                                                className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                                                            />
+                                                            <button
+                                                                onClick={handleSavePhone}
+                                                                disabled={isSavingPhone}
+                                                                className="px-4 py-2.5 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                                                            >
+                                                                {isSavingPhone ? "..." : "Sauvegarder"}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setIsEditingPhone(false)}
+                                                                className="px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                                                            >
+                                                                Annuler
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] rounded-lg px-4 py-3 group/item hover:bg-white/[0.04] transition-colors">
+                                                            <span className="text-sm">
+                                                                {phoneValue
+                                                                    ? <span className="text-white">{phoneValue}</span>
+                                                                    : <span className="text-zinc-600">Non renseigné — ajoutez un numéro pour recevoir les SMS</span>
+                                                                }
+                                                            </span>
+                                                            <button onClick={() => setIsEditingPhone(true)} className="w-8 h-8 rounded-md bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all">
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="space-y-3">
@@ -1115,6 +1186,24 @@ export default function DashboardPage() {
                     />
                 )
             }
+
+            {/* Toast notification */}
+            {notification && (
+                <div className="fixed top-24 right-6 z-[200] flex items-center gap-3 bg-[#141822] border border-gold/30 rounded-2xl px-5 py-4 shadow-2xl shadow-black/50 animate-in slide-in-from-right-4 duration-500 max-w-sm">
+                    <div className="w-10 h-10 bg-gold/10 border border-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Plane className="w-5 h-5 text-gold -rotate-45" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white">{notification}</p>
+                        <p className="text-xs text-white/40 mt-0.5">
+                            {phoneValue ? "SMS envoyé au " + phoneValue : "Ajoutez un numéro dans Paramètres pour les SMS"}
+                        </p>
+                    </div>
+                    <button onClick={() => setNotification(null)} className="text-white/30 hover:text-white transition-colors flex-shrink-0">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
 
             {/* Select Sync Provider Modal (For Local Users) */}
             {
