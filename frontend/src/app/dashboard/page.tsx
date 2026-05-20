@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Calendar, Mail, Settings, Plus, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X } from "lucide-react";
+import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
@@ -57,8 +57,6 @@ export default function DashboardPage() {
     const [trips, setTrips] = useState<Trip[]>([]);
     const [userName, setUserName] = useState("Voyageur");
     const [userId, setUserId] = useState<string | null>(null);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newTripTitle, setNewTripTitle] = useState("");
 
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -68,7 +66,6 @@ export default function DashboardPage() {
 
     const [emailConnected, setEmailConnected] = useState(false);
     const [provider, setProvider] = useState<string>("local");
-    const [showSyncOptions, setShowSyncOptions] = useState(false);
 
     const [showSettings, setShowSettings] = useState(false);
     const [userEmail, setUserEmail] = useState("");
@@ -123,16 +120,6 @@ export default function DashboardPage() {
         }
     };
 
-    const handleConnectEmail = () => {
-        // Placeholder endpoints
-        if (provider === "google") {
-            axios.post(`/api/email/connect/google`).then(() => alert("Feature en cours d'intégration dans AIVANA V2"));
-        } else if (provider === "microsoft") {
-            axios.post(`/api/email/connect/outlook`).then(() => alert("Feature en cours d'intégration dans AIVANA V2"));
-        } else {
-            setShowSyncOptions(true); // Open modal for local users to choose
-        }
-    };
 
     const fetchTrips = async () => {
         try {
@@ -268,23 +255,6 @@ export default function DashboardPage() {
         }, 1500);
     };
 
-    const handleCreateTrip = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!userId || !newTripTitle) return;
-
-        try {
-            await axios.post("/api/trips", {
-                title: newTripTitle,
-            });
-            setNewTripTitle("");
-            setShowCreateModal(false);
-            fetchTrips();
-            showNotification("Voyage créé ! SMS de confirmation en route.");
-        } catch (err) {
-            console.error("Failed to create trip", err);
-        }
-    };
-
     const handleDeleteTrip = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!confirm("Supprimer ce voyage ?")) return;
@@ -386,30 +356,35 @@ export default function DashboardPage() {
 
                 <nav className="flex-1 px-4 space-y-1">
                     {[
-                        { icon: LayoutDashboard, label: "Vue Générale", active: !selectedTrip && !showSettings, onClick: () => { setSelectedTrip(null); setShowSettings(false); } },
-                        { icon: Calendar, label: "Mes Voyages", active: !!selectedTrip && !showSettings, onClick: () => { setShowSettings(false); } },
                         {
-                            icon: Mail,
-                            label: emailConnected ? "Email Connecté" : (provider === 'google' ? "Sync Gmail" : provider === 'microsoft' ? "Sync Outlook" : "Sync Email"),
-                            active: false,
-                            onClick: handleConnectEmail,
-                            color: emailConnected ? "text-emerald-400" : ""
+                            icon: Calendar,
+                            label: "Mes Voyages",
+                            active: !showSettings,
+                            onClick: () => { setSelectedTrip(null); setShowSettings(false); }
                         },
-                        { icon: Settings, label: "Paramètres", active: showSettings, onClick: () => { setSelectedTrip(null); setShowSettings(true); } },
+                        {
+                            icon: Settings,
+                            label: "Paramètres",
+                            active: showSettings,
+                            onClick: () => { setSelectedTrip(null); setShowSettings(true); }
+                        },
                     ].map((item) => (
                         <button
                             key={item.label}
                             onClick={item.onClick}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${item.active
-                                ? "font-medium shadow-sm"
-                                : ""
-                                }`}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${item.active ? "font-medium shadow-sm" : ""}`}
                             style={item.active ? { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' } : { color: 'var(--text-muted)' }}
                         >
-                            <item.icon className={`w-4 h-4 ${item.color || ""}`} />
+                            <item.icon className="w-4 h-4" />
                             <span>{item.label}</span>
                         </button>
                     ))}
+                    {emailConnected && (
+                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" style={{ color: 'var(--text-muted)' }}>
+                            <Mail className="w-4 h-4 text-emerald-400" />
+                            <span className="text-emerald-400 text-xs font-medium">Email synchronisé</span>
+                        </div>
+                    )}
                 </nav>
 
                 <div className="p-4" style={{ borderTop: '1px solid var(--border-light)' }}>
@@ -643,45 +618,23 @@ export default function DashboardPage() {
                                         <h2 className="text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
                                         <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
                                     </div>
-                                    {trips.length > 0 && (
-                                        <button
-                                            onClick={() => setShowCreateModal(true)}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-white text-zinc-950 text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors"
-                                        >
-                                            <Plus className="w-4 h-4" /> Nouveau voyage
-                                        </button>
-                                    )}
                                 </div>
 
                                 {trips.length === 0 ? (
                                     <div className="rounded-2xl p-12 text-center mb-10 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
-                                        <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-white/10">
-                                            📬
+                                        <div className="w-20 h-20 bg-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-gold/20">
+                                            ✈️
                                         </div>
-                                        <h3 className="text-xl font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Créez votre premier voyage</h3>
+                                        <h3 className="text-xl font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Aucun voyage enregistré</h3>
                                         <p className="text-sm max-w-md mx-auto mb-10 leading-relaxed font-normal" style={{ color: 'var(--text-secondary)' }}>
-                                            Connectez votre email ou ajoutez un voyage manuellement pour que l'IA commence à organiser vos escapades.
+                                            Utilisez le chatbot AIVANA pour générer un itinéraire et enregistrez-le ici en un clic.
                                         </p>
-                                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                            <button
-                                                onClick={handleConnectEmail}
-                                                className="px-6 py-3 w-full sm:w-auto flex items-center justify-center gap-3 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors"
-                                            >
-                                                {provider === 'google' ? (
-                                                    <><svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="currentColor" opacity="0.6" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /></svg> Connecter Gmail</>
-                                                ) : provider === 'microsoft' ? (
-                                                    <><svg className="w-4 h-4" viewBox="0 0 21 21"><path fill="currentColor" d="M0 0h10v10H0z" /><path fill="currentColor" opacity="0.6" d="M11 0h10v10H11z" /></svg> Connecter Outlook</>
-                                                ) : (
-                                                    "Connecter mon email"
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => setShowCreateModal(true)}
-                                                className="flex items-center gap-2 px-6 py-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/5"
-                                            >
-                                                <Plus className="w-4 h-4" /> Ajouter manuellement
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-zinc-950 text-sm font-medium rounded-xl hover:bg-zinc-200 transition-colors"
+                                        >
+                                            <Sparkles className="w-4 h-4" /> Planifier avec l&apos;IA
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -754,16 +707,6 @@ export default function DashboardPage() {
                                         ); })}
 
 
-                                        {/* Add card */}
-                                        <button
-                                            onClick={() => setShowCreateModal(true)}
-                                            className="h-full min-h-[260px] border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-white hover:border-white/30 hover:bg-white/[0.02] transition-colors group"
-                                        >
-                                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4 border border-white/10 group-hover:bg-white/10 transition-colors">
-                                                <Plus className="w-6 h-6" />
-                                            </div>
-                                            <span className="text-sm font-medium">Nouveau Voyage</span>
-                                        </button>
                                     </div>
                                 )}
                             </>
@@ -1171,52 +1114,6 @@ export default function DashboardPage() {
                 </button>
             </nav >
 
-            {/* Create Trip Modal */}
-            {
-                showCreateModal && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-[#0A0D14]/90 backdrop-blur-xl">
-                        <div className="absolute inset-0" onClick={() => setShowCreateModal(false)} />
-                        <div className="relative bg-[#141822] w-full max-w-md rounded-[32px] p-10 shadow-2xl border border-white/5 animate-in zoom-in-95 duration-300">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[40px] rounded-full pointer-events-none" />
-
-                            <div className="space-y-1 mb-8">
-                                <h3 className="text-3xl font-serif text-white uppercase tracking-tight">Nouveau Voyage</h3>
-                                <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">Donner un titre à l'aventure</p>
-                            </div>
-
-                            <form onSubmit={handleCreateTrip} className="space-y-8">
-                                <div>
-                                    <label className="block text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">Nom du voyage</label>
-                                    <input
-                                        type="text"
-                                        autoFocus
-                                        required
-                                        value={newTripTitle}
-                                        onChange={(e) => setNewTripTitle(e.target.value)}
-                                        placeholder="ex: Roadtrip Italie 2024"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-gold transition-all"
-                                    />
-                                </div>
-                                <div className="flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCreateModal(false)}
-                                        className="flex-1 py-4 text-[10px] font-black text-white/30 hover:text-white uppercase tracking-widest transition-colors"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-[2] btn-gold py-4 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gold/10 active:scale-95 transition-all"
-                                    >
-                                        Créer le voyage
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )
-            }
 
             {/* Create Booking Modal (Shopping Mode) */}
             {
@@ -1247,42 +1144,6 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Select Sync Provider Modal (For Local Users) */}
-            {
-                showSyncOptions && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-[#0A0D14]/90 backdrop-blur-xl">
-                        <div className="absolute inset-0" onClick={() => setShowSyncOptions(false)} />
-                        <div className="relative bg-[#141822] w-full max-w-sm rounded-[32px] p-10 shadow-2xl border border-white/5 animate-in zoom-in-95 duration-300">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[40px] rounded-full pointer-events-none" />
-
-                            <div className="space-y-1 mb-8 text-center">
-                                <h3 className="text-2xl font-serif text-white uppercase tracking-tight">Connecter Email</h3>
-                                <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] leading-relaxed">Activez la synchronisation IA pour importer vos réservations</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <button onClick={() => alert("La synchronisation des emails via Supabase arrive bientôt !")}
-                                    className="w-full flex items-center justify-center gap-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all group">
-                                    <svg className="w-5 h-5 grayscale group-hover:grayscale-0 transition-all" viewBox="0 0 24 24">
-                                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                    </svg>
-                                    Via Google Cloud
-                                </button>
-
-                                <button onClick={() => alert("La synchronisation des emails via Supabase arrive bientôt !")}
-                                    className="w-full flex items-center justify-center gap-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all group">
-                                    <svg className="w-5 h-5 grayscale group-hover:grayscale-0 transition-all" viewBox="0 0 21 21">
-                                        <path fill="currentColor" d="M0 0h10v10H0z" /><path fill="currentColor" opacity="0.6" d="M11 0h10v10H11z" />
-                                    </svg>
-                                    Via Microsoft AI
-                                </button>
-                            </div>
-
-                            <button onClick={() => setShowSyncOptions(false)} className="w-full mt-10 py-2 text-[10px] font-black text-white/20 hover:text-white/40 uppercase tracking-widest transition-colors">Fermer la fenêtre</button>
-                        </div>
-                    </div>
-                )
-            }
         </div >
     );
 }

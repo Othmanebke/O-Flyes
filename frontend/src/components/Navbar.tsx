@@ -9,8 +9,6 @@ import { useTheme } from "./ThemeProvider";
 import { createClient } from "@/lib/supabase/browser";
 
 const links = [
-  { href: "/#features", label: "Fonctionnalités" },
-  { href: "/#pricing", label: "Tarifs" },
   { href: "/explore", label: "Destinations" },
   { href: "/explore/flights", label: "Vols" },
   { href: "/explore/hotels", label: "Hôtels" },
