@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Recommendation } from "@/lib/mockRecommendations";
 import { Plane, Hotel, Calendar, CreditCard, Sparkles, Loader2, ArrowUpRight } from "lucide-react";
 import axios from "axios";
@@ -133,21 +134,26 @@ export function RecommendationCards({ recommendations }: RecommendationCardsProp
                         >
                             Réserver sur Booking <ArrowUpRight className="w-4 h-4" />
                         </a>
-                        <button
-                            onClick={() => handleSaveToDashboard(rec)}
-                            disabled={savingId === rec.id || savedIds.has(rec.id)}
-                            className="w-full bg-transparent border border-white/20 hover:border-white/50 text-white font-medium py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:border-white/20"
-                        >
-                            {savingId === rec.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : savedIds.has(rec.id) ? (
-                                "✓ Sauvegardé"
-                            ) : (
-                                <>
-                                    <Sparkles className="w-4 h-4 text-[#C9A84C]" /> Ajouter au dashboard
-                                </>
-                            )}
-                        </button>
+                        {savedIds.has(rec.id) ? (
+                            <Link
+                                href="/dashboard"
+                                className="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-medium py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 hover:bg-emerald-500/20"
+                            >
+                                <ArrowUpRight className="w-4 h-4" /> Voir mon dashboard
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={() => handleSaveToDashboard(rec)}
+                                disabled={savingId === rec.id}
+                                className="w-full bg-transparent border border-white/20 hover:border-white/50 text-white font-medium py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {savingId === rec.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <><Sparkles className="w-4 h-4 text-[#C9A84C]" /> Ajouter au dashboard</>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             ))}

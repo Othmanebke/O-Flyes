@@ -39,7 +39,6 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
   );
 
   const handleSave = async () => {
-    if (!localDest) return;
     try {
       setSaving(true);
       await axios.post("/api/trips", {
@@ -101,21 +100,27 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
       )}
 
       {/* Buttons */}
-      <div className="px-4 pb-3 flex gap-2">
-        {localDest && (
+      <div className="px-4 pb-3 flex flex-col gap-2">
+        <div className="flex gap-2">
           <button onClick={handleSave} disabled={saving || saved}
             className="flex-1 flex items-center justify-center gap-1.5 bg-gold hover:bg-gold-600 disabled:opacity-50 text-dark-900 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : (saved ? "✓ Enregistré" : <><Sparkles className="w-3 h-3" /> Enregistrer</>)}
           </button>
+          <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
+            <Hotel className="w-3 h-3" /> Hôtels
+          </a>
+          <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
+            <Plane className="w-3 h-3" /> Vols
+          </a>
+        </div>
+        {saved && (
+          <Link href="/dashboard"
+            className="w-full flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors border border-white/20">
+            <ArrowUpRight className="w-3 h-3" /> Voir mon dashboard
+          </Link>
         )}
-        <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
-          <Hotel className="w-3 h-3" /> Hôtels
-        </a>
-        <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
-          <Plane className="w-3 h-3" /> Vols
-        </a>
       </div>
     </div>
   );
