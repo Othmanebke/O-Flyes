@@ -28,11 +28,12 @@ interface Booking {
     confirmation_number?: string;
     start_datetime?: string;
     end_datetime?: string;
-    price?: number;
+    price_estimate?: number;
     currency?: string;
     location?: string;
     status: string;
     external_reference?: string;
+    external_url?: string;
     booking_url?: string;
     raw_data?: Record<string, any>;
 }
@@ -172,7 +173,7 @@ export default function DashboardPage() {
         const flights = items.filter(b => b.type === 'flight');
         const hotels = items.filter(b => b.type === 'hotel');
         const activities = items.filter(b => b.type === 'activity');
-        const totalCost = items.reduce((sum, b) => sum + (b.price || 0), 0);
+        const totalCost = items.reduce((sum, b) => sum + (b.price_estimate || 0), 0);
         const hasOutbound = flights.length > 0;
         const hasReturn = flights.length >= 2;
         const hasHotel = hotels.length > 0;
@@ -880,7 +881,7 @@ export default function DashboardPage() {
                                                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-wrap">
                                                                     <h4 className="font-medium text-lg text-white leading-none">{b.title}</h4>
                                                                     <div className="flex gap-2">
-                                                                        {(b.booking_url || (b.external_reference && b.external_reference.startsWith('WIKI')) || (b.raw_data && Object.keys(b.raw_data).length > 2)) && (
+                                                                        {(b.external_url || b.booking_url || (b.external_reference && b.external_reference.startsWith('WIKI')) || (b.raw_data && Object.keys(b.raw_data).length > 2)) && (
                                                                             <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1.5">
                                                                                 <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> IA Vérifiée
                                                                             </span>
@@ -900,7 +901,7 @@ export default function DashboardPage() {
                                                             <div className="flex items-center gap-3 mb-4 mt-1">
                                                                 <span className="text-xs font-medium text-zinc-400">{b.provider || "Prestataire"}</span>
                                                                 <span className="text-xs text-zinc-600">•</span>
-                                                                <span className="text-xs text-white font-medium">{b.price ? `${b.price} €` : 'Prix inconnu'}</span>
+                                                                <span className="text-xs text-white font-medium">{b.price_estimate ? `${b.price_estimate} €` : 'Prix inconnu'}</span>
                                                             </div>
 
                                                             {/* Displaying Extracted Intelligence from raw_data */}
@@ -947,9 +948,12 @@ export default function DashboardPage() {
                                             <p className="text-zinc-400 text-sm max-w-md mx-auto text-center mb-10 leading-relaxed relative z-10">
                                                 Demandez à l'IA de générer des recommandations personnalisées d'activités, de restaurants et de lieux cachés pour votre voyage.
                                             </p>
-                                            <Link href="/chat" className="flex items-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-medium text-sm rounded-lg hover:bg-zinc-200 transition-all relative z-10">
+                                            <button
+                                                onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
+                                                className="flex items-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-medium text-sm rounded-lg hover:bg-zinc-200 transition-all relative z-10"
+                                            >
                                                 <Sparkles className="w-4 h-4" /> Générer des suggestions avec AIVANA
-                                            </Link>
+                                            </button>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
