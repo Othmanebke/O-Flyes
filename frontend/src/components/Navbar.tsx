@@ -9,12 +9,12 @@ import { useTheme } from "./ThemeProvider";
 import { createClient } from "@/lib/supabase/browser";
 
 const links = [
+  { href: "/#features", label: "Fonctionnalités" },
+  { href: "/#pricing", label: "Tarifs" },
   { href: "/explore", label: "Destinations" },
-  { href: "/explore/activities", label: "Activités" },
-  { href: "/explore/hotels", label: "Hôtels" },
   { href: "/explore/flights", label: "Vols" },
+  { href: "/explore/hotels", label: "Hôtels" },
   { href: "/blog", label: "Blog" },
-  { href: "/gallery", label: "Galerie" },
 ];
 
 export default function Navbar() {

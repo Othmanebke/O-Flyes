@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { Plane, ArrowUpRight, ChevronDown, Star, MessageCircle, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RecommendationCards } from "@/components/assistant/RecommendationCards";
-import { getMockRecommendations, Recommendation, RecommendationInput } from "@/lib/mockRecommendations";
+import { getMockRecommendations, Recommendation } from "@/lib/mockRecommendations";
 
 const HERO_SLIDES = [
   {
@@ -22,10 +22,10 @@ const HERO_SLIDES = [
 ];
 
 const faqs = [
-  { q: "Comment fonctionne l'IA ?", a: "Notre IA analyse vos préférences (budget, climat, période) et les croise avec une base de centaines de destinations pour vous proposer les meilleures options." },
-  { q: "Le chatbot est-il disponible 24h/24 ?", a: "Oui, le chatbot IA est disponible à toute heure pour répondre à vos questions et affiner vos recommandations de voyage." },
-  { q: "Est-ce que je réserve sur AIVANA ?", a: "Non, vous réservez sur des partenaires. AIVANA centralise et organise tout dans votre dashboard." },
-  { q: "Les estimations de prix sont-elles fiables ?", a: "Les prix affichés sont des estimations basées sur les moyennes de marché. Ils varient selon la saison et le délai de réservation." },
+  { q: "Comment fonctionne l'IA ?", a: "AIVANA utilise LLaMA 3.3 via l'API Groq pour analyser vos préférences (budget, période, envies) et générer un itinéraire personnalisé en moins de 5 secondes." },
+  { q: "Mon email est-il en sécurité avec Smart Sync ?", a: "Oui. Smart Sync utilise le protocole OAuth 2.0 avec un accès en lecture seule. AIVANA ne stocke jamais le contenu de vos emails, seulement les informations extraites (dates, vols, hôtels)." },
+  { q: "Est-ce que je réserve directement sur AIVANA ?", a: "Non. AIVANA est un outil de planification et d'organisation. Vous réservez sur vos sites partenaires habituels (Booking, Skyscanner…). AIVANA centralise tout ensuite." },
+  { q: "Quelle est la différence entre le plan Gratuit et Pro ?", a: "Le plan Gratuit donne accès à 5 requêtes IA par mois et au dashboard de base. Le plan Pro (9,99€/mois) offre l'IA illimitée, Smart Sync Gmail/Outlook et l'export PDF de vos itinéraires." },
 ];
 
 const INTERESTS_LIST = ["Soleil", "Culture", "Nature", "Food", "Luxe", "Petit budget"];
@@ -100,10 +100,6 @@ export default function HomePage() {
     }, 0);
   };
 
-  const triggerChatbot = () => {
-    window.dispatchEvent(new CustomEvent("open-chatbot"));
-  };
-
   const goTo = useCallback((idx: number) => {
     if (transitioning) return;
     setTransitioning(true);
@@ -163,10 +159,10 @@ export default function HomePage() {
                       </span>
                     </div>
                     <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] drop-shadow-lg">
-                      Trouvez un voyage optimisé selon votre budget.
+                      L&apos;aventure sur mesure,<br />sans l&apos;effort.
                     </h1>
                     <p className="text-white/70 text-sm md:text-base mt-4 mb-4 max-w-lg leading-relaxed">
-                      Destination, meilleure période et hôtels recommandés. Vous réservez sur des sites partenaires, tout reste centralisé dans votre dashboard.
+                      Décrivez votre voyage idéal, l&apos;IA génère un itinéraire complet en 5 secondes. Destinations, hôtels, budget — tout centralisé dans votre dashboard.
                     </p>
                   </motion.div>
                 </AnimatePresence>
@@ -315,9 +311,9 @@ export default function HomePage() {
 
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { step: "01", title: "Inscription", desc: "Créez votre compte AIVANA en quelques secondes pour accéder à votre espace personnel." },
-            { step: "02", title: "Connexion Email", desc: "Connectez votre boîte Gmail ou Outlook en toute sécurité. Notre IA fait le reste." },
-            { step: "03", title: "Dashboard Magique", desc: "Vos vols, hôtels et activités s'affichent automatiquement. Zéro saisie manuelle." },
+            { step: "01", title: "Décrivez votre voyage", desc: "Budget, période, envies — répondez à 4 questions. L'IA génère votre itinéraire personnalisé en 5 secondes." },
+            { step: "02", title: "Smart Sync", desc: "Connectez Gmail ou Outlook (lecture seule, OAuth 2.0). L'IA extrait vos confirmations de vol et d'hôtel automatiquement." },
+            { step: "03", title: "Dashboard centralisé", desc: "Vols, hôtels, activités et budget réunis en un seul endroit. Export iCal, alertes intelligentes." },
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -548,6 +544,163 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── FEATURES ─────────────────────────────────────────────────────── */}
+      <section id="features" className="py-24 px-8" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="section-label mb-4 text-gold/80">Fonctionnalités</p>
+            <h2 className="font-serif text-4xl md:text-5xl" style={{ color: 'var(--text-primary)' }}>
+              Tout ce dont vous avez besoin<br />pour voyager sans stress
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "⚡",
+                tag: "Chatbot IA",
+                title: "Itinéraire en 5 secondes",
+                desc: "Décrivez votre voyage idéal, l'IA génère un plan complet — destinations, hôtels, budget — en moins de 5 secondes.",
+                detail: "Propulsé par LLaMA 3.3 via Groq",
+              },
+              {
+                icon: "🔒",
+                tag: "Smart Sync",
+                title: "Sync Gmail & Outlook",
+                desc: "Connectez votre messagerie en toute sécurité. AIVANA extrait vos confirmations de vol, hôtel et activité sans stocker vos emails.",
+                detail: "Accès lecture seule — OAuth 2.0",
+              },
+              {
+                icon: "📊",
+                tag: "Dashboard Intelligent",
+                title: "Tout centralisé, rien d'oublié",
+                desc: "Vols, hôtels, budget, activités : votre voyage entier dans un seul tableau de bord. Alertes et export iCal inclus.",
+                detail: "Synchronisation en temps réel",
+              },
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.15, duration: 0.6 }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center text-2xl flex-shrink-0">
+                  {f.icon}
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold/70 mb-2">{f.tag}</p>
+                  <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{f.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{f.desc}</p>
+                </div>
+                <div className="mt-auto pt-5 flex items-center gap-2" style={{ borderTop: '1px solid var(--border-light)' }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                  <p className="text-[11px] font-medium text-emerald-400">{f.detail}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ───────────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-24 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="section-label mb-4 text-gold/80">Tarifs</p>
+            <h2 className="font-serif text-4xl md:text-5xl" style={{ color: 'var(--text-primary)' }}>
+              Commencez gratuitement.<br />Passez Pro quand vous êtes prêt.
+            </h2>
+            <p className="mt-4 text-sm max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
+              Aucune carte bancaire requise pour démarrer. Sans engagement.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Free */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="rounded-3xl p-8 flex flex-col"
+              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+            >
+              <p className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: 'var(--text-muted)' }}>Découverte</p>
+              <div className="mb-2 flex items-end gap-2">
+                <span className="text-5xl font-serif" style={{ color: 'var(--text-primary)' }}>0€</span>
+                <span className="text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>/mois</span>
+              </div>
+              <p className="text-xs mb-8" style={{ color: 'var(--text-muted)' }}>Pour découvrir AIVANA</p>
+              <ul className="space-y-4 mb-10 flex-1">
+                {[
+                  "5 requêtes IA par mois",
+                  "Recommandations de destinations",
+                  "Dashboard personnel",
+                  "Itinéraire basique",
+                ].map(f => (
+                  <li key={f} className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0" style={{ borderColor: 'var(--border-color)' }}>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--text-muted)' }} />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/auth/register"
+                className="block w-full text-center py-3.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5"
+                style={{ border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+              >
+                Commencer gratuitement
+              </Link>
+            </motion.div>
+
+            {/* Pro */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="rounded-3xl p-8 flex flex-col relative overflow-hidden"
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
+              <div className="absolute top-0 right-0 w-48 h-48 bg-gold/5 blur-[60px] rounded-full pointer-events-none" />
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-gold">Pro</p>
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-gold text-zinc-950 px-3 py-1 rounded-full">Recommandé</span>
+              </div>
+              <div className="mb-2 flex items-end gap-2">
+                <span className="text-5xl font-serif" style={{ color: 'var(--text-primary)' }}>9,99€</span>
+                <span className="text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>/mois</span>
+              </div>
+              <p className="text-xs mb-8" style={{ color: 'var(--text-muted)' }}>Pour les voyageurs réguliers</p>
+              <ul className="space-y-4 mb-10 flex-1">
+                {[
+                  "IA illimitée — réponses en 5 secondes",
+                  "Smart Sync Gmail & Outlook",
+                  "Accès lecture seule — OAuth 2.0",
+                  "Export PDF de l'itinéraire complet",
+                  "Alertes de prix intelligentes",
+                  "Support prioritaire",
+                ].map(f => (
+                  <li key={f} className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="w-4 h-4 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/auth/register" className="btn-gold block w-full text-center py-3.5 relative z-10">
+                Passer à Pro
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA BANNER ────────────────────────────────────────────────────── */}
       <section className="px-8 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto">
@@ -556,11 +709,11 @@ export default function HomePage() {
             <div className="flex-1">
               <span className="tag mb-4">Commencer maintenant</span>
               <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-                Découvrez votre prochain<br />voyage idéal
+                L&apos;aventure sur mesure,<br />sans l&apos;effort.
               </h2>
               <p className="text-sm mb-8 max-w-sm" style={{ color: 'var(--text-secondary)' }}>
-                Planifiez votre voyage en quelques minutes et profitez
-                de chaque instant de votre escapade.
+                Rejoignez AIVANA gratuitement. Itinéraire IA en 5 secondes,
+                dashboard centralisé, zéro saisie manuelle.
               </p>
               <div className="flex items-center gap-3">
                 <Link href="/explore" className="btn-gold shadow-lg shadow-gold/20">
