@@ -41,6 +41,11 @@ export interface RealFlightOffer {
     departure: string;
     arrival: string;
     duration: string;
+    // Présents uniquement quand une date de retour est fournie (vol aller-retour)
+    returnDeparture?: string;
+    returnArrival?: string;
+    returnDuration?: string;
+    // `price` est le total aller-retour quand `returnDate` est fourni, sinon le prix aller simple
     price: number;
     currency: string;
     stops: number;
@@ -51,7 +56,8 @@ export async function searchFlights(
     originCode: string,
     destCode: string,
     departDate: string,
-    adults: number = 1
+    adults: number = 1,
+    returnDate?: string
 ): Promise<RealFlightOffer[] | null> {
     const token = await getAmadeusToken();
     if (!token) return null;
@@ -65,6 +71,9 @@ export async function searchFlights(
             max: '5',
             currencyCode: 'EUR',
         });
+        if (returnDate) {
+            params.append('returnDate', returnDate);
+        }
         const res = await fetch(
             `https://test.api.amadeus.com/v2/shopping/flight-offers?${params}`,
             { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(7000) }
@@ -75,21 +84,34 @@ export async function searchFlights(
         if (offers.length === 0) return null;
 
         return offers.map((offer: any) => {
-            const seg = offer.itineraries[0].segments[0];
-            const lastSeg = offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1];
-            return {
+            const outbound = offer.itineraries[0];
+            const seg = outbound.segments[0];
+            const lastSeg = outbound.segments[outbound.segments.length - 1];
+            const inbound = offer.itineraries[1];
+
+            const result: RealFlightOffer = {
                 id: offer.id,
                 airline: seg.carrierCode,
                 origin: seg.departure.iataCode,
                 destination: lastSeg.arrival.iataCode,
                 departure: seg.departure.at,
                 arrival: lastSeg.arrival.at,
-                duration: offer.itineraries[0].duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
+                duration: outbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
                 price: Math.round(parseFloat(offer.price.total)),
                 currency: offer.price.currency || 'EUR',
-                stops: offer.itineraries[0].segments.length - 1,
+                stops: outbound.segments.length - 1,
                 cabin: offer.travelerPricings?.[0]?.fareDetailsBySegment?.[0]?.cabin === 'BUSINESS' ? 'Business' : 'Economy',
             };
+
+            if (inbound) {
+                const inSeg = inbound.segments[0];
+                const inLastSeg = inbound.segments[inbound.segments.length - 1];
+                result.returnDeparture = inSeg.departure.at;
+                result.returnArrival = inLastSeg.arrival.at;
+                result.returnDuration = inbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase();
+            }
+
+            return result;
         });
     } catch {
         return null;

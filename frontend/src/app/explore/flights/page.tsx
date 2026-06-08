@@ -18,6 +18,9 @@ interface Flight {
     departure: string;
     arrival: string;
     duration: string;
+    returnDeparture?: string | null;
+    returnArrival?: string | null;
+    returnDuration?: string | null;
     price: number;
     currency: string;
     type: string;
@@ -137,6 +140,10 @@ function FlightsContent() {
 
     const formatTime = (dateStr: string) => {
         return new Date(dateStr).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    };
+
+    const formatDateShort = (dateStr: string) => {
+        return new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
     };
 
     const handleBook = async (flight: Flight) => {
@@ -414,39 +421,79 @@ function FlightsContent() {
                                         </div>
                                     </div>
 
-                                    {/* Timeline */}
-                                    <div className="flex-1 w-full flex items-center justify-between gap-6">
-                                        <div className="text-center shrink-0">
-                                            <p className="text-3xl font-serif text-white leading-none mb-1">{formatTime(flight.departure)}</p>
-                                            <p className="text-gold font-black text-base tracking-tighter uppercase">{flight.originCode}</p>
-                                            <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{flight.origin}</p>
+                                    {/* Timeline aller + retour */}
+                                    <div className="flex-1 w-full flex flex-col gap-4">
+                                        {/* Aller */}
+                                        <div className="flex items-center justify-between gap-6">
+                                            <span className="hidden sm:flex items-center gap-1.5 text-emerald-400/70 text-[8px] font-black uppercase tracking-[0.2em] w-14 shrink-0">
+                                                <ArrowRight className="w-3 h-3" /> Aller
+                                            </span>
+                                            <div className="text-center shrink-0">
+                                                <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.departure)}</p>
+                                                <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.originCode}</p>
+                                                <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.departure)}</p>
+                                            </div>
+
+                                            <div className="flex-1 relative flex flex-col items-center">
+                                                <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent relative">
+                                                    <motion.div
+                                                        initial={{ left: "0%" }}
+                                                        animate={{ left: "100%" }}
+                                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                                        className="absolute -top-[3px] w-1.5 h-1.5 bg-gold rounded-full shadow-[0_0_8px_rgba(184,134,11,0.8)]"
+                                                    />
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-1.5 text-white/25 text-[9px] uppercase font-black tracking-widest">
+                                                    <Clock className="w-2.5 h-2.5" /> {flight.duration}
+                                                </div>
+                                            </div>
+
+                                            <div className="text-center shrink-0">
+                                                <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.arrival)}</p>
+                                                <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.destinationCode}</p>
+                                                <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.arrival)}</p>
+                                            </div>
                                         </div>
 
-                                        <div className="flex-1 relative flex flex-col items-center">
-                                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent relative">
-                                                <motion.div
-                                                    initial={{ left: "0%" }}
-                                                    animate={{ left: "100%" }}
-                                                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                                    className="absolute -top-[3px] w-1.5 h-1.5 bg-gold rounded-full shadow-[0_0_8px_rgba(184,134,11,0.8)]"
-                                                />
-                                            </div>
-                                            <div className="mt-3 flex items-center gap-1.5 text-white/25 text-[9px] uppercase font-black tracking-widest">
-                                                <Clock className="w-2.5 h-2.5" /> {flight.duration}
-                                            </div>
-                                        </div>
+                                        {/* Retour */}
+                                        {flight.returnDeparture && flight.returnArrival && (
+                                            <div className="flex items-center justify-between gap-6 pt-4 border-t border-white/[0.05]">
+                                                <span className="hidden sm:flex items-center gap-1.5 text-blue-400/70 text-[8px] font-black uppercase tracking-[0.2em] w-14 shrink-0">
+                                                    <ArrowRight className="w-3 h-3 rotate-180" /> Retour
+                                                </span>
+                                                <div className="text-center shrink-0">
+                                                    <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.returnDeparture)}</p>
+                                                    <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.destinationCode}</p>
+                                                    <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.returnDeparture)}</p>
+                                                </div>
 
-                                        <div className="text-center shrink-0">
-                                            <p className="text-3xl font-serif text-white leading-none mb-1">{formatTime(flight.arrival)}</p>
-                                            <p className="text-gold font-black text-base tracking-tighter uppercase">{flight.destinationCode}</p>
-                                            <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{flight.destination}</p>
-                                        </div>
+                                                <div className="flex-1 relative flex flex-col items-center">
+                                                    <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent relative">
+                                                        <motion.div
+                                                            initial={{ left: "100%" }}
+                                                            animate={{ left: "0%" }}
+                                                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                                            className="absolute -top-[3px] w-1.5 h-1.5 bg-gold rounded-full shadow-[0_0_8px_rgba(184,134,11,0.8)]"
+                                                        />
+                                                    </div>
+                                                    <div className="mt-2 flex items-center gap-1.5 text-white/25 text-[9px] uppercase font-black tracking-widest">
+                                                        <Clock className="w-2.5 h-2.5" /> {flight.returnDuration || flight.duration}
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-center shrink-0">
+                                                    <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.returnArrival)}</p>
+                                                    <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.originCode}</p>
+                                                    <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.returnArrival)}</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Price & CTA */}
                                     <div className="flex flex-col items-end gap-4 shrink-0 border-l border-white/[0.06] pl-8">
                                         <div className="text-right">
-                                            <p className="text-[9px] text-white/20 uppercase tracking-[0.15em] mb-1">Tarif</p>
+                                            <p className="text-[9px] text-white/20 uppercase tracking-[0.15em] mb-1">Tarif aller-retour</p>
                                             <p className="text-3xl font-serif text-white">
                                                 {flight.price} <span className="text-gold text-xl">{flight.currency}</span>
                                             </p>

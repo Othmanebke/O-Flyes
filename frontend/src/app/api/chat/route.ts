@@ -64,11 +64,12 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
     const adults = 2;
 
     const [flights, hotels, activities] = await Promise.all([
-        searchFlights(originCode, destCode, departDate, adults),
+        searchFlights(originCode, destCode, departDate, adults, checkout),
         searchHotelOffers(draft.name, checkin, checkout, adults),
         searchRealActivities(draft.name, 6),
     ]);
 
+    // `flights` is now a round-trip search (returnDate = checkout) — `price` is already the full aller-retour total
     const cheapestFlight = flights ? Math.min(...flights.map(f => f.price)) : null;
     const cheapestHotel = hotels ? Math.min(...hotels.map(h => h.pricePerNight)) : null;
 
@@ -76,8 +77,7 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
     let priceEstimate: number | null = null;
 
     if (cheapestFlight !== null && cheapestHotel !== null) {
-        // Round-trip flight estimate (search returns one-way pricing for `adults` travelers) + nights of lodging
-        priceEstimate = Math.round(cheapestFlight * 2 + cheapestHotel * nights);
+        priceEstimate = Math.round(cheapestFlight + cheapestHotel * nights);
         dataSource = 'real';
     }
 
@@ -94,7 +94,7 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
         dataSource,
         price_estimate: priceEstimate,
         booking_url: bookingHotelUrl({ city: draft.name, checkin, checkout, adults }),
-        flights_url: skyscannerFlightUrl({ origin: originCity, destination: draft.name, depart: departDate, adults }),
+        flights_url: skyscannerFlightUrl({ origin: originCity, destination: draft.name, depart: departDate, return: checkout, adults }),
         activities: realActivities,
     };
 }

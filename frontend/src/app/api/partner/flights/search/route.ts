@@ -128,7 +128,7 @@ async function getAmadeusToken(): Promise<string | null> {
     }
 }
 
-async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string, returnDate?: string) {
+async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string, returnDate: string) {
     const token = await getAmadeusToken();
     if (!token) return null;
 
@@ -137,14 +137,12 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
             originLocationCode: originCode,
             destinationLocationCode: destCode,
             departureDate: departDate,
+            returnDate: returnDate,
             adults: String(adults),
             max: '5',
             currencyCode: 'EUR',
         });
-        if (returnDate) {
-            params.append('returnDate', returnDate);
-        }
-        
+
         const res = await fetch(
             `https://test.api.amadeus.com/v2/shopping/flight-offers?${params}`,
             { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(6000) }
@@ -153,25 +151,35 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
         const data = await res.json();
 
         return (data.data || []).map((offer: any) => {
-            const seg = offer.itineraries[0].segments[0];
+            const outbound = offer.itineraries[0];
+            const inbound = offer.itineraries[1];
+            const seg = outbound.segments[0];
+            const lastSeg = outbound.segments[outbound.segments.length - 1];
+            // `price.total` est le prix ALLER-RETOUR complet quand `returnDate` est fourni
             const price = parseFloat(offer.price.total);
             const fareDetails = offer.travelerPricings[0].fareDetailsBySegment[0];
             const includedBags = fareDetails.includedCheckedBags?.quantity || 0;
             const baggageStatus = includedBags > 0 ? "Bagage cabine + soute" : "Sans bagage (cabine uniquement)";
+
+            const inSeg = inbound?.segments[0];
+            const inLastSeg = inbound?.segments[inbound.segments.length - 1];
 
             return {
                 id: offer.id,
                 airline: seg.carrierCode,
                 origin: seg.departure.iataCode,
                 originCode: seg.departure.iataCode,
-                destination: seg.arrival.iataCode,
-                destinationCode: seg.arrival.iataCode,
+                destination: lastSeg.arrival.iataCode,
+                destinationCode: lastSeg.arrival.iataCode,
                 departure: seg.departure.at,
-                arrival: seg.arrival.at,
-                duration: offer.itineraries[0].duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
+                arrival: lastSeg.arrival.at,
+                duration: outbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
+                returnDeparture: inSeg?.departure.at ?? null,
+                returnArrival: inLastSeg?.arrival.at ?? null,
+                returnDuration: inbound ? inbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase() : null,
                 price: Math.round(price),
                 currency: 'EUR',
-                type: offer.itineraries[0].segments.length === 1 ? 'Direct' : 'Escale',
+                type: outbound.segments.length === 1 ? 'Direct' : 'Escale',
                 class: fareDetails.cabin === 'BUSINESS' ? 'Business' : 'Economy',
                 baggage: baggageStatus,
                 booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, return: returnDate, airline: seg.carrierCode }),
@@ -188,7 +196,8 @@ export async function GET(request: Request) {
     const origin = searchParams.get('origin') || 'Paris';
     const destination = searchParams.get('destination') || 'New York';
     const depart = searchParams.get('depart') || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    const returnDate = searchParams.get('return') || undefined;
+    // Le site ne propose plus que des recherches aller-retour : on impose toujours une date de retour
+    const returnDate = searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0];
     const adults = parseInt(searchParams.get('adults') || '1', 10);
 
     const originCode = getIATA(origin);
@@ -209,6 +218,7 @@ export async function GET(request: Request) {
     const airlines = pickAirlines(4, seed);
 
     const departDate = new Date(depart + 'T08:00:00');
+    const returnDeptDate = new Date(returnDate + 'T08:00:00');
 
     const flights = airlines.map((airline, i) => {
         // Spread departures through the day
@@ -216,10 +226,14 @@ export async function GET(request: Request) {
         const dep = addHours(departDate, depOffset);
         const arr = addHours(dep, durationH + (i % 2 === 1 ? 1.5 : 0)); // escale sur vol impair
 
-        // Price variation: cheapest early morning, more expensive midday
+        // Vol retour : décalage symétrique sur la journée de retour, même compagnie/itinéraire
+        const retDep = addHours(returnDeptDate, depOffset + 1);
+        const retArr = addHours(retDep, durationH + (i % 2 === 1 ? 1.5 : 0));
+
+        // Price variation: cheapest early morning, more expensive midday — prix = total ALLER-RETOUR
         const priceMultiplier = [0.85, 1.0, 1.2, 0.95][i];
         const basePrice = routeInfo.base + Math.floor((seed * (i + 1) * 13) % routeInfo.range);
-        const price = Math.round(basePrice * priceMultiplier * adults);
+        const price = Math.round(basePrice * priceMultiplier * adults * 2);
 
         const isStop = durationH > 8 && i % 2 === 1;
 
@@ -234,13 +248,16 @@ export async function GET(request: Request) {
             departure: dep.toISOString(),
             arrival: arr.toISOString(),
             duration: routeInfo.duration,
+            returnDeparture: retDep.toISOString(),
+            returnArrival: retArr.toISOString(),
+            returnDuration: routeInfo.duration,
             price,
             currency: "EUR",
             type: isStop ? "1 escale" : "Direct",
             class: i === 3 ? "Business" : "Economy",
             baggage: "Sans bagage (cabine uniquement)",
-            booking_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
-            google_flights_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
+            booking_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
+            google_flights_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
         };
     });
 

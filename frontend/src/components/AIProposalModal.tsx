@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Plane, Hotel, Compass, Calendar, Check, ArrowRight, Loader2, Sparkles, MapPin, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, Plane, Hotel, Compass, Calendar, Check, Loader2, Sparkles, MapPin, AlertCircle, ExternalLink } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { DESTINATIONS } from "@/lib/destinations";
 
 // Reprise de l'interface du Chatbot
 interface Activity { name: string; price: number | null; emoji: string; }
@@ -24,53 +25,55 @@ export default function AIProposalModal({ dest, onClose }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  
-  // États de sélection (pour choisir parmi les "plusieurs choix")
-  const [selectedFlight, setSelectedFlight] = useState(0);
-  const [selectedHotel, setSelectedHotel] = useState(0);
 
-  // Génération d'options simulées pour donner du choix à l'utilisateur
-  const basePrice = dest.price_estimate || 800;
-  
-  const flightOptions = [
-    { id: 0, type: "Vol Direct", airline: "Air France", price: Math.round(basePrice * 0.4), duration: "2h 15m", time: "10:30 - 12:45" },
-    { id: 1, type: "Économique (1 escale)", airline: "Lufthansa", price: Math.round(basePrice * 0.25), duration: "4h 30m", time: "06:15 - 10:45" },
-  ];
+  // Image réelle : on réutilise la photo du catalogue destinations si elle existe (jamais d'image générée/inventée)
+  const heroImg = DESTINATIONS.find(
+    d => d.name.toLowerCase() === dest.name.toLowerCase()
+  )?.img || "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=80";
 
-  const hotelOptions = [
-    { id: 0, name: `Palace ${dest.name}`, type: "Luxe 5★", pricePerNight: Math.round(basePrice * 0.6 / 7), image: "https://images.unsplash.com/photo-1542314831-c6a4d14d8373?w=800&q=80" },
-    { id: 1, name: "Boutique Hôtel Central", type: "Charme 4★", pricePerNight: Math.round(basePrice * 0.35 / 7), image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80" },
-  ];
+  // Répartition indicative de l'estimation réelle (vol + hôtel / 2 pers., 7 nuits) — jamais de prix inventés :
+  // si aucune donnée réelle n'est disponible, on l'affiche clairement plutôt que d'afficher un chiffre fictif.
+  const hasRealEstimate = dest.dataSource === "real" && dest.price_estimate !== null;
+  const flightShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.4) : null;
+  const hotelShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.6) : null;
+  const activitiesTotal = dest.activities.reduce((s, a) => s + (a.price || 0), 0);
+  const totalPrice = hasRealEstimate ? dest.price_estimate! + activitiesTotal : null;
 
   const handleSaveTrip = async () => {
     try {
       setSaving(true);
       // 1. Créer le voyage
       const tripRes = await axios.post("/api/trips", {
-        title: `Aventure à ${dest.name}`,
+        title: `Voyage : ${dest.name}`,
         destination_name: dest.name,
         country: dest.country,
         start_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         end_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       });
-      
+
       const tripId = tripRes.data.id;
 
-      // 2. Ajouter les items sélectionnés
-      const flight = flightOptions[selectedFlight];
+      // 2. Ajouter vol + hôtel à partir des VRAIES données groundées (prix réels Amadeus, ou rien si indisponible)
       await axios.post(`/api/trips/${tripId}/items`, {
-        type: 'flight', title: `Vol ${flight.airline} (${flight.type})`, price_estimate: flight.price, external_url: dest.flights_url
+        type: 'flight',
+        title: `Vol aller-retour vers ${dest.name}`,
+        price_estimate: flightShare ?? undefined,
+        external_url: dest.flights_url,
       });
 
-      const hotel = hotelOptions[selectedHotel];
       await axios.post(`/api/trips/${tripId}/items`, {
-        type: 'hotel', title: hotel.name, price_estimate: hotel.pricePerNight * 7, external_url: dest.booking_url
+        type: 'hotel',
+        title: `Hébergement à ${dest.name}`,
+        price_estimate: hotelShare ?? undefined,
+        external_url: dest.booking_url,
       });
 
-      // Ajouter quelques activités
+      // 3. Ajouter les activités réelles (OpenTripMap) — on garde le prix `null` tel quel quand il est inconnu
       for (const act of dest.activities.slice(0, 3)) {
         await axios.post(`/api/trips/${tripId}/items`, {
-          type: 'activity', title: `${act.emoji} ${act.name}`, price_estimate: act.price || 0
+          type: 'activity',
+          title: `${act.emoji} ${act.name}`,
+          price_estimate: act.price ?? undefined,
         });
       }
 
@@ -90,8 +93,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
       setSaving(false);
     }
   };
-
-  const totalPrice = flightOptions[selectedFlight].price + (hotelOptions[selectedHotel].pricePerNight * 7) + dest.activities.slice(0,3).reduce((s,a) => s + (a.price || 0), 0);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-12">
@@ -116,16 +117,14 @@ export default function AIProposalModal({ dest, onClose }: Props) {
           
           {/* HERO HEADER */}
           <div className="relative h-[25vh] min-h-[180px] w-full shrink-0">
-            {/* L'image est générée via Unsplash Source en utilisant le nom de la destination */}
-            <img 
-              src={`https://source.unsplash.com/1600x900/?${encodeURIComponent(dest.name + " " + dest.country + " travel")}`} 
-              alt={dest.name} 
+            <img
+              src={heroImg}
+              alt={dest.name}
               className="absolute inset-0 w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=80" }} // fallback
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14] via-[#0A0D14]/60 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/80 via-transparent to-transparent" />
-            
+
             <div className="absolute bottom-0 left-0 w-full p-6 md:p-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-3 backdrop-blur-md">
                 <Sparkles className="w-3 h-3" /> Proposition IA AIVANA
@@ -143,80 +142,69 @@ export default function AIProposalModal({ dest, onClose }: Props) {
 
           {/* CONTENU PROPOSITION */}
           <div className="p-6 md:p-8 space-y-8">
-            
+
+            {!hasRealEstimate && (
+              <div className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-white/[0.02] border border-white/10 text-white/50 text-xs">
+                <AlertCircle className="w-4 h-4 text-gold shrink-0" />
+                Les prix réels n'ont pas pu être récupérés à l'instant pour cette destination — pas de chiffre inventé. Réessaie dans un instant pour une estimation chiffrée.
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-              
-              {/* COLONNE GAUCHE : Vols & Hôtels */}
+
+              {/* COLONNE GAUCHE : Vol & Hôtel (données réelles groundées) */}
               <div className="space-y-8">
-                {/* Section Vols */}
+                {/* Vol */}
                 <section>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                       <Plane className="w-5 h-5 text-blue-400 -rotate-45" />
                     </div>
-                    <h3 className="text-2xl font-serif text-white">Options de Vols</h3>
+                    <h3 className="text-2xl font-serif text-white">Vol aller-retour</h3>
                   </div>
-                  
-                  <div className="space-y-4">
-                    {flightOptions.map(opt => (
-                      <div 
-                        key={opt.id} 
-                        onClick={() => setSelectedFlight(opt.id)}
-                        className={`p-5 rounded-2xl border cursor-pointer transition-all ${selectedFlight === opt.id ? 'bg-blue-500/10 border-blue-500/50' : 'bg-white/[0.02] border-white/10 hover:border-white/30'}`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <span className="text-[10px] text-white/40 uppercase tracking-wider">{opt.airline}</span>
-                            <h4 className="text-white font-medium text-lg">{opt.type}</h4>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedFlight === opt.id ? 'bg-blue-500 border-blue-500' : 'border-white/30'}`}>
-                            {selectedFlight === opt.id && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-4 text-sm">
-                          <span className="text-white/60">{opt.time} • {opt.duration}</span>
-                          <span className="text-blue-400 font-bold">{opt.price} €</span>
-                        </div>
-                      </div>
-                    ))}
+
+                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">2 personnes · aller-retour</p>
+                      {flightShare !== null ? (
+                        <p className="text-blue-400 font-bold text-xl">~{flightShare.toLocaleString("fr-FR")} €</p>
+                      ) : (
+                        <p className="text-white/40 text-sm italic">Prix indisponible à l'instant</p>
+                      )}
+                    </div>
+                    <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
+                      Comparer <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
                 </section>
 
-                {/* Section Hôtels */}
+                {/* Hôtel */}
                 <section>
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
                       <Hotel className="w-5 h-5 text-gold" />
                     </div>
-                    <h3 className="text-2xl font-serif text-white">Hébergements suggérés</h3>
+                    <h3 className="text-2xl font-serif text-white">Hébergement</h3>
                   </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {hotelOptions.map(opt => (
-                      <div 
-                        key={opt.id} 
-                        onClick={() => setSelectedHotel(opt.id)}
-                        className={`relative rounded-2xl border cursor-pointer transition-all overflow-hidden h-48 ${selectedHotel === opt.id ? 'border-gold ring-2 ring-gold/30' : 'border-white/10 hover:border-white/30'}`}
-                      >
-                        <img src={opt.image} className="absolute inset-0 w-full h-full object-cover" alt={opt.name} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                        
-                        <div className="absolute top-3 right-3">
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedHotel === opt.id ? 'bg-gold border-gold' : 'border-white/50 bg-black/20'}`}>
-                            {selectedHotel === opt.id && <Check className="w-3 h-3 text-black" />}
-                          </div>
-                        </div>
 
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <span className="text-[9px] bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-white/80 uppercase tracking-wider border border-white/10 mb-2 inline-block">
-                            {opt.type}
-                          </span>
-                          <h4 className="text-white font-serif text-lg leading-tight mb-1">{opt.name}</h4>
-                          <span className="text-gold font-bold text-sm">{opt.pricePerNight} € <span className="text-white/40 text-xs font-normal">/nuit</span></span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">7 nuits · 2 personnes</p>
+                      {hotelShare !== null ? (
+                        <p className="text-gold font-bold text-xl">~{hotelShare.toLocaleString("fr-FR")} €</p>
+                      ) : (
+                        <p className="text-white/40 text-sm italic">Prix indisponible à l'instant</p>
+                      )}
+                    </div>
+                    <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
+                      Comparer <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
+                  <p className="text-[10px] text-white/30 mt-2">
+                    Répartition indicative de l'estimation réelle vol + hôtel ({dest.price_estimate?.toLocaleString("fr-FR")} € au total) — montants exacts à confirmer sur les sites de réservation.
+                  </p>
                 </section>
               </div>
 
@@ -229,7 +217,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                     </div>
                     <h3 className="text-2xl font-serif text-white">Expériences Incontournables</h3>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {dest.activities.length > 0 ? dest.activities.slice(0,4).map((act, i) => (
                       <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors">
@@ -237,17 +225,15 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                           <div className="text-2xl">{act.emoji}</div>
                           <div>
                             <h4 className="text-white text-sm font-medium">{act.name}</h4>
-                            <div className="flex text-gold/60 mt-1">
-                              <Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" />
-                            </div>
+                            <p className="text-[10px] text-white/30 mt-1">Lieu réel (OpenTripMap)</p>
                           </div>
                         </div>
                         <div className="text-emerald-400 font-medium text-sm whitespace-nowrap">
-                          {act.price ? `${act.price} €` : 'Inclus'}
+                          {act.price !== null ? `${act.price} €` : 'Prix non communiqué'}
                         </div>
                       </div>
                     )) : (
-                      <p className="text-white/40 text-sm italic">L'IA prépare actuellement une liste d'activités secrètes pour vous.</p>
+                      <p className="text-white/40 text-sm italic">Aucune activité réelle disponible pour cette destination à l'instant.</p>
                     )}
                   </div>
                 </section>
@@ -255,21 +241,27 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                 {/* Bloc Total */}
                 <div className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 rounded-3xl p-6 relative overflow-hidden mt-auto">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-gold/10 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
-                  <p className="text-gold/80 text-[10px] font-bold uppercase tracking-widest mb-2">Estimation sur mesure</p>
+                  <p className="text-gold/80 text-[10px] font-bold uppercase tracking-widest mb-2">Estimation réelle (vol + hôtel + activités)</p>
                   <div className="flex items-end gap-2 mb-6">
-                    <span className="text-4xl font-serif text-white leading-none">{totalPrice.toLocaleString("fr-FR")}</span>
-                    <span className="text-lg text-gold font-bold mb-1">€</span>
-                    <span className="text-white/40 text-[10px] mb-1.5">/pers.</span>
+                    {totalPrice !== null ? (
+                      <>
+                        <span className="text-4xl font-serif text-white leading-none">{totalPrice.toLocaleString("fr-FR")}</span>
+                        <span className="text-lg text-gold font-bold mb-1">€</span>
+                        <span className="text-white/40 text-[10px] mb-1.5">/ 2 pers.</span>
+                      </>
+                    ) : (
+                      <span className="text-lg text-white/40 italic">Estimation indisponible à l'instant</span>
+                    )}
                   </div>
 
-                  <button 
+                  <button
                     onClick={handleSaveTrip}
                     disabled={saving || saved}
                     className="w-full bg-gold hover:bg-yellow-400 text-black py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 transition-all"
                   >
-                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-                     saved ? <><Check className="w-5 h-5" /> Voyage généré</> : 
-                     <><Sparkles className="w-5 h-5" /> Transformer en Dashboard</>}
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> :
+                     saved ? <><Check className="w-5 h-5" /> Voyage créé</> :
+                     <><Sparkles className="w-5 h-5" /> Ajouter ce voyage à mon dashboard</>}
                   </button>
                   <p className="text-center text-white/30 text-[10px] mt-4 uppercase tracking-wider">
                     Modifiable à tout moment dans le dashboard

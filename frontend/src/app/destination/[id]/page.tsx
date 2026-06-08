@@ -104,8 +104,11 @@ export default function DestinationDetailPage({ params }: { params: { id: string
         if (!d) return;
         let cancelled = false;
         setLoadingTravel(true);
+        // Recherche systématiquement un aller-retour (départ +30j, retour +37j = 1 semaine sur place)
+        const depart = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+        const ret = new Date(Date.now() + 37 * 86400000).toISOString().split('T')[0];
         Promise.allSettled([
-            axios.get<RealFlight[]>("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
+            axios.get<RealFlight[]>("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, depart, return: ret, adults: 2 } }),
             axios.get<RealHotel[]>("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
             axios.get<RealActivity[]>("/api/partner/activities/search", { params: { city: d.name } }),
         ]).then(([f, h, a]) => {
@@ -125,9 +128,11 @@ export default function DestinationDetailPage({ params }: { params: { id: string
     const sortedHotels = hotels ? [...hotels].sort((a, b) => a.price_per_night - b.price_per_night) : null;
     const cheapestFlight = sortedFlights?.[0] ?? null;
     const cheapestHotel = sortedHotels?.[0] ?? null;
+    // `cheapestFlight.price` est désormais le total ALLER-RETOUR pour 2 personnes (recherche round-trip)
     const estimatedTotal = cheapestFlight && cheapestHotel
-        ? cheapestFlight.price * 2 + cheapestHotel.price_per_night * 7
+        ? cheapestFlight.price + cheapestHotel.price_per_night * 7
         : null;
+    const flightPricePerPerson = cheapestFlight ? Math.round(cheapestFlight.price / 2) : null;
 
     return (
         <>
@@ -204,11 +209,11 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                             </div>
                             <div className="dest-pricebar-sep" />
                             <div className="dest-pricebar-item">
-                                <p className="dest-pricebar-label"><Plane className="w-3.5 h-3.5 inline text-gold mr-1" />Vol / personne</p>
+                                <p className="dest-pricebar-label"><Plane className="w-3.5 h-3.5 inline text-gold mr-1" />Vol aller-retour / pers.</p>
                                 {loadingTravel
                                     ? <p className="skeleton h-5 w-16 inline-block rounded" />
-                                    : cheapestFlight
-                                        ? <p className="dest-pricebar-val">~{cheapestFlight.price}€<span className="dest-pricebar-unit">/pers</span></p>
+                                    : flightPricePerPerson !== null
+                                        ? <p className="dest-pricebar-val">~{flightPricePerPerson}€<span className="dest-pricebar-unit">/pers</span></p>
                                         : <p className="dest-pricebar-na">Indisponible</p>
                                 }
                             </div>
@@ -296,12 +301,12 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                         </div>
                                         <div className="dest-card-footer">
                                             <div>
-                                                <p className="dest-card-price-label">Prix réel</p>
-                                                <p className="dest-card-price">{f.price}€<span className="dest-card-price-unit">/pers</span></p>
+                                                <p className="dest-card-price-label">Aller-retour réel · 2 pers.</p>
+                                                <p className="dest-card-price">{f.price}€</p>
                                             </div>
                                             <div className="dest-card-actions">
                                                 <AddBtn onClick={() => openModal({
-                                                    title: `${f.airline} — ${d.name}`,
+                                                    title: `Vol A/R ${f.airline} — ${d.name}`,
                                                     type: "flight",
                                                     provider: f.airline,
                                                     price_estimate: f.price,

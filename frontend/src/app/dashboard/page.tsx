@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
 import TripProposal from "@/components/TripProposal";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
@@ -76,7 +75,6 @@ export default function DashboardPage() {
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
-    const [showBookingModal, setShowBookingModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'documents'>('overview');
     const [replacementPrompt, setReplacementPrompt] = useState<{type: string, title: string} | null>(null);
 
@@ -294,24 +292,6 @@ export default function DashboardPage() {
     const handleSelectTrip = (trip: Trip) => {
         setSelectedTrip(trip);
         fetchBookings(trip.id);
-    };
-
-    const handleAddBooking = async (bookingData: BookingData) => {
-        if (!selectedTrip) return;
-
-        try {
-            await axios.post(`/api/trips/${selectedTrip.id}/items`, {
-                title: bookingData.title,
-                type: bookingData.type,
-                provider: bookingData.provider,
-                price_estimate: bookingData.price,
-                external_url: bookingData.booking_url || bookingData.external_url
-            });
-            setShowBookingModal(false);
-            fetchBookings(selectedTrip.id);
-        } catch (err) {
-            console.error("Failed to add booking", err);
-        }
     };
 
     const handleDeleteBooking = async (id: string) => {
