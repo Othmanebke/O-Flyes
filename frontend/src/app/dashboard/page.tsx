@@ -118,7 +118,7 @@ export default function DashboardPage() {
             const providerStr = user.app_metadata?.provider || 'local';
             setProvider(providerStr);
 
-            fetchTrips();
+            fetchTrips(true);
             checkEmailSync(user.id);
         };
         checkUser();
@@ -137,10 +137,18 @@ export default function DashboardPage() {
     };
 
 
-    const fetchTrips = async () => {
+    const fetchTrips = async (isInitial = false) => {
         try {
+            const start = Date.now();
             const res = await axios.get(`/api/trips`);
             setTrips(res.data || []);
+            
+            if (isInitial) {
+                const elapsed = Date.now() - start;
+                if (elapsed < 3000) {
+                    await new Promise(r => setTimeout(r, 3000 - elapsed));
+                }
+            }
         } catch (err) {
             console.error("Failed to fetch trips", err);
         } finally {
