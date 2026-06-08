@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Chatbot from "@/components/Chatbot";
-import PlaneBackground from "@/components/PlaneBackground";
 import ThemeProvider from "@/components/ThemeProvider";
-import PageTransition, { FloatingParticles } from "@/components/PageTransition";
 import PremiumCursor from "@/components/PremiumCursor";
+import ClientShell from "@/components/ClientShell";
 
 export const metadata: Metadata = {
   title: "AIVANA – Votre assistant voyage intelligent",
@@ -19,16 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <ThemeProvider>
           <PremiumCursor />
-          <FloatingParticles />
-          <PlaneBackground />
-          <Navbar />
-          <main className="flex-1 pt-20">
-            <PageTransition>
-              {children}
-            </PageTransition>
-          </main>
-          <Footer />
-          <Chatbot />
+          <ClientShell>
+            {children}
+          </ClientShell>
         </ThemeProvider>
       </body>
     </html>
