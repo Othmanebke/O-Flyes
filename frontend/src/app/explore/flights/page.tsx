@@ -402,8 +402,14 @@ function FlightsContent() {
                                         <div className="min-w-0">
                                             <h3 className="text-lg font-serif text-white truncate">{flight.airline}</h3>
                                             <div className="flex gap-1.5 mt-1 flex-wrap">
+                                                <span className="bg-gold/10 text-gold text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">Aller-Retour</span>
                                                 <span className="bg-gold/10 text-gold text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{flight.class}</span>
                                                 <span className="bg-white/[0.05] text-white/30 text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{flight.type}</span>
+                                                {(flight as any).baggage && (
+                                                    <span className={`text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${(flight as any).baggage.includes('Sans') ? 'bg-zinc-800 text-zinc-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                                        {(flight as any).baggage}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

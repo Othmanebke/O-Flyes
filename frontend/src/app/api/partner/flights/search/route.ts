@@ -128,7 +128,7 @@ async function getAmadeusToken(): Promise<string | null> {
     }
 }
 
-async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string) {
+async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string, returnDate?: string) {
     const token = await getAmadeusToken();
     if (!token) return null;
 
@@ -141,6 +141,10 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
             max: '5',
             currencyCode: 'EUR',
         });
+        if (returnDate) {
+            params.append('returnDate', returnDate);
+        }
+        
         const res = await fetch(
             `https://test.api.amadeus.com/v2/shopping/flight-offers?${params}`,
             { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(6000) }
@@ -151,6 +155,10 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
         return (data.data || []).map((offer: any) => {
             const seg = offer.itineraries[0].segments[0];
             const price = parseFloat(offer.price.total);
+            const fareDetails = offer.travelerPricings[0].fareDetailsBySegment[0];
+            const includedBags = fareDetails.includedCheckedBags?.quantity || 0;
+            const baggageStatus = includedBags > 0 ? "Bagage cabine + soute" : "Sans bagage (cabine uniquement)";
+
             return {
                 id: offer.id,
                 airline: seg.carrierCode,
@@ -164,8 +172,9 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
                 price: Math.round(price),
                 currency: 'EUR',
                 type: offer.itineraries[0].segments.length === 1 ? 'Direct' : 'Escale',
-                class: offer.travelerPricings[0].fareDetailsBySegment[0].cabin === 'BUSINESS' ? 'Business' : 'Economy',
-                booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, airline: seg.carrierCode }),
+                class: fareDetails.cabin === 'BUSINESS' ? 'Business' : 'Economy',
+                baggage: baggageStatus,
+                booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, return: returnDate, airline: seg.carrierCode }),
             };
         });
     } catch {
@@ -186,7 +195,7 @@ export async function GET(request: Request) {
     const destCode = getIATA(destination);
 
     // ── Try Amadeus first ──────────────────────────────────────────────────
-    const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults, origin, destination);
+    const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults, origin, destination, returnDate);
     if (amadeusFlights && amadeusFlights.length > 0) {
         return NextResponse.json(amadeusFlights);
     }
@@ -229,6 +238,7 @@ export async function GET(request: Request) {
             currency: "EUR",
             type: isStop ? "1 escale" : "Direct",
             class: i === 3 ? "Business" : "Economy",
+            baggage: "Sans bagage (cabine uniquement)",
             booking_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
             google_flights_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
         };
