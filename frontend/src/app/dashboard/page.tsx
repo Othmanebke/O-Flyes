@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus } from "lucide-react";
+import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
 import TripProposal from "@/components/TripProposal";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
 import TripBudgetPanel from "@/components/TripBudgetPanel";
 
@@ -77,6 +77,7 @@ export default function DashboardPage() {
     const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'documents'>('overview');
+    const [replacementPrompt, setReplacementPrompt] = useState<{type: string, title: string} | null>(null);
 
     const [emailConnected, setEmailConnected] = useState(false);
     const [provider, setProvider] = useState<string>("local");
@@ -308,8 +309,13 @@ export default function DashboardPage() {
         if (!confirm("Supprimer cette réservation ?")) return;
         try {
             if (!selectedTrip) return;
+            const bookingToDelete = bookings.find(b => b.id === id);
             await axios.delete(`/api/trips/${selectedTrip.id}/items/${id}`);
             fetchBookings(selectedTrip.id);
+            if (bookingToDelete && (bookingToDelete.type === 'flight' || bookingToDelete.type === 'hotel' || bookingToDelete.type === 'activity')) {
+                setReplacementPrompt({ type: bookingToDelete.type, title: bookingToDelete.title });
+                setTimeout(() => setReplacementPrompt(null), 10000); // clear after 10s
+            }
         } catch (err) {
             console.error("Failed to delete booking", err);
         }
@@ -364,6 +370,40 @@ export default function DashboardPage() {
 
     return (
         <div className="flex font-sans min-h-[calc(100vh-80px)] relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+            {/* Smart Replacement Prompt (Toast) */}
+            <AnimatePresence>
+                {replacementPrompt && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] bg-[#141822] border border-gold/30 rounded-2xl p-4 shadow-2xl flex items-center gap-5 backdrop-blur-xl"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 shrink-0">
+                            <Sparkles className="w-5 h-5 text-gold" />
+                        </div>
+                        <div>
+                            <p className="text-white font-medium text-sm">Vous avez supprimé : {replacementPrompt.title}</p>
+                            <p className="text-zinc-400 text-xs mt-0.5">L'IA peut vous trouver une meilleure alternative.</p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                            <button 
+                                onClick={() => setReplacementPrompt(null)} 
+                                className="px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+                            >
+                                Ignorer
+                            </button>
+                            <Link 
+                                href={`/explore/${replacementPrompt.type}s?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`}
+                                className="px-4 py-2 bg-gold text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+                            >
+                                Trouver
+                            </Link>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
             {/* Sidebar */}
             <aside className="w-64 hidden md:flex flex-col sticky top-20 h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
 
@@ -834,6 +874,61 @@ export default function DashboardPage() {
                                 {activeTab === 'overview' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                                         <div className="lg:col-span-2 space-y-8">
+                                            {/* Actions Requises IA */}
+                                            {analysis && analysis.warnings.length > 0 && (
+                                                <div className="bg-gold/[0.03] border border-gold/20 rounded-2xl p-6 relative overflow-hidden">
+                                                    <div className="absolute top-0 right-0 w-64 h-64 bg-gold/[0.05] blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none" />
+                                                    <div className="flex items-center gap-3 mb-5 relative z-10">
+                                                        <Sparkles className="w-5 h-5 text-gold" />
+                                                        <h4 className="text-sm font-medium text-gold">Actions recommandées par l'IA</h4>
+                                                    </div>
+                                                    <div className="space-y-3 relative z-10">
+                                                        {analysis.coverage.missingOutboundFlight && (
+                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                                                                        <Plane className="w-4 h-4 text-orange-400" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-sm text-white font-medium">Vol aller manquant</p>
+                                                                        <p className="text-[10px] text-zinc-400">Aucun vol pour vous rendre à {getTripDestination(selectedTrip)}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <Link href={`/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Trouver</Link>
+                                                            </div>
+                                                        )}
+                                                        {analysis.coverage.missingHotelNights > 0 && (
+                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                                                        <MapPin className="w-4 h-4 text-blue-400" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-sm text-white font-medium">Hébergement incomplet</p>
+                                                                        <p className="text-[10px] text-zinc-400">Il vous manque {analysis.coverage.missingHotelNights} nuits à réserver</p>
+                                                                    </div>
+                                                                </div>
+                                                                <Link href={`/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Réserver</Link>
+                                                            </div>
+                                                        )}
+                                                        {!analysis.coverage.hasActivity && (
+                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                                                        <Compass className="w-4 h-4 text-emerald-400" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-sm text-white font-medium">Aucune activité prévue</p>
+                                                                        <p className="text-[10px] text-zinc-400">Enrichissez votre séjour avec des expériences locales</p>
+                                                                    </div>
+                                                                </div>
+                                                                <Link href={`/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Explorer</Link>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6">
                                                 <div className="flex items-center justify-between mb-5">
                                                     <h4 className="text-sm font-medium text-zinc-300">Compléter votre voyage</h4>
