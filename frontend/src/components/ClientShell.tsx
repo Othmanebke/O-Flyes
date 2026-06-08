@@ -7,7 +7,7 @@ import PlaneBackground from "@/components/PlaneBackground";
 import PageTransition, { FloatingParticles } from "@/components/PageTransition";
 
 /* Routes qui ont leur propre layout complet — on ne leur affiche ni Navbar, ni Footer */
-const STANDALONE_ROUTES = ["/dashboard", "/onboarding"];
+const STANDALONE_ROUTES = ["/onboarding"];
 
 export default function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

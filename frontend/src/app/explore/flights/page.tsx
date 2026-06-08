@@ -62,10 +62,11 @@ function FlightsContent() {
             }
         };
         checkAuth();
-        const defaultDest = destFromUrl || "New York";
-        if (destFromUrl) setDestSearch(destFromUrl);
+        const currentDest = searchParams.get("dest");
+        const defaultDest = currentDest || "New York";
+        if (currentDest) setDestSearch(currentDest);
         fetchFlights("Paris", defaultDest, departDate, returnDate, passengers);
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedOrigin(originSearch), 300);

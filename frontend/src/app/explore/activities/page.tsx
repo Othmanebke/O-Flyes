@@ -52,10 +52,11 @@ function ActivitiesContent() {
             }
         };
         checkAuth();
-        const defaultCity = destFromUrl || "Paris";
-        if (destFromUrl) setSearchTerm(destFromUrl);
+        const currentCity = searchParams.get("dest");
+        const defaultCity = currentCity || "Paris";
+        if (currentCity) setSearchTerm(currentCity);
         fetchActivities(defaultCity);
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedTerm(searchTerm), 300);

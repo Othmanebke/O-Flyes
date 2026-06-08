@@ -823,7 +823,17 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                                         <div className="lg:col-span-2 space-y-8">
                                             <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6">
-                                                <h4 className="text-sm font-medium text-zinc-300 mb-5">Compléter votre voyage</h4>
+                                                <div className="flex items-center justify-between mb-5">
+                                                    <h4 className="text-sm font-medium text-zinc-300">Compléter votre voyage</h4>
+                                                    {bookings.length > 0 && (
+                                                        <button 
+                                                            onClick={() => setActiveTab('itinerary')} 
+                                                            className="text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-white/70 transition-colors"
+                                                        >
+                                                            Gérer mes éléments ({bookings.length})
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div className="space-y-3">
                                                     {[
                                                         { href: `/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres · ajout direct au voyage" },
