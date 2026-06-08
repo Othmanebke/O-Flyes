@@ -351,9 +351,9 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="fixed inset-0 z-40 flex font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div className="flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Sidebar */}
-            <aside className="w-64 hidden md:flex flex-col pt-24" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
+            <aside className="w-64 hidden md:flex flex-col sticky top-20 h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
 
 
                 <nav className="flex-1 px-4 space-y-1">
@@ -406,12 +406,12 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden relative pt-24" style={{ backgroundColor: 'var(--bg-primary)' }}>
+            <main className="flex-1 flex flex-col relative min-h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 {/* Subtle top gradient */}
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none z-0" />
 
                 {/* Header */}
-                <header className="h-16 px-8 flex items-center justify-between flex-shrink-0 z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
+                <header className="h-16 px-8 flex items-center justify-between z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
                     <div className="flex items-center gap-4">
                         <h1 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                             {showSettings ? "Paramètres du compte" : (selectedTrip ? selectedTrip.title : "Vue Générale")}
@@ -447,7 +447,7 @@ export default function DashboardPage() {
                 </header>
 
                 {/* Scrollable Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 z-10">
+                <div className="flex-1 p-4 md:p-8 z-10">
                     <div className="max-w-6xl mx-auto">
                         {showSettings ? (
                             /* Settings View */
