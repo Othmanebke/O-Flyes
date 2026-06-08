@@ -12,6 +12,7 @@ interface RoadtripStep {
     country: string;
     description: string;
     transportToNext?: string;
+    estimatedCost?: string;
     activities: string[];
 }
 
