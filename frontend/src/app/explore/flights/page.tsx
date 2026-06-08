@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight, ChevronRight } from "lucide-react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
+import { Suspense } from "react";
+import TripContextBanner from "@/components/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Flight {
@@ -24,6 +26,9 @@ interface Flight {
 }
 
 export default function FlightsPage() {
+    const searchParams = useSearchParams();
+    const tripIdFromUrl = searchParams.get("tripId");
+    const destFromUrl = searchParams.get("dest");
     const router = useRouter();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,7 +62,9 @@ export default function FlightsPage() {
             }
         };
         checkAuth();
-        fetchFlights("Paris", "New York", departDate, returnDate, passengers);
+        const defaultDest = destFromUrl || "New York";
+        if (destFromUrl) setDestSearch(destFromUrl);
+        fetchFlights("Paris", defaultDest, departDate, returnDate, passengers);
     }, []);
 
     useEffect(() => {
@@ -134,8 +141,31 @@ export default function FlightsPage() {
     const handleBook = async (flight: Flight) => {
         if (!userId) { router.push("/auth/login"); return; }
         setSelectedFlight(flight);
-        if (trips.length > 0) setShowTripSelector(true);
-        else window.open(flight.booking_url, "_blank");
+        if (tripIdFromUrl) {
+            await confirmBookingDirect(flight, tripIdFromUrl);
+        } else if (trips.length > 0) {
+            setShowTripSelector(true);
+        } else {
+            window.open(flight.booking_url, "_blank");
+        }
+    };
+
+    const confirmBookingDirect = async (flight: Flight, tripId: string) => {
+        try {
+            await axios.post(`/api/trips/${tripId}/items`, {
+                type: 'flight',
+                title: `Vol ${flight.airline} : ${flight.originCode} → ${flight.destinationCode}`,
+                provider: flight.airline,
+                price_estimate: flight.price,
+                external_url: flight.booking_url
+            });
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
+            alert(`✓ Vol ajouté au voyage ! Ouverture de la réservation...`);
+            window.open(flight.booking_url, "_blank");
+        } catch (err) {
+            console.error("Failed direct booking", err);
+            window.open(flight.booking_url, "_blank");
+        }
     };
 
     const confirmBooking = async (tripId: string) => {
@@ -158,7 +188,10 @@ export default function FlightsPage() {
     };
 
     return (
-        <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+        <>
+            <TripContextBanner />
+            <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
             <div className="relative h-[70vh] min-h-[500px]">
@@ -517,5 +550,7 @@ export default function FlightsPage() {
                 )}
             </AnimatePresence>
         </div>
+        </>
+        </Suspense>
     );
 }

@@ -8,6 +8,7 @@ import BookingShoppingModal, { BookingData } from "@/components/shopping/Booking
 import TripProposal from "@/components/TripProposal";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
+import TripBudgetPanel from "@/components/TripBudgetPanel";
 
 interface Trip {
     id: string;
@@ -809,9 +810,15 @@ export default function DashboardPage() {
                                                 </div>
                                             </motion.div>
                                         )}
+                                        
+                                        {bookings.length > 0 && (
+                                            <TripBudgetPanel
+                                                bookings={bookings}
+                                                tripTitle={selectedTrip?.title || ""}
+                                            />
+                                        )}
                                     </div>
                                 )}
-
                                 {activeTab === 'overview' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                                         <div className="lg:col-span-2 space-y-8">
@@ -819,9 +826,9 @@ export default function DashboardPage() {
                                                 <h4 className="text-sm font-medium text-zinc-300 mb-5">Compléter votre voyage</h4>
                                                 <div className="space-y-3">
                                                     {[
-                                                        { href: "/explore/flights", emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres" },
-                                                        { href: "/explore/hotels", emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet" },
-                                                        { href: "/explore/activities", emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques à chaque destination" },
+                                                        { href: `/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres · ajout direct au voyage" },
+                                                        { href: `/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
+                                                        { href: `/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
                                                     ].map(item => (
                                                         <Link key={item.href} href={item.href} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
                                                             <span className="text-2xl flex-shrink-0">{item.emoji}</span>

@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Star, ArrowRight, Sparkles, Compass } from "lucide-react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
+import { Suspense } from "react";
+import TripContextBanner from "@/components/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Activity {
@@ -24,6 +26,9 @@ interface Activity {
 }
 
 export default function ActivitiesPage() {
+    const searchParams = useSearchParams();
+    const tripIdFromUrl = searchParams.get("tripId");
+    const destFromUrl = searchParams.get("dest");
     const router = useRouter();
     const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,7 +52,9 @@ export default function ActivitiesPage() {
             }
         };
         checkAuth();
-        fetchActivities("Paris");
+        const defaultCity = destFromUrl || "Paris";
+        if (destFromUrl) setSearchTerm(destFromUrl);
+        fetchActivities(defaultCity);
     }, []);
 
     useEffect(() => {
@@ -89,8 +96,23 @@ export default function ActivitiesPage() {
     const handleBook = async (activity: Activity) => {
         if (!userId) { router.push("/auth/login"); return; }
         setSelectedActivity(activity);
-        if (trips.length > 0) setShowTripSelector(true);
-        else { trackClick("activity"); window.open(activity.booking_url, "_blank"); }
+        if (tripIdFromUrl) {
+            await confirmBookingDirect(activity, tripIdFromUrl);
+        } else if (trips.length > 0) {
+            setShowTripSelector(true);
+        } else { trackClick("activity"); window.open(activity.booking_url, "_blank"); }
+    };
+
+    const confirmBookingDirect = async (activity: Activity, tripId: string) => {
+        try {
+            await axios.post(`/api/trips/${tripId}/items`, {
+                type: "activity", title: activity.title, provider: activity.category || "Activité",
+                price_estimate: activity.price, external_url: activity.booking_url
+            });
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
+            alert(`✓ Activité ajoutée au voyage !`);
+            window.open(activity.booking_url, "_blank");
+        } catch { window.open(activity.booking_url, "_blank"); }
     };
     const confirmBooking = async (tripId: string) => {
         if (!selectedActivity || !userId) return;
@@ -108,7 +130,10 @@ export default function ActivitiesPage() {
     };
 
     return (
-        <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+        <>
+            <TripContextBanner />
+            <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ──────────────────────────────────────────────── */}
             <div className="relative h-[70vh] min-h-[500px]">
@@ -336,5 +361,7 @@ export default function ActivitiesPage() {
                 )}
             </AnimatePresence>
         </div>
+        </>
+        </Suspense>
     );
 }

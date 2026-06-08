@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass, Calendar, Users } from "lucide-react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
+import { Suspense } from "react";
+import TripContextBanner from "@/components/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Hotel {
@@ -14,6 +16,9 @@ interface Hotel {
 }
 
 export default function HotelsPage() {
+    const searchParams = useSearchParams();
+    const tripIdFromUrl = searchParams.get("tripId");
+    const destFromUrl = searchParams.get("dest");
     const router = useRouter();
     const [hotels, setHotels] = useState<Hotel[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,7 +51,9 @@ export default function HotelsPage() {
             }
         };
         checkAuth();
-        fetchHotels("Paris");
+        const defaultCity = destFromUrl || "Paris";
+        if (destFromUrl) setSearchTerm(destFromUrl);
+        fetchHotels(defaultCity);
     }, []);
 
     useEffect(() => {
@@ -99,8 +106,23 @@ export default function HotelsPage() {
     const handleBook = async (hotel: Hotel) => {
         if (!userId) { router.push("/auth/login"); return; }
         setSelectedHotel(hotel);
-        if (trips.length > 0) setShowTripSelector(true);
-        else { trackClick("hotel"); window.open(hotel.booking_url, "_blank"); }
+        if (tripIdFromUrl) {
+            await confirmBookingDirect(hotel, tripIdFromUrl);
+        } else if (trips.length > 0) {
+            setShowTripSelector(true);
+        } else { trackClick("hotel"); window.open(hotel.booking_url, "_blank"); }
+    };
+
+    const confirmBookingDirect = async (hotel: Hotel, tripId: string) => {
+        try {
+            await axios.post(`/api/trips/${tripId}/items`, {
+                type: "hotel", title: hotel.name, provider: hotel.category || "Hotel",
+                price_estimate: hotel.price_per_night, external_url: hotel.booking_url
+            });
+            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
+            alert(`✓ Hôtel ajouté au voyage !`);
+            window.open(hotel.booking_url, "_blank");
+        } catch { window.open(hotel.booking_url, "_blank"); }
     };
     const confirmBooking = async (tripId: string) => {
         if (!selectedHotel || !userId) return;
@@ -118,7 +140,10 @@ export default function HotelsPage() {
     };
 
     return (
-        <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+        <>
+            <TripContextBanner />
+            <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ──────────────────────────────────────────────── */}
             <div className="relative h-[70vh] min-h-[500px]">
@@ -396,5 +421,7 @@ export default function HotelsPage() {
                 )}
             </AnimatePresence>
         </div>
+        </>
+        </Suspense>
     );
 }
