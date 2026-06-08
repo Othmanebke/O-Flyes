@@ -53,7 +53,7 @@ interface TripAnalysis {
     score: number;
 }
 
-export const getTripDestination = (trip: Trip | null): string => {
+const getTripDestination = (trip: Trip | null): string => {
     if (!trip) return '';
     if (trip.destination_name) return trip.destination_name;
     if (trip.title) {
@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
                                 )}
 
                                 {activeTab === 'proposal' && selectedTrip && (
-                                    <TripProposal tripId={selectedTrip.id} />
+                                    <TripProposal tripId={selectedTrip.id} destinationName={getTripDestination(selectedTrip)} />
                                 )}
 
                                 {activeTab === 'documents' && (

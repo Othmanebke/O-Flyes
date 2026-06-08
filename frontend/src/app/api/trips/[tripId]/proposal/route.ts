@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { generateTripProposal } from '@/lib/agents/pipeline';
+import { runRoadtripAgent } from '@/lib/agents/roadtripAgent';
 import type { TripContext } from '@/lib/agents/types';
 
 const generateProposalSchema = z.object({
@@ -11,11 +11,6 @@ const generateProposalSchema = z.object({
     travelers: z.number().int().positive().max(20).optional(),
 });
 
-// Trips saved from chatbot/recommendation suggestions have no destinations FK
-// match (local catalog ids aren't real UUIDs), so destination_id stays null and
-// the only trace of the chosen place is the title ("Voyage à X" / "Voyage : X").
-// Parse it back out so destination-agent confirms the SAME place the user saved
-// instead of guessing a different one from scratch.
 function extractDestinationFromTitle(title: string): string | null {
     const match = title.match(/^Voyage\s*[:à]\s*(.+)$/i);
     return match ? match[1].trim() || null : null;
@@ -39,27 +34,11 @@ function buildPreferencesText(prefs: Record<string, unknown> | null | undefined)
     return parts.join(' ; ');
 }
 
-// Returns the previously generated & persisted proposal for this trip, if any.
+// NOTE: We don't fetch from DB in GET anymore, we return 404 so the frontend knows it has to generate or load from local storage.
 export async function GET(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { data: trip, error } = await supabase
-        .from('trips')
-        .select('id, proposal_json, proposal_generated_at')
-        .eq('id', params.tripId)
-        .single();
-
-    if (error || !trip) {
-        return NextResponse.json({ error: 'Trip not found or unauthorized' }, { status: 404 });
-    }
-
-    return NextResponse.json({ proposal: trip.proposal_json || null, generatedAt: trip.proposal_generated_at || null });
+    return NextResponse.json({ proposal: null, generatedAt: null });
 }
 
-// Runs the full multi-agent pipeline (destination → transport/activities/safety → budget → orchestrator)
-// grounded in real flight/hotel/activity data, then persists the result on the trip.
 export async function POST(request: Request, { params }: { params: { tripId: string } }) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -100,15 +79,10 @@ export async function POST(request: Request, { params }: { params: { tripId: str
             preferences: validated.preferences?.trim() || buildPreferencesText(prefs),
         };
 
-        const proposal = await generateTripProposal(context);
+        const proposal = await runRoadtripAgent(context);
 
-        const { error: updateError } = await supabase
-            .from('trips')
-            .update({ proposal_json: proposal, proposal_generated_at: proposal.generatedAt })
-            .eq('id', trip.id);
-
-        if (updateError) throw updateError;
-
+        // We DO NOT save to the database here to avoid the missing column error.
+        // The frontend will save it in localStorage.
         return NextResponse.json({ proposal, generatedAt: proposal.generatedAt }, { status: 201 });
     } catch (err: unknown) {
         if (err instanceof z.ZodError) {
