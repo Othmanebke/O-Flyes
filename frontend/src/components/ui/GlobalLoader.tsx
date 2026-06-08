@@ -2,10 +2,16 @@
 
 import { motion } from "framer-motion";
 import { Plane, Globe, Compass, Stars } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function GlobalLoader() {
+interface GlobalLoaderProps {
+    /** Appelé une seule fois lorsque la barre de progression atteint 100%. */
+    onComplete?: () => void;
+}
+
+export default function GlobalLoader({ onComplete }: GlobalLoaderProps) {
     const [progress, setProgress] = useState(0);
+    const completedRef = useRef(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -20,6 +26,13 @@ export default function GlobalLoader() {
         }, 150);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (progress >= 100 && !completedRef.current) {
+            completedRef.current = true;
+            onComplete?.();
+        }
+    }, [progress, onComplete]);
 
     return (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0A0D14] overflow-hidden">
