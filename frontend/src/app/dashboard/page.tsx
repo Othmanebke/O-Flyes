@@ -840,15 +840,16 @@ export default function DashboardPage() {
                                                         { href: `/explore/hotels`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
                                                         { href: `/explore/activities`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
                                                     ].map(item => {
-                                                        if (selectedTrip?.destination_name) return selectedTrip.destination_name;
-                                                        if (selectedTrip?.title) {
-                                                            let t = selectedTrip.title;
-                                                            if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
-                                                            if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
-                                                            return t;
-                                                        }
-                                                        return '';
-                                                    };
+                                                        const getDest = () => {
+                                                            if (selectedTrip?.destination_name) return selectedTrip.destination_name;
+                                                            if (selectedTrip?.title) {
+                                                                let t = selectedTrip.title;
+                                                                if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
+                                                                if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
+                                                                return t;
+                                                            }
+                                                            return '';
+                                                        };
                                                     
                                                     return (
                                                         <Link key={item.href} href={`${item.href}?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getDest())}`} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
