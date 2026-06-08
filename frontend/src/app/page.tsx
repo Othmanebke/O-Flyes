@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { useState, useEffect, useCallback, FormEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const HERO_SLIDES = [
@@ -26,57 +26,15 @@ const faqs = [
   { q: "Quelle est la différence entre le plan Gratuit et Pro ?", a: "Le plan Gratuit donne accès à 5 requêtes IA par mois et au dashboard de base. Le plan Pro (9,99€/mois) offre l'IA illimitée, Smart Sync Gmail/Outlook et l'export PDF de vos itinéraires." },
 ];
 
-const INTERESTS_LIST = ["Soleil", "Culture", "Nature", "Food", "Luxe", "Petit budget"];
-
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState(-1);
   const [transitioning, setTransitioning] = useState(false);
 
-  // AI Form State
-  const [budget, setBudget] = useState(1500);
-  const [duration, setDuration] = useState(7);
-  const [period, setPeriod] = useState("Flexible");
-  const [departure, setDeparture] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
-
-  // Opens AIVANA's chatbot with the form's criteria as a preset prompt — the
-  // chatbot is grounded in real flight/hotel/activity data (see /api/chat),
-  // so this replaces the old fake "generate recommendations" mock flow.
-  const openChatWithCriteria = (params: { budget: number; duration: number; period: string; departure: string; interests: string[] }) => {
-    const text = `Budget ${params.budget}€, ${params.period}, ${params.duration} jours, départ ${params.departure || "n'importe où"}, envie: ${params.interests.join(", ") || "découverte"}. Propose 3 destinations + hôtels avec de vrais prix.`;
-    window.dispatchEvent(
-      new CustomEvent("chatbot-preset", {
-        detail: { text, autoSend: true, open: true }
-      })
-    );
-  };
-
-  const triggerChatbotWithPreset = () => {
-    console.log("open_chat_from_home");
-    openChatWithCriteria({ budget, duration, period, departure, interests });
-  };
-
-  const toggleInterest = (i: string) => {
-    setInterests(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
-  };
-
-  const handleDiscuss = (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    console.log("discuss_with_ai_click", { budget, duration, period, departure, interests });
-    openChatWithCriteria({ budget, duration, period, departure, interests });
-  };
-
-  const loadExample = () => {
-    console.log("example_click");
-    const example = { budget: 900, duration: 5, period: "Mai", departure: "Paris", interests: ["Soleil"] };
-    setBudget(example.budget);
-    setPeriod(example.period);
-    setDuration(example.duration);
-    setDeparture(example.departure);
-    setInterests(example.interests);
-    openChatWithCriteria(example);
+  // Opens AIVANA's chatbot — grounded in real flight/hotel/activity data (see /api/chat).
+  const openChatbot = () => {
+    window.dispatchEvent(new CustomEvent("open-chatbot"));
   };
 
   const goTo = useCallback((idx: number) => {
@@ -118,130 +76,49 @@ export default function HomePage() {
 
         {/* Content */}
         <div className="relative z-20 w-full pt-32 md:pt-40">
-          <div className="max-w-6xl mx-auto px-8 pb-16">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-              {/* Left – dynamic title */}
-              <div className="max-w-lg">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={slide}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-px bg-white/40" />
-                      <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
-                      <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
-                        Assistant IA
-                      </span>
-                    </div>
-                    <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] drop-shadow-lg">
-                      L&apos;aventure sur mesure,<br />sans l&apos;effort.
-                    </h1>
-                    <p className="text-white/70 text-sm md:text-base mt-4 mb-4 max-w-lg leading-relaxed">
-                      Décrivez votre voyage idéal, l&apos;IA génère un itinéraire complet en 5 secondes. Destinations, hôtels, budget — tout centralisé dans votre dashboard.
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+          <div className="max-w-4xl mx-auto px-8 pb-16 text-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={slide}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex items-center justify-center gap-3 mb-6">
+                  <div className="w-8 h-px bg-white/40" />
+                  <span className="text-white/70 text-[11px] tracking-widest uppercase">AIVANA</span>
+                  <span className="text-gold text-[11px] tracking-wide uppercase border border-gold/40 px-2 py-0.5 rounded-full">
+                    Assistant IA
+                  </span>
+                  <div className="w-8 h-px bg-white/40" />
+                </div>
+                <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[1.1] drop-shadow-lg">
+                  L&apos;aventure sur mesure,<br /><span className="italic text-gold-200">sans l&apos;effort.</span>
+                </h1>
+                <p className="text-white/70 text-base md:text-lg mt-6 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  Décrivez votre voyage idéal, l&apos;IA génère un itinéraire complet en quelques secondes — destinations, hôtels et activités avec de vrais prix, le tout centralisé dans votre dashboard.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <button onClick={openChatbot} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)] px-8 py-4 text-base flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Discuter avec AIVANA
+                  </button>
+                  <Link href="/explore" className="inline-flex items-center justify-center gap-2 border border-white/25 backdrop-blur-md text-white text-sm font-semibold px-8 py-4 rounded-xl hover:bg-white/10 transition-all">
+                    Explorer les destinations <ArrowUpRight className="w-4 h-4" />
+                  </Link>
+                </div>
 
-              {/* Right - Form Container */}
-              <div id="assistant" className="w-full lg:w-[480px] backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden" style={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none" />
-
-                <form onSubmit={handleDiscuss} className="relative z-10 space-y-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-gold" />
-                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Où partir ?</h3>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Budget */}
-                    <div>
-                      <div className="flex justify-between items-end mb-2">
-                        <label className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'var(--text-secondary)' }}>Budget Total</label>
-                        <span className="text-xl font-bold text-gold">{budget} €</span>
-                      </div>
-                      <input
-                        type="range" min="200" max="8000" step="50" value={budget} onChange={(e) => setBudget(Number(e.target.value))}
-                        className="w-full accent-gold h-1.5 rounded-lg appearance-none cursor-pointer"
-                        style={{ backgroundColor: 'var(--border-color)' }}
-                      />
-                    </div>
-
-                    {/* Ligne 2: Durée & Période */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Durée</label>
-                        <select
-                          value={duration} onChange={(e) => setDuration(Number(e.target.value))}
-                          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50 appearance-none"
-                          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                        >
-                          {[3, 5, 7, 10, 14, 21].map(d => <option key={d} value={d}>{d} jours</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Période</label>
-                        <select
-                          value={period} onChange={(e) => setPeriod(e.target.value)}
-                          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50 appearance-none"
-                          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                        >
-                          <option value="Flexible">Flexible</option>
-                          {["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"].map(m => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Départ */}
-                    <div>
-                      <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Départ (Optionnel)</label>
-                      <input
-                        type="text" placeholder="Ex: Paris, Lyon..." value={departure} onChange={(e) => setDeparture(e.target.value)}
-                        className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold/50"
-                        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                      />
-                    </div>
-
-                    {/* Envies */}
-                    <div>
-                      <label className="block text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Envies</label>
-                      <div className="flex flex-wrap gap-2">
-                        {INTERESTS_LIST.map(interest => (
-                          <button
-                            key={interest} type="button" onClick={() => toggleInterest(interest)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${interests.includes(interest)
-                              ? "bg-gold border-gold"
-                              : ""
-                              }`}
-                            style={interests.includes(interest) ? { color: 'var(--text-inverse)' } : { backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', borderColor: 'var(--border-color)' }}
-                          >
-                            {interest}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                    <button type="submit" className="flex-1 btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)] py-3.5 flex items-center justify-center gap-2">
-                      <Sparkles className="w-4 h-4" /> Discuter avec AIVANA
-                    </button>
-                    <button type="button" onClick={loadExample} className="sm:w-auto px-6 py-3.5 rounded-xl text-sm font-bold hover:bg-gold/10 transition-colors" style={{ border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                      Voir un exemple
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+                {/* Trust strip */}
+                <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-14 text-white/50 text-[11px] uppercase tracking-widest">
+                  <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-gold" /> Itinéraire généré en quelques secondes</span>
+                  <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-gold" /> Vols, hôtels & activités à prix réels</span>
+                  <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-gold" /> Dashboard centralisé</span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
 
             {/* Controls — arrows + dots */}
-            <div className="flex items-center gap-4 mt-10">
+            <div className="flex items-center justify-center gap-4 mt-16">
               <button onClick={prev} className="w-9 h-9 rounded-full border border-white/20 hover:border-white/50 flex items-center justify-center text-white/50 hover:text-white transition-all">
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -410,7 +287,7 @@ export default function HomePage() {
                 gravés dans les mémoires. Chaque recommandation est pensée pour
                 correspondre exactement à votre profil de voyageur.
               </p>
-              <button onClick={triggerChatbotWithPreset} className="btn-gold">
+              <button onClick={openChatbot} className="btn-gold">
                 Parler à notre IA
                 <ArrowUpRight className="w-4 h-4" />
               </button>
@@ -457,7 +334,7 @@ export default function HomePage() {
             </div>
             {/* CTA button center bottom */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
-              <button onClick={() => document.getElementById("assistant")?.scrollIntoView({ behavior: "smooth" })} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]">
+              <button onClick={openChatbot} className="btn-gold shadow-[0_0_30px_rgba(201,168,76,0.3)]">
                 <Sparkles className="w-4 h-4" />
                 Démarrer la planification
               </button>
@@ -475,7 +352,7 @@ export default function HomePage() {
               <h2 className="font-serif text-4xl leading-tight" style={{ color: 'var(--text-primary)' }}>
                 Tout ce que vous devez<br />savoir avant de<br />commencer
               </h2>
-              <button onClick={triggerChatbotWithPreset} className="btn-gold mt-8">
+              <button onClick={openChatbot} className="btn-gold mt-8">
                 Poser une question
                 <ArrowUpRight className="w-4 h-4" />
               </button>

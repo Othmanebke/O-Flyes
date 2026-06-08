@@ -1,7 +1,8 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown } from "lucide-react";
+import axios from "axios";
+import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -299,7 +300,15 @@ const BUDGET_BADGE: Record<string, string> = {
 };
 const STYLES = ["Tous", "plage", "culture", "nature", "aventure", "gastronomie", "bien-être", "luxe"];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Estimations live (vol + hôtel) ───────────────────────────────────────────
+interface LiveEstimate {
+  flightFrom: number | null;
+  hotelFrom: number | null;
+  estimatedTotal: number | null;
+}
+
+const NIGHTS = 14;
+
 export default function ExplorePage() {
   const [continent, setContinent] = useState("Tous");
   const [budgetTier, setBudgetTier] = useState("tous");
@@ -315,6 +324,51 @@ export default function ExplorePage() {
 
   const topFive = DESTINATIONS.filter(d => d.topDest);
   const activeCount = (continent !== "Tous" ? 1 : 0) + (budgetTier !== "tous" ? 1 : 0) + (style !== "Tous" ? 1 : 0);
+
+  // ── Estimations réelles vol + hôtel pour chaque destination du Top 5 ──
+  const [liveEstimates, setLiveEstimates] = useState<Record<string, LiveEstimate>>({});
+  const [loadingEstimates, setLoadingEstimates] = useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingEstimates(true);
+    Promise.allSettled(
+      topFive.map(d => Promise.allSettled([
+        axios.get("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
+        axios.get("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
+      ]))
+    ).then(results => {
+      if (cancelled) return;
+      const next: Record<string, LiveEstimate> = {};
+      results.forEach((res, i) => {
+        const d = topFive[i];
+        if (res.status !== "fulfilled") { next[d.id] = { flightFrom: null, hotelFrom: null, estimatedTotal: null }; return; }
+        const [flightsRes, hotelsRes] = res.value;
+        const flights = flightsRes.status === "fulfilled" ? (flightsRes.value.data as Array<{ price: number }>) : [];
+        const hotels = hotelsRes.status === "fulfilled" ? (hotelsRes.value.data as Array<{ price_per_night: number }>) : [];
+        const flightFrom = flights.length ? Math.min(...flights.map(f => f.price)) : null;
+        const hotelFrom = hotels.length ? Math.min(...hotels.map(h => h.price_per_night)) : null;
+        const estimatedTotal = (flightFrom !== null && hotelFrom !== null) ? (flightFrom * 2) + (hotelFrom * NIGHTS) : null;
+        next[d.id] = { flightFrom, hotelFrom, estimatedTotal };
+      });
+      setLiveEstimates(next);
+      setLoadingEstimates(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Seules les destinations avec une estimation réelle (vol + hôtel) sont affichées dans le carrousel
+  const topFiveWithRealData = topFive.filter(d => {
+    const est = liveEstimates[d.id];
+    return est && est.flightFrom !== null && est.hotelFrom !== null;
+  });
+
+  const scrollCarousel = (dir: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -420 : 420, behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -354,47 +408,80 @@ export default function ExplorePage() {
             Vol + hôtel pour 2 personnes<br />sur 2 semaines depuis Paris
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {topFive.map((d, i) => (
-            <motion.div
-              key={d.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className={`relative rounded-3xl overflow-hidden group hover:shadow-[0_0_30px_rgba(201,168,76,0.15)] transition-all ${i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}`}
-            >
-              <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              <div className="absolute top-3 left-3">
-                <span className="text-[10px] font-semibold backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(20,24,34,0.9)' }}>{d.continentRank}</span>
+        {loadingEstimates ? (
+          <div className="flex gap-4 overflow-hidden">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="shrink-0 w-[300px] sm:w-[360px] h-[420px] rounded-3xl animate-pulse bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-gold/40 animate-spin" />
               </div>
-              <div className="absolute top-3 right-3">
-                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
-                  {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
-                </span>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-center gap-1 mb-2">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-gold text-gold" : "text-white/20"}`} />
-                  ))}
-                  <span className="text-white/60 text-[10px] ml-1">{d.rating}</span>
-                </div>
-                <h3 className="font-serif text-2xl text-white leading-tight mb-1">{d.name}</h3>
-                <p className="text-white/60 text-xs mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" />{d.country}</p>
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-3 border border-white/5">
-                  <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1.5">Budget total 2 pers / 2 sem</p>
-                  <p className="text-white font-bold text-lg">{d.tripBudget.min.toLocaleString()}€ <span className="text-white/50 text-sm font-normal">— {d.tripBudget.max.toLocaleString()}€</span></p>
-                  <div className="flex gap-3 mt-1.5">
-                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5 text-gold/80" /> Vol ~{d.flightFrom}€/pers</span>
-                    <span className="text-white/60 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5 text-gold/80" /> Hôtel ~{d.hotelPerNight}€/nuit</span>
-                  </div>
-                </div>
-                <p className="text-gold-200/80 text-xs italic leading-snug">&ldquo;{d.highlight}&rdquo;</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : topFiveWithRealData.length === 0 ? (
+          <div className="rounded-3xl p-12 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Aucune estimation de prix réelle disponible pour le moment. Réessayez dans quelques instants.</p>
+          </div>
+        ) : (
+          <div className="relative group/carousel">
+            <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {topFiveWithRealData.map((d, i) => {
+                const est = liveEstimates[d.id];
+                return (
+                  <motion.div
+                    key={d.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1, duration: 0.5 }}
+                    className="relative shrink-0 w-[300px] sm:w-[360px] rounded-3xl overflow-hidden group hover:shadow-[0_0_30px_rgba(201,168,76,0.15)] transition-all snap-start"
+                  >
+                    <Link href={`/destination/${d.id}`} className="block">
+                      <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                      <div className="absolute top-3 left-3">
+                        <span className="text-[10px] font-semibold backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(20,24,34,0.9)' }}>{d.continentRank}</span>
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
+                          {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-5">
+                        <div className="flex items-center gap-1 mb-2">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star key={idx} className={`w-3 h-3 ${idx < Math.floor(d.rating) ? "fill-gold text-gold" : "text-white/20"}`} />
+                          ))}
+                          <span className="text-white/60 text-[10px] ml-1">{d.rating}</span>
+                        </div>
+                        <h3 className="font-serif text-2xl text-white leading-tight mb-1">{d.name}</h3>
+                        <p className="text-white/60 text-xs mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" />{d.country}</p>
+                        <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 mb-3 border border-white/5">
+                          <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                            Estimation réelle — 2 pers / 2 sem
+                          </p>
+                          <p className="text-white font-bold text-lg">{est?.estimatedTotal?.toLocaleString()}€ <span className="text-white/50 text-sm font-normal">estimé</span></p>
+                          <div className="flex gap-3 mt-1.5">
+                            <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5 text-gold/80" /> Vol dès {est?.flightFrom}€/pers</span>
+                            <span className="text-white/60 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5 text-gold/80" /> Hôtel dès {est?.hotelFrom}€/nuit</span>
+                          </div>
+                        </div>
+                        <p className="text-gold-200/80 text-xs italic leading-snug">&ldquo;{d.highlight}&rdquo;</p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+            {/* Carousel controls */}
+            <button type="button" onClick={() => scrollCarousel("left")}
+              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center bg-[#0A0D14]/90 border border-white/10 text-white/60 hover:text-gold hover:border-gold/40 backdrop-blur-md shadow-xl transition-all opacity-0 group-hover/carousel:opacity-100 z-10">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={() => scrollCarousel("right")}
+              className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full items-center justify-center bg-[#0A0D14]/90 border border-white/10 text-white/60 hover:text-gold hover:border-gold/40 backdrop-blur-md shadow-xl transition-all opacity-0 group-hover/carousel:opacity-100 z-10">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ═══ FILTRES ═════════════════════════════════════════════════════════ */}

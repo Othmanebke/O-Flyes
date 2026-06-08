@@ -1,10 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import {
-    MapPin, Star, Plane, Hotel, Car, Calendar, ArrowLeft,
-    Clock, Users, Wifi, Waves, Utensils, Dumbbell, Wind,
-    ChevronRight, Sparkles, CheckCircle2
+    MapPin, Star, Plane, Hotel, Calendar, ArrowLeft,
+    Clock, Wifi, Waves, Utensils, Dumbbell, Wind,
+    ExternalLink, Sparkles, CheckCircle2, AlertTriangle
 } from "lucide-react";
 import { DESTINATIONS, BUDGET_BADGE, BUDGET_TIERS, ALL_MONTHS } from "@/lib/destinations";
 
@@ -12,6 +14,30 @@ import { DESTINATIONS, BUDGET_BADGE, BUDGET_TIERS, ALL_MONTHS } from "@/lib/dest
 const BUDGET_LABEL: Record<string, string> = {
     petit: "Essentiel", moyen: "Confort", confort: "Premium", luxe: "Prestige"
 };
+
+// Real, live-fetched data — mirrors the shapes returned by /api/partner/* routes
+// (Amadeus / OpenTripMap when available, smart per-city fallbacks with real booking links otherwise)
+interface RealFlight { id: string; airline: string; duration: string; price: number; currency: string; type: string; class?: string; booking_url: string; }
+interface RealHotel { id: string; name: string; price_per_night: number; currency: string; rating: number | string; stars: number; category: string; image_url: string; description: string; amenities: string[]; booking_url: string; }
+interface RealActivity { id: string; title: string; category: string; price: number; currency: string; duration: string; rating: number | string; image_url: string; description: string; booking_url: string; }
+
+function SkeletonCards({ count, className }: { count: number; className: string }) {
+    return (
+        <>
+            {Array.from({ length: count }).map((_, i) => (
+                <div key={i} className={`bg-sand-50 border border-gray-100 rounded-2xl animate-pulse ${className}`} />
+            ))}
+        </>
+    );
+}
+
+function NoRealData({ label }: { label: string }) {
+    return (
+        <p className="text-sm text-gray-400 flex items-center gap-2 bg-sand-50 border border-gray-100 rounded-2xl px-5 py-4">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" /> {label}
+        </p>
+    );
+}
 
 const amenityIcon: Record<string, React.ReactNode> = {
     "WiFi": <Wifi className="w-3 h-3" />,
@@ -35,9 +61,39 @@ function Stars({ n, max = 5 }: { n: number; max?: number }) {
 export default function DestinationDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
     const d = DESTINATIONS.find(x => x.id === id);
+
+    // ── Real, live travel data — fetched per destination, never invented ──────
+    const [flights, setFlights] = useState<RealFlight[] | null>(null);
+    const [hotels, setHotels] = useState<RealHotel[] | null>(null);
+    const [activities, setActivities] = useState<RealActivity[] | null>(null);
+    const [loadingTravel, setLoadingTravel] = useState(true);
+
+    useEffect(() => {
+        if (!d) return;
+        let cancelled = false;
+        setLoadingTravel(true);
+        Promise.allSettled([
+            axios.get<RealFlight[]>("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
+            axios.get<RealHotel[]>("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
+            axios.get<RealActivity[]>("/api/partner/activities/search", { params: { city: d.name } }),
+        ]).then(([f, h, a]) => {
+            if (cancelled) return;
+            setFlights(f.status === "fulfilled" ? f.value.data : []);
+            setHotels(h.status === "fulfilled" ? h.value.data : []);
+            setActivities(a.status === "fulfilled" ? a.value.data : []);
+            setLoadingTravel(false);
+        });
+        return () => { cancelled = true; };
+    }, [d?.name]);
+
     if (!d) notFound();
 
     const budgetInfo = BUDGET_TIERS.find(b => b.id === d.budgetTier);
+    const sortedFlights = flights ? [...flights].sort((a, b) => a.price - b.price) : null;
+    const sortedHotels = hotels ? [...hotels].sort((a, b) => a.price_per_night - b.price_per_night) : null;
+    const cheapestFlight = sortedFlights && sortedFlights.length > 0 ? sortedFlights[0] : null;
+    const cheapestHotel = sortedHotels && sortedHotels.length > 0 ? sortedHotels[0] : null;
+    const estimatedTotal = cheapestFlight && cheapestHotel ? cheapestFlight.price * 2 + cheapestHotel.price_per_night * 7 : null;
 
     return (
         <div className="bg-[#f9f7f4] min-h-screen -mt-20">
@@ -96,23 +152,41 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                 <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex flex-wrap gap-6 items-center justify-between">
                     <div className="flex flex-wrap gap-8">
                         <div>
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Budget total 2 pers / 2 sem</p>
-                            <p className="text-xl font-bold text-dark-900">{d.tripBudget.min.toLocaleString()}€ <span className="text-gray-400 font-normal text-base">— {d.tripBudget.max.toLocaleString()}€</span></p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Estimation 2 pers · 1 semaine (vol + hôtel, prix réels)</p>
+                            {loadingTravel ? (
+                                <p className="text-xl font-bold text-gray-300 animate-pulse">Calcul…</p>
+                            ) : estimatedTotal !== null ? (
+                                <p className="text-xl font-bold text-dark-900">~{estimatedTotal.toLocaleString()}€</p>
+                            ) : (
+                                <p className="text-sm text-gray-400">Estimation indisponible</p>
+                            )}
                         </div>
                         <div className="hidden md:block w-px bg-gray-100" />
                         <div className="flex items-center gap-2">
                             <Plane className="w-4 h-4 text-gold-500" />
                             <div>
-                                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Vol A/R depuis Paris</p>
-                                <p className="font-bold text-dark-900">~{d.flightFrom}€<span className="text-gray-400 font-normal text-sm">/pers</span></p>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Vol depuis Paris (prix réel)</p>
+                                {loadingTravel ? (
+                                    <p className="text-gray-300 animate-pulse">…</p>
+                                ) : cheapestFlight ? (
+                                    <p className="font-bold text-dark-900">~{cheapestFlight.price}€<span className="text-gray-400 font-normal text-sm">/pers</span></p>
+                                ) : (
+                                    <p className="text-sm text-gray-400">Indisponible</p>
+                                )}
                             </div>
                         </div>
                         <div className="hidden md:block w-px bg-gray-100" />
                         <div className="flex items-center gap-2">
                             <Hotel className="w-4 h-4 text-gold-500" />
                             <div>
-                                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Hôtel moyen</p>
-                                <p className="font-bold text-dark-900">~{d.hotelPerNight}€<span className="text-gray-400 font-normal text-sm">/nuit</span></p>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Hôtel le moins cher (prix réel)</p>
+                                {loadingTravel ? (
+                                    <p className="text-gray-300 animate-pulse">…</p>
+                                ) : cheapestHotel ? (
+                                    <p className="font-bold text-dark-900">~{cheapestHotel.price_per_night}€<span className="text-gray-400 font-normal text-sm">/nuit</span></p>
+                                ) : (
+                                    <p className="text-sm text-gray-400">Indisponible</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -161,41 +235,45 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                             <p className="text-xs uppercase tracking-widest text-gold-600 font-semibold mb-1">Transport</p>
                             <h2 className="font-serif text-3xl text-dark-900">Vols disponibles</h2>
                         </div>
-                        <p className="text-xs text-gray-400">Prix indicatifs A/R depuis Paris</p>
+                        <p className="text-xs text-emerald-600 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Prix réels (Amadeus / partenaires)</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-4">
-                        {d.flights?.map((f, i) => (
-                            <div key={i} className={`bg-sand-50 rounded-2xl p-6 border transition-all hover:shadow-md ${i === 0 ? "border-gold-300 ring-1 ring-gold-200" : "border-gray-100"}`}>
-                                {i === 0 && <span className="text-[10px] bg-gold-400 text-black font-bold px-2.5 py-0.5 rounded-full mb-3 inline-block">💸 Meilleur prix</span>}
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-sand-50 border border-gray-100 flex items-center justify-center text-xl">{f.logo}</div>
-                                    <div>
-                                        <p className="font-semibold text-dark-900 text-sm">{f.airline}</p>
-                                        <p className="text-gray-400 text-xs">{f.type}</p>
+                    {loadingTravel ? (
+                        <div className="grid md:grid-cols-3 gap-4"><SkeletonCards count={3} className="h-48" /></div>
+                    ) : sortedFlights && sortedFlights.length > 0 ? (
+                        <div className="grid md:grid-cols-3 gap-4">
+                            {sortedFlights.slice(0, 3).map((f, i) => (
+                                <div key={f.id} className={`bg-sand-50 rounded-2xl p-6 border transition-all hover:shadow-md ${i === 0 ? "border-gold-300 ring-1 ring-gold-200" : "border-gray-100"}`}>
+                                    {i === 0 && <span className="text-[10px] bg-gold-400 text-black font-bold px-2.5 py-0.5 rounded-full mb-3 inline-block">💸 Meilleur prix réel</span>}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-xl bg-sand-50 border border-gray-100 flex items-center justify-center">
+                                            <Plane className="w-4 h-4 text-gold-500" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-dark-900 text-sm">{f.airline}</p>
+                                            <p className="text-gray-400 text-xs">{f.type}{f.class ? ` · ${f.class}` : ""}</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 mb-5">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-sand-500 flex items-center gap-1"><Clock className="w-3 h-3" /> Durée</span>
+                                            <span className="font-medium text-dark-800">{f.duration}</span>
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-sand-50 pt-4 flex items-end justify-between">
+                                        <div>
+                                            <p className="text-[10px] text-gray-400 uppercase">Prix réel</p>
+                                            <p className="text-2xl font-bold text-dark-900">{f.price}€<span className="text-sm text-gray-400 font-normal">/pers</span></p>
+                                        </div>
+                                        <a href={f.booking_url} target="_blank" rel="noopener noreferrer" className="bg-dark-900 hover:bg-gold-400 hover:text-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all inline-flex items-center gap-1.5">
+                                            Réserver <ExternalLink className="w-3 h-3" />
+                                        </a>
                                     </div>
                                 </div>
-                                <div className="space-y-2 mb-5">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-sand-500 flex items-center gap-1"><Clock className="w-3 h-3" /> Durée</span>
-                                        <span className="font-medium text-dark-800">{f.duration}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-sand-500">Escales</span>
-                                        <span className={`font-medium ${f.stops === "Direct" ? "text-green-600" : "text-dark-800"}`}>{f.stops}</span>
-                                    </div>
-                                </div>
-                                <div className="border-t border-sand-50 pt-4 flex items-end justify-between">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 uppercase">À partir de</p>
-                                        <p className="text-2xl font-bold text-dark-900">{f.price}€<span className="text-sm text-gray-400 font-normal">/pers</span></p>
-                                    </div>
-                                    <button className="bg-dark-900 hover:bg-gold-400 hover:text-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all">
-                                        Voir <ChevronRight className="w-3 h-3 inline" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <NoRealData label={`Aucun vol disponible pour ${d.name} à l'instant — réessayez plus tard.`} />
+                    )}
                 </div>
 
                 {/* ── HÔTELS ──────────────────────────────────────────────────────── */}
@@ -205,107 +283,90 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                             <p className="text-xs uppercase tracking-widest text-gold-600 font-semibold mb-1">Hébergement</p>
                             <h2 className="font-serif text-3xl text-dark-900">Hôtels recommandés</h2>
                         </div>
-                        <p className="text-xs text-gray-400">Prix par nuit, 1 chambre double</p>
+                        <p className="text-xs text-emerald-600 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Prix réels par nuit</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-4">
-                        {d.hotels?.map((h, i) => (
-                            <div key={i} className={`bg-sand-50 rounded-2xl overflow-hidden border transition-all hover:shadow-md ${i === 1 ? "border-gold-300 ring-1 ring-gold-200" : "border-gray-100"}`}>
-                                <div className="relative h-40 overflow-hidden">
-                                    <img src={h.img} alt={h.name} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                                    <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${i === 0 ? "bg-emerald-100 text-emerald-700" : i === 1 ? "bg-gold-100 text-gold-700" : "bg-purple-100 text-purple-700"}`}>{h.badge}</span>
-                                    <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                                        <Stars n={h.stars} />
-                                    </div>
-                                </div>
-                                <div className="p-5">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-semibold text-dark-900">{h.name}</h3>
-                                        <div className="text-right flex-shrink-0 ml-2">
-                                            <p className="text-[10px] text-gray-400">Note</p>
-                                            <p className="font-bold text-dark-900">{h.rating}<span className="text-gray-400 font-normal text-xs">/10</span></p>
+                    {loadingTravel ? (
+                        <div className="grid md:grid-cols-3 gap-4"><SkeletonCards count={3} className="h-72" /></div>
+                    ) : sortedHotels && sortedHotels.length > 0 ? (
+                        <div className="grid md:grid-cols-3 gap-4">
+                            {sortedHotels.slice(0, 3).map((h, i) => (
+                                <div key={h.id} className={`bg-sand-50 rounded-2xl overflow-hidden border transition-all hover:shadow-md ${i === 0 ? "border-gold-300 ring-1 ring-gold-200" : "border-gray-100"}`}>
+                                    <div className="relative h-40 overflow-hidden">
+                                        <img src={h.image_url} alt={h.name} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                        <span className="absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full bg-gold-100 text-gold-700">{h.category}</span>
+                                        <div className="absolute bottom-3 left-3 flex items-center gap-1">
+                                            <Stars n={h.stars} />
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-1.5 mb-4">
-                                        {h.amenities.slice(0, 4).map(a => (
-                                            <span key={a} className="inline-flex items-center gap-1 text-[11px] bg-sand-50 border border-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                                {amenityIcon[a] || <CheckCircle2 className="w-3 h-3" />} {a}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <div className="flex items-end justify-between border-t border-sand-50 pt-4">
-                                        <div>
-                                            <p className="text-[10px] text-gray-400 uppercase">Prix / nuit</p>
-                                            <p className="text-xl font-bold text-dark-900">{h.pricePerNight}€</p>
+                                    <div className="p-5">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <h3 className="font-semibold text-dark-900">{h.name}</h3>
+                                            <div className="text-right flex-shrink-0 ml-2">
+                                                <p className="text-[10px] text-gray-400">Note</p>
+                                                <p className="font-bold text-dark-900">{h.rating}<span className="text-gray-400 font-normal text-xs">/10</span></p>
+                                            </div>
                                         </div>
-                                        <button className="bg-dark-900 hover:bg-gold-400 hover:text-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all">
-                                            Réserver <ChevronRight className="w-3 h-3 inline" />
-                                        </button>
+                                        {h.amenities.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mb-4">
+                                                {h.amenities.slice(0, 4).map(a => (
+                                                    <span key={a} className="inline-flex items-center gap-1 text-[11px] bg-sand-50 border border-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                                        {amenityIcon[a] || <CheckCircle2 className="w-3 h-3" />} {a}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="flex items-end justify-between border-t border-sand-50 pt-4">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase">Prix réel / nuit</p>
+                                                <p className="text-xl font-bold text-dark-900">{h.price_per_night}€</p>
+                                            </div>
+                                            <a href={h.booking_url} target="_blank" rel="noopener noreferrer" className="bg-dark-900 hover:bg-gold-400 hover:text-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all inline-flex items-center gap-1.5">
+                                                Réserver <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <NoRealData label={`Aucun hôtel disponible pour ${d.name} à l'instant — réessayez plus tard.`} />
+                    )}
                 </div>
 
                 {/* ── ACTIVITÉS ───────────────────────────────────────────────────── */}
                 <div>
-                    <p className="text-xs uppercase tracking-widest text-gold-600 font-semibold mb-1">Sur place</p>
-                    <h2 className="font-serif text-3xl text-dark-900 mb-6">Activités à faire à {d.name}</h2>
-                    <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {d.activities?.map((a, i) => (
-                            <div key={i} className="bg-sand-50 rounded-2xl p-5 border border-gray-100 hover:border-gold-300 hover:shadow-md transition-all group">
-                                <div className="w-11 h-11 bg-gold-50 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-gold-100 transition-colors">{a.emoji}</div>
-                                <span className="text-[10px] bg-gray-100 text-sand-500 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-medium mb-2 inline-block">{a.category}</span>
-                                <h3 className="font-semibold text-dark-900 text-sm mb-1.5 leading-snug">{a.name}</h3>
-                                <p className="text-sand-500 text-xs leading-relaxed mb-4">{a.description}</p>
-                                <div className="flex items-center justify-between text-xs text-gray-400">
-                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {a.duration}</span>
-                                    <span className="font-semibold text-dark-700">{a.price}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* ── LOCATION DE VOITURE ─────────────────────────────────────────── */}
-                <div>
                     <div className="flex items-end justify-between mb-6">
                         <div>
-                            <p className="text-xs uppercase tracking-widest text-gold-600 font-semibold mb-1">Mobilité</p>
-                            <h2 className="font-serif text-3xl text-dark-900">Location de voiture</h2>
+                            <p className="text-xs uppercase tracking-widest text-gold-600 font-semibold mb-1">Sur place</p>
+                            <h2 className="font-serif text-3xl text-dark-900">Activités à faire à {d.name}</h2>
                         </div>
-                        <p className="text-xs text-gray-400">Prix indicatifs / jour, toutes compagnies</p>
+                        <p className="text-xs text-emerald-600 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Lieux & prix réels (OpenTripMap / partenaires)</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-4">
-                        {d.carRentals?.map((c, i) => (
-                            <div key={i} className="bg-sand-50 rounded-2xl p-6 border border-gray-100 hover:border-gold-300 hover:shadow-md transition-all">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 rounded-xl bg-sand-50 flex items-center justify-center text-2xl">{c.emoji}</div>
-                                    <div>
-                                        <p className="font-semibold text-dark-900">{c.category}</p>
-                                        <p className="text-gray-400 text-xs">{c.model}</p>
+                    {loadingTravel ? (
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"><SkeletonCards count={8} className="h-56" /></div>
+                    ) : activities && activities.length > 0 ? (
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {activities.slice(0, 8).map((a) => (
+                                <a key={a.id} href={a.booking_url} target="_blank" rel="noopener noreferrer" className="bg-sand-50 rounded-2xl overflow-hidden border border-gray-100 hover:border-gold-300 hover:shadow-md transition-all group block">
+                                    <div className="relative h-28 overflow-hidden">
+                                        <img src={a.image_url} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                     </div>
-                                </div>
-                                <div className="space-y-1.5 mb-5">
-                                    {c.features.map(f => (
-                                        <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> {f}
+                                    <div className="p-4">
+                                        <span className="text-[10px] bg-gray-100 text-sand-500 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-medium mb-2 inline-block">{a.category}</span>
+                                        <h3 className="font-semibold text-dark-900 text-sm mb-1.5 leading-snug line-clamp-2">{a.title}</h3>
+                                        <p className="text-sand-500 text-xs leading-relaxed mb-3 line-clamp-2">{a.description}</p>
+                                        <div className="flex items-center justify-between text-xs text-gray-400">
+                                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {a.duration}</span>
+                                            <span className="font-semibold text-dark-700">{a.price > 0 ? `${a.price}€` : "Gratuit"}</span>
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="border-t border-sand-50 pt-4 flex items-end justify-between">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 uppercase">À partir de</p>
-                                        <p className="text-2xl font-bold text-dark-900">{c.pricePerDay}€<span className="text-sm text-gray-400 font-normal">/jour</span></p>
                                     </div>
-                                    <button className="bg-dark-900 hover:bg-gold-400 hover:text-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-1">
-                                        <Car className="w-3.5 h-3.5" /> Louer
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    ) : (
+                        <NoRealData label={`Aucune activité disponible pour ${d.name} à l'instant — réessayez plus tard.`} />
+                    )}
                 </div>
 
                 {/* ── CTA IA ──────────────────────────────────────────────────────── */}

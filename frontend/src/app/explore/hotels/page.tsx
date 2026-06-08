@@ -151,8 +151,8 @@ export default function HotelsPage() {
                 {/* Search bar floating at the bottom of the hero */}
                 <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-1/2 px-6">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="max-w-3xl mx-auto">
-                        <form onSubmit={handleSearch} className="relative">
-                            <div className="flex flex-col md:flex-row gap-0 bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+                        <form onSubmit={handleSearch} className="relative flex flex-col bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+                            <div className="flex flex-col md:flex-row">
                                 {/* Destination */}
                                 <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
                                     <MapPin className="w-4 h-4 text-gold shrink-0" />
@@ -213,10 +213,11 @@ export default function HotelsPage() {
                                         </select>
                                     </div>
                                 </div>
-                                <button type="submit" className="bg-gold text-[#0A0D14] font-black px-8 py-5 m-2 rounded-[20px] hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shrink-0">
-                                    <Search className="w-4 h-4" /> Explorer
-                                </button>
                             </div>
+
+                            <button type="submit" className="w-full bg-gold text-[#0A0D14] font-black py-5 hover:bg-yellow-400 transition-all flex items-center justify-center gap-2.5 text-xs uppercase tracking-[0.2em] border-t border-white/[0.06]">
+                                <Search className="w-4 h-4" /> Rechercher des hôtels
+                            </button>
 
                             <AnimatePresence>
                                 {showSuggestions && suggestions.length > 0 && (
