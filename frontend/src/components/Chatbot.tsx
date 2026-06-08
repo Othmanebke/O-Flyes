@@ -6,13 +6,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-import { DESTINATIONS } from "@/lib/destinations";
 
 // ── Types ────────────────────────────────────────────────────────────────
-interface Activity { name: string; price: number; emoji: string; }
+interface Activity { name: string; price: number | null; emoji: string; }
 interface EnrichedDestination {
   name: string; country: string; emoji: string;
-  price_estimate: number; booking_url: string;
+  dataSource: "real" | "unavailable";
+  price_estimate: number | null; booking_url: string;
   flights_url: string; activities: Activity[];
 }
 interface Message {
@@ -32,11 +32,6 @@ const SUGGESTIONS = [
 function DestinationCard({ dest }: { dest: EnrichedDestination }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  const localDest = DESTINATIONS.find(d =>
-    d.name.toLowerCase().includes(dest.name.toLowerCase().split(",")[0]) ||
-    dest.name.toLowerCase().includes(d.name.toLowerCase().split(",")[0])
-  );
 
   const handleSave = async () => {
     try {
@@ -76,23 +71,36 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-white/30">Budget estimé</p>
-          <p className="text-gold font-bold text-base">{dest.price_estimate.toLocaleString("fr-FR")} €</p>
-          <p className="text-white/30 text-[9px]">vol + hôtel / 2 pers.</p>
+          {dest.dataSource === "real" && dest.price_estimate !== null ? (
+            <>
+              <p className="text-[10px] text-emerald-400/70 flex items-center justify-end gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />Prix réel actuel
+              </p>
+              <p className="text-gold font-bold text-base">{dest.price_estimate.toLocaleString("fr-FR")} €</p>
+              <p className="text-white/30 text-[9px]">vol + hôtel / 2 pers.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[10px] text-white/30">Prix indisponible</p>
+              <p className="text-white/40 text-[10px] max-w-[110px]">Réessaie dans un instant</p>
+            </>
+          )}
         </div>
       </div>
 
       {/* Activities */}
       {dest.activities?.length > 0 && (
         <div className="px-4 py-3">
-          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-2">Activités</p>
+          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-2">Activités à {dest.name}</p>
           <div className="space-y-1">
             {dest.activities.slice(0, 3).map((act, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
                 <span className="text-white/70 flex items-center gap-1.5">
                   <span>{act.emoji}</span>{act.name}
                 </span>
-                <span className="text-gold font-medium ml-2 whitespace-nowrap">~{act.price} €</span>
+                {act.price !== null && (
+                  <span className="text-gold font-medium ml-2 whitespace-nowrap">~{act.price} €</span>
+                )}
               </div>
             ))}
           </div>

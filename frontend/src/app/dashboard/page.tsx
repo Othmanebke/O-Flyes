@@ -5,6 +5,7 @@ import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin
 import Link from "next/link";
 import axios from "axios";
 import BookingShoppingModal, { BookingData } from "@/components/shopping/BookingShoppingModal";
+import TripProposal from "@/components/TripProposal";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
 
@@ -62,7 +63,7 @@ export default function DashboardPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'discover' | 'documents'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'discover' | 'documents'>('overview');
 
     const [emailConnected, setEmailConnected] = useState(false);
     const [provider, setProvider] = useState<string>("local");
@@ -725,6 +726,7 @@ export default function DashboardPage() {
                                     {[
                                         { id: 'overview', label: 'Aperçu', icon: LayoutDashboard },
                                         { id: 'itinerary', label: 'Itinéraire', icon: Calendar },
+                                        { id: 'proposal', label: 'Proposition IA', icon: Plane },
                                         { id: 'discover', label: 'Suggestions', icon: Sparkles },
                                         { id: 'documents', label: 'Documents', icon: Folder },
                                     ].map(tab => (
@@ -991,6 +993,10 @@ export default function DashboardPage() {
                                             </div>
                                         )}
                                     </div>
+                                )}
+
+                                {activeTab === 'proposal' && selectedTrip && (
+                                    <TripProposal tripId={selectedTrip.id} />
                                 )}
 
                                 {activeTab === 'discover' && (

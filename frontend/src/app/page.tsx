@@ -3,8 +3,6 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RecommendationCards } from "@/components/assistant/RecommendationCards";
-import { getMockRecommendations, Recommendation } from "@/lib/mockRecommendations";
 
 const HERO_SLIDES = [
   {
@@ -42,12 +40,12 @@ export default function HomePage() {
   const [period, setPeriod] = useState("Flexible");
   const [departure, setDeparture] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
-  const [loadingReco, setLoadingReco] = useState(false);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
-  const triggerChatbotWithPreset = () => {
-    console.log("open_chat_from_home");
-    const text = `Budget ${budget}€, ${period}, ${duration} jours, départ ${departure || "n'importe où"}, envie: ${interests.join(", ") || "découverte"}. Propose 3 destinations + hôtels.`;
+  // Opens AIVANA's chatbot with the form's criteria as a preset prompt — the
+  // chatbot is grounded in real flight/hotel/activity data (see /api/chat),
+  // so this replaces the old fake "generate recommendations" mock flow.
+  const openChatWithCriteria = (params: { budget: number; duration: number; period: string; departure: string; interests: string[] }) => {
+    const text = `Budget ${params.budget}€, ${params.period}, ${params.duration} jours, départ ${params.departure || "n'importe où"}, envie: ${params.interests.join(", ") || "découverte"}. Propose 3 destinations + hôtels avec de vrais prix.`;
     window.dispatchEvent(
       new CustomEvent("chatbot-preset", {
         detail: { text, autoSend: true, open: true }
@@ -55,49 +53,30 @@ export default function HomePage() {
     );
   };
 
+  const triggerChatbotWithPreset = () => {
+    console.log("open_chat_from_home");
+    openChatWithCriteria({ budget, duration, period, departure, interests });
+  };
+
   const toggleInterest = (i: string) => {
     setInterests(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
   };
 
-  const handleGenerate = (e?: FormEvent) => {
+  const handleDiscuss = (e?: FormEvent) => {
     if (e) e.preventDefault();
-    console.log("generate_reco_click", { budget, duration, period, departure, interests });
-    setLoadingReco(true);
-    setRecommendations([]); // clear previous
-
-    // Add a fake delay for the "AI thinking" effect
-    setTimeout(() => {
-      const recs = getMockRecommendations({ budget, duration, period, departure, interests });
-      setRecommendations(recs);
-      setLoadingReco(false);
-      // Scroll to results
-      setTimeout(() => {
-        document.getElementById("reco-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    }, 1500);
+    console.log("discuss_with_ai_click", { budget, duration, period, departure, interests });
+    openChatWithCriteria({ budget, duration, period, departure, interests });
   };
 
   const loadExample = () => {
     console.log("example_click");
-    setBudget(900);
-    setPeriod("Mai");
-    setDuration(5);
-    setDeparture("Paris");
-    setInterests(["Soleil"]);
-    setTimeout(() => {
-      setLoadingReco(true);
-      setRecommendations([]);
-      setTimeout(() => {
-        const recs = getMockRecommendations({
-          budget: 900, duration: 5, period: "Mai", departure: "Paris", interests: ["Soleil"]
-        });
-        setRecommendations(recs);
-        setLoadingReco(false);
-        setTimeout(() => {
-          document.getElementById("reco-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
-      }, 1500);
-    }, 0);
+    const example = { budget: 900, duration: 5, period: "Mai", departure: "Paris", interests: ["Soleil"] };
+    setBudget(example.budget);
+    setPeriod(example.period);
+    setDuration(example.duration);
+    setDeparture(example.departure);
+    setInterests(example.interests);
+    openChatWithCriteria(example);
   };
 
   const goTo = useCallback((idx: number) => {
@@ -172,7 +151,7 @@ export default function HomePage() {
               <div id="assistant" className="w-full lg:w-[480px] backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden" style={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none" />
 
-                <form onSubmit={handleGenerate} className="relative z-10 space-y-5">
+                <form onSubmit={handleDiscuss} className="relative z-10 space-y-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-5 h-5 text-gold" />
                     <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Où partir ?</h3>
@@ -250,8 +229,8 @@ export default function HomePage() {
                   </div>
 
                   <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                    <button type="submit" disabled={loadingReco} className="flex-1 btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)] disabled:opacity-70 disabled:cursor-not-allowed py-3.5">
-                      {loadingReco ? "Analyse en cours..." : "Générer ma recommandation"}
+                    <button type="submit" className="flex-1 btn-gold shadow-[0_0_20px_rgba(201,168,76,0.2)] py-3.5 flex items-center justify-center gap-2">
+                      <Sparkles className="w-4 h-4" /> Discuter avec AIVANA
                     </button>
                     <button type="button" onClick={loadExample} className="sm:w-auto px-6 py-3.5 rounded-xl text-sm font-bold hover:bg-gold/10 transition-colors" style={{ border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                       Voir un exemple
@@ -280,24 +259,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── RECOMMENDATIONS RESULTS ─────────────────────────────────────── */}
-      {recommendations.length > 0 && (
-        <section id="reco-results" className="py-24 px-8 scroll-mt-20" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)' }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-12 text-center">
-              <p className="section-label mb-4 text-gold/80">Recommandations sur mesure</p>
-              <h2 className="font-serif text-3xl md:text-5xl" style={{ color: 'var(--text-primary)' }}>Vos 3 destinations idéales</h2>
-              <p className="mt-4 max-w-2xl mx-auto text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Basé sur votre budget de {budget}€ et vos envies. Sélectionnez la destination qui vous
-                correspond le plus et ajoutez-la à votre dashboard pour commencer la planification.
-              </p>
-            </div>
-
-            <RecommendationCards recommendations={recommendations} />
-          </div>
-        </section>
-      )}
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
       <section id="how-it-works" className="py-24 px-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
