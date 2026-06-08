@@ -836,11 +836,22 @@ export default function DashboardPage() {
                                                 </div>
                                                 <div className="space-y-3">
                                                     {[
-                                                        { href: `/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres · ajout direct au voyage" },
-                                                        { href: `/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
-                                                        { href: `/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(selectedTrip?.destination_name || '')}`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
-                                                    ].map(item => (
-                                                        <Link key={item.href} href={item.href} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
+                                                        { href: `/explore/flights`, emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres · ajout direct au voyage" },
+                                                        { href: `/explore/hotels`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
+                                                        { href: `/explore/activities`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
+                                                    ].map(item => {
+                                                        if (selectedTrip?.destination_name) return selectedTrip.destination_name;
+                                                        if (selectedTrip?.title) {
+                                                            let t = selectedTrip.title;
+                                                            if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
+                                                            if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
+                                                            return t;
+                                                        }
+                                                        return '';
+                                                    };
+                                                    
+                                                    return (
+                                                        <Link key={item.href} href={`${item.href}?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getDest())}`} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
                                                             <span className="text-2xl flex-shrink-0">{item.emoji}</span>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{item.label}</p>
@@ -848,7 +859,8 @@ export default function DashboardPage() {
                                                             </div>
                                                             <ChevronRight className="w-4 h-4 text-zinc-600 flex-shrink-0 group-hover:text-zinc-300 group-hover:translate-x-1 transition-all" />
                                                         </Link>
-                                                    ))}
+                                                    );
+                                                })}
                                                 </div>
                                             </div>
                                         </div>
