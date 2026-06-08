@@ -53,6 +53,18 @@ interface TripAnalysis {
     score: number;
 }
 
+export const getTripDestination = (trip: Trip | null): string => {
+    if (!trip) return '';
+    if (trip.destination_name) return trip.destination_name;
+    if (trip.title) {
+        let t = trip.title;
+        if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
+        if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
+        return t;
+    }
+    return '';
+};
+
 export default function DashboardPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -840,19 +852,10 @@ export default function DashboardPage() {
                                                         { href: `/explore/hotels`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
                                                         { href: `/explore/activities`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
                                                     ].map(item => {
-                                                        const getDest = () => {
-                                                            if (selectedTrip?.destination_name) return selectedTrip.destination_name;
-                                                            if (selectedTrip?.title) {
-                                                                let t = selectedTrip.title;
-                                                                if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
-                                                                if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
-                                                                return t;
-                                                            }
-                                                            return '';
-                                                        };
+                                                        const dest = getTripDestination(selectedTrip);
                                                     
                                                     return (
-                                                        <Link key={item.href} href={`${item.href}?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getDest())}`} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
+                                                        <Link key={item.href} href={`${item.href}?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(dest)}`} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
                                                             <span className="text-2xl flex-shrink-0">{item.emoji}</span>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{item.label}</p>
@@ -925,12 +928,24 @@ export default function DashboardPage() {
                                                 >
                                                     <Calendar className="w-4 h-4" /> Export iCal
                                                 </button>
-                                                <button
-                                                    onClick={() => setShowBookingModal(true)}
-                                                    className="flex items-center gap-2 bg-white text-zinc-950 text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
-                                                >
-                                                    <Plus className="w-4 h-4" /> Ajouter
-                                                </button>
+                                                <div className="relative group/add z-50">
+                                                    <button
+                                                        className="flex items-center gap-2 bg-white text-zinc-950 text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
+                                                    >
+                                                        <Plus className="w-4 h-4" /> Ajouter
+                                                    </button>
+                                                    <div className="absolute right-0 top-full mt-2 w-48 bg-[#141822] border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover/add:opacity-100 group-hover/add:visible transition-all overflow-hidden flex flex-col">
+                                                        <Link href={`/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors">
+                                                            <span className="text-lg">✈️</span> Vol
+                                                        </Link>
+                                                        <Link href={`/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors border-t border-white/[0.02]">
+                                                            <span className="text-lg">🏨</span> Hôtel
+                                                        </Link>
+                                                        <Link href={`/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors border-t border-white/[0.02]">
+                                                            <span className="text-lg">🎒</span> Activité
+                                                        </Link>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1106,16 +1121,7 @@ export default function DashboardPage() {
             </nav >
 
 
-            {/* Create Booking Modal (Shopping Mode) */}
-            {
-                showBookingModal && selectedTrip && (
-                    <BookingShoppingModal
-                        tripId={selectedTrip.id}
-                        onClose={() => setShowBookingModal(false)}
-                        onAddBooking={handleAddBooking}
-                    />
-                )
-            }
+
 
             {/* Toast notification */}
             {notification && (
