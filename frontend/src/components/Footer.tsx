@@ -1,22 +1,12 @@
 "use client";
 import Link from "next/link";
-import { Plane, Mail, MapPin, ArrowUpRight, Send } from "lucide-react";
+import { Send } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "Accueil" },
   { href: "/explore", label: "Destinations" },
-  { href: "/chat", label: "Chatbot IA" },
-  { href: "/blog", label: "Blog" },
-  { href: "/gallery", label: "Galerie" },
-  { href: "/pricing", label: "Tarifs" },
-  { href: "/dashboard", label: "Mon espace" },
-];
-
-const LEGAL = [
-  { href: "#", label: "Confidentialité" },
-  { href: "#", label: "CGU" },
-  { href: "#", label: "Mentions légales" },
-  { href: "#", label: "Cookies" },
+  { href: "/explore/flights", label: "Vols" },
+  { href: "/explore/hotels", label: "Hôtels" },
 ];
 
 const SOCIALS = [
@@ -24,7 +14,7 @@ const SOCIALS = [
     name: "Instagram",
     href: "#",
     icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
       </svg>
     ),
@@ -33,7 +23,7 @@ const SOCIALS = [
     name: "TikTok",
     href: "#",
     icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.66a8.16 8.16 0 004.77 1.52V6.73a4.85 4.85 0 01-1-.04z" />
       </svg>
     ),
@@ -42,7 +32,7 @@ const SOCIALS = [
     name: "LinkedIn",
     href: "#",
     icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
       </svg>
     ),
@@ -51,7 +41,7 @@ const SOCIALS = [
     name: "X / Twitter",
     href: "#",
     icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
       </svg>
     ),
@@ -60,102 +50,71 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="relative z-20 border-t transition-colors duration-300" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
+    <footer className="relative z-20 overflow-hidden border-t transition-colors duration-300" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
       {/* Top strip — golden */}
       <div className="h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 
-      <div className="max-w-7xl mx-auto px-8 pt-16 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+      {/* Giant "AIVANA" watermark in the background */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center font-serif font-black select-none pointer-events-none whitespace-nowrap"
+        style={{ fontSize: 'clamp(64px, 13vw, 170px)', color: 'var(--text-primary)', opacity: 0.06, letterSpacing: '0.04em' }}
+      >
+        AIVANA
+      </span>
 
-          {/* ── Brand col ─────────────────────────────────────────── */}
-          <div className="md:col-span-4 text-center md:text-left">
-            <Link href="/" className="flex items-center justify-center md:justify-start gap-2 mb-5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-                <Plane className="w-4 h-4 -rotate-45" style={{ color: 'var(--text-primary)' }} />
-              </div>
-              <span className="font-serif text-xl" style={{ color: 'var(--text-primary)' }}>AI<span className="text-gold">VANA</span></span>
+      {/* ── Plane-nose shaped panel ─────────────────────────────── */}
+      <div className="relative mx-auto flex justify-center pt-8 pb-2">
+        <div className="relative w-[260px] sm:w-[300px]">
+          <svg viewBox="0 0 300 380" className="w-full h-auto block" aria-hidden="true">
+            <path
+              d="M150 6 C179 6 193 46 193 86 L193 250 L266 352 L34 352 L107 250 L107 86 C107 46 121 6 150 6 Z"
+              fill="var(--gold)"
+            />
+            <rect x="2" y="330" width="64" height="26" rx="13" fill="var(--gold)" transform="rotate(-28 34 343)" />
+            <rect x="234" y="330" width="64" height="26" rx="13" fill="var(--gold)" transform="rotate(28 266 343)" />
+          </svg>
+
+          {/* Content overlaid on the shape */}
+          <div className="absolute inset-0 flex flex-col items-center text-center" style={{ color: '#0A0D14' }}>
+            <Link href="/" className="mt-[68px] sm:mt-[78px] font-serif font-black text-base tracking-wide">
+              AI<span style={{ color: '#0A0D14', opacity: 0.55 }}>VANA</span>
             </Link>
-            <p className="text-[13px] leading-relaxed mb-6 max-w-xs mx-auto md:mx-0" style={{ color: 'var(--text-secondary)' }}>
-              Votre assistant voyage intelligent. Décrivez vos envies, notre IA trouve la destination parfaite — vols, hôtels, activités inclus.
-            </p>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-gold text-xs mb-2">
-              <MapPin className="w-3.5 h-3.5" /> Paris, France
-            </div>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-gold text-xs">
-              <Mail className="w-3.5 h-3.5" /> contact@aivana.com
-            </div>
-          </div>
 
-          {/* ── Navigation ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 md:col-span-4 gap-8">
-            <div className="md:col-span-1">
-              <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Menu</p>
-              <ul className="space-y-3">
-                {NAV.map(({ href, label }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-[13px] transition-colors flex items-center gap-1 group hover:text-gold" style={{ color: 'var(--text-secondary)' }}>
-                      <span className="group-hover:translate-x-0.5 transition-transform">{label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <nav className="mt-3 flex flex-col items-center gap-1.5">
+              {NAV.map(({ href, label }) => (
+                <Link key={href} href={href} className="text-[12px] font-semibold uppercase tracking-wider hover:underline underline-offset-2 transition-all">
+                  {label}
+                </Link>
+              ))}
+            </nav>
 
-            <div className="md:col-span-1">
-              <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Légal</p>
-              <ul className="space-y-3">
-                {LEGAL.map(({ href, label }) => (
-                  <li key={label}>
-                    <Link href={href} className="text-[13px] transition-colors hover:text-gold" style={{ color: 'var(--text-secondary)' }}>{label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* ── Newsletter ─────────────────────────────────────────── */}
-          <div className="md:col-span-4 text-center md:text-left">
-            <p className="text-gold text-[10px] tracking-widest uppercase mb-5 font-semibold">Newsletter</p>
-            <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Recevez chaque semaine les meilleures offres de voyage et les conseils de notre IA.
-            </p>
             <form
               onSubmit={(e) => e.preventDefault()}
-              className="flex gap-2 max-w-sm mx-auto md:mx-0"
+              className="mt-auto mb-[58px] sm:mb-[64px] flex items-center gap-1.5 w-[180px] sm:w-[210px]"
             >
               <input
                 type="email"
-                placeholder="votre@email.com"
-                className="flex-1 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-gold/50 transition-all"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
+                placeholder="Newsletter — email"
+                className="flex-1 min-w-0 rounded-full px-3 py-1.5 text-[11px] bg-white/80 placeholder:text-[#0A0D14]/50 focus:outline-none"
+                style={{ color: '#0A0D14' }}
               />
               <button
                 type="submit"
-                className="flex-shrink-0 w-10 h-10 bg-gold hover:bg-gold-400 rounded-xl flex items-center justify-center transition-all hover:scale-105"
-                style={{ color: 'var(--text-inverse)' }}
+                aria-label="S'inscrire à la newsletter"
+                className="flex-shrink-0 w-7 h-7 rounded-full bg-[#0A0D14] text-gold flex items-center justify-center hover:scale-105 transition-all"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3 h-3" />
               </button>
             </form>
-            <p className="text-[10px] mt-2 tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Pas de spam. Désabonnement en 1 clic.</p>
 
-            {/* Réseaux */}
-            <div className="flex items-center justify-center md:justify-start gap-3 mt-8">
+            <div className="mb-[18px] flex items-center justify-center gap-2">
               {SOCIALS.map((s) => (
                 <Link
                   key={s.name}
                   href={s.href}
                   title={s.name}
-                  className="w-9 h-9 rounded-xl hover:bg-gold/20 hover:text-gold flex items-center justify-center transition-all"
-                  style={{
-                    backgroundColor: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-secondary)',
-                  }}
+                  className="w-7 h-7 rounded-full border border-[#0A0D14]/30 hover:bg-[#0A0D14] hover:text-gold flex items-center justify-center transition-all"
                 >
                   {s.icon}
                 </Link>
@@ -163,41 +122,13 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ── Destinations highlights ────────────────────────────── */}
-        <div className="pt-8 mb-8" style={{ borderTop: '1px solid var(--border-light)' }}>
-          <p className="text-[10px] tracking-widest uppercase mb-4" style={{ color: 'var(--text-muted)' }}>Destinations populaires</p>
-          <div className="flex flex-wrap gap-2">
-            {["Bali", "Marrakech", "Kyoto", "Islande", "Lisbonne", "Maldives", "Istanbul", "Buenos Aires", "Queenstown", "Dubaï", "New York", "Thaïlande"].map((d) => (
-              <Link key={d} href="/explore"
-                className="text-[11px] font-medium hover:text-gold transition-colors px-3 py-1 rounded-full block"
-                style={{
-                  color: 'var(--text-secondary)',
-                  backgroundColor: 'var(--bg-card)',
-                  border: '1px solid var(--border-light)',
-                }}
-              >
-                {d}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Bottom bar ─────────────────────────────────────────── */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid var(--border-light)' }}>
-          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} AIVANA — Tous droits réservés.
-          </p>
-          <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            <span>Fait avec</span>
-            <span className="text-gold">✦</span>
-            <span>et beaucoup d&apos;IA</span>
-            <span className="mx-1" style={{ color: 'var(--border-color)' }}>·</span>
-            <Link href="/auth/register" className="text-gold/70 hover:text-gold transition-colors flex items-center gap-1">
-              Créer un compte <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
+      {/* ── Bottom bar ─────────────────────────────────────────── */}
+      <div className="relative max-w-7xl mx-auto px-8 pb-5 pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          © {new Date().getFullYear()} AIVANA — Tous droits réservés. · Fait avec <span className="text-gold">✦</span> et beaucoup d&apos;IA
+        </p>
       </div>
     </footer>
   );

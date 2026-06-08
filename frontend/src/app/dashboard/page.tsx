@@ -63,7 +63,7 @@ export default function DashboardPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'discover' | 'documents'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'documents'>('overview');
 
     const [emailConnected, setEmailConnected] = useState(false);
     const [provider, setProvider] = useState<string>("local");
@@ -419,7 +419,7 @@ export default function DashboardPage() {
                         {selectedTrip && (
                             <>
                                 <ChevronRight className="w-4 h-4 text-zinc-700" />
-                                <span className="text-sm capitalize" style={{ color: 'var(--text-muted)' }}>{activeTab === 'overview' ? 'Aperçu' : activeTab === 'itinerary' ? 'Itinéraire' : activeTab === 'discover' ? 'Découvrir' : 'Documents'}</span>
+                                <span className="text-sm capitalize" style={{ color: 'var(--text-muted)' }}>{activeTab === 'overview' ? 'Aperçu' : activeTab === 'itinerary' ? 'Itinéraire' : activeTab === 'proposal' ? 'Proposition IA' : 'Documents'}</span>
                             </>
                         )}
                     </div>
@@ -627,15 +627,9 @@ export default function DashboardPage() {
                                             ✈️
                                         </div>
                                         <h3 className="text-xl font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Aucun voyage enregistré</h3>
-                                        <p className="text-sm max-w-md mx-auto mb-10 leading-relaxed font-normal" style={{ color: 'var(--text-secondary)' }}>
-                                            Utilisez le chatbot AIVANA pour générer un itinéraire et enregistrez-le ici en un clic.
+                                        <p className="text-sm max-w-md mx-auto leading-relaxed font-normal" style={{ color: 'var(--text-secondary)' }}>
+                                            Ouvrez l&apos;assistant AIVANA (la bulle dorée en bas à droite), décrivez votre prochaine envie de voyage, et enregistrez l&apos;itinéraire généré ici en un clic.
                                         </p>
-                                        <button
-                                            onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-zinc-950 text-sm font-medium rounded-xl hover:bg-zinc-200 transition-colors"
-                                        >
-                                            <Sparkles className="w-4 h-4" /> Planifier avec l&apos;IA
-                                        </button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -727,7 +721,6 @@ export default function DashboardPage() {
                                         { id: 'overview', label: 'Aperçu', icon: LayoutDashboard },
                                         { id: 'itinerary', label: 'Itinéraire', icon: Calendar },
                                         { id: 'proposal', label: 'Proposition IA', icon: Plane },
-                                        { id: 'discover', label: 'Suggestions', icon: Sparkles },
                                         { id: 'documents', label: 'Documents', icon: Folder },
                                     ].map(tab => (
                                         <button
@@ -864,10 +857,10 @@ export default function DashboardPage() {
                                                                 </div>
                                                             ))}
                                                             <button
-                                                                onClick={() => setActiveTab('discover')}
+                                                                onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
                                                                 className="w-full flex items-center justify-center gap-2 py-3 mt-6 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors"
                                                             >
-                                                                Optimiser mon voyage
+                                                                Optimiser mon voyage avec l&apos;IA
                                                             </button>
                                                         </div>
                                                     ) : (
@@ -877,7 +870,7 @@ export default function DashboardPage() {
                                                             </div>
                                                             <p className="text-zinc-300 text-sm font-medium leading-relaxed mb-6">Itinéraire parfait. Aucune anomalie détectée par l'IA.</p>
                                                             <button
-                                                                onClick={() => setActiveTab('discover')}
+                                                                onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
                                                                 className="w-full py-3 rounded-lg border border-white/10 text-sm font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
                                                             >
                                                                 Parler avec AIVANA
@@ -997,44 +990,6 @@ export default function DashboardPage() {
 
                                 {activeTab === 'proposal' && selectedTrip && (
                                     <TripProposal tripId={selectedTrip.id} />
-                                )}
-
-                                {activeTab === 'discover' && (
-                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-8">
-                                        <div className="flex flex-col items-center justify-center py-20 relative overflow-hidden">
-                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
-                                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-lg shadow-black/50 relative z-10">
-                                                <Sparkles className="w-8 h-8 text-emerald-400" />
-                                            </div>
-                                            <h3 className="text-xl font-medium text-white mb-3 relative z-10">Découvrez votre destination</h3>
-                                            <p className="text-zinc-400 text-sm max-w-md mx-auto text-center mb-10 leading-relaxed relative z-10">
-                                                Demandez à l'IA de générer des recommandations personnalisées d'activités, de restaurants et de lieux cachés pour votre voyage.
-                                            </p>
-                                            <button
-                                                onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
-                                                className="flex items-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-medium text-sm rounded-lg hover:bg-zinc-200 transition-all relative z-10"
-                                            >
-                                                <Sparkles className="w-4 h-4" /> Générer des suggestions avec AIVANA
-                                            </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                                            {[
-                                                { href: "/explore/flights", emoji: "✈️", label: "Vols", sub: "Comparez les prix en temps réel" },
-                                                { href: "/explore/hotels", emoji: "🏨", label: "Hôtels", sub: "Les meilleures adresses du monde" },
-                                                { href: "/explore/activities", emoji: "🎒", label: "Activités", sub: "Expériences locales exclusives" },
-                                            ].map(item => (
-                                                <Link key={item.href} href={item.href} className="block p-6 rounded-xl bg-zinc-950 border border-white/[0.04] hover:border-white/10 hover:bg-white/[0.02] transition-all group">
-                                                    <span className="text-3xl mb-4 block">{item.emoji}</span>
-                                                    <h4 className="text-sm font-semibold text-white mb-1">{item.label}</h4>
-                                                    <p className="text-xs text-zinc-500 leading-relaxed">{item.sub}</p>
-                                                    <div className="mt-4 flex items-center gap-1 text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">
-                                                        Explorer <ChevronRight className="w-3 h-3" />
-                                                    </div>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </div>
                                 )}
 
                                 {activeTab === 'documents' && (
