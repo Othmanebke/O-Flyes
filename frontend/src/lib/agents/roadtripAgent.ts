@@ -7,6 +7,7 @@ export interface RoadtripStep {
     country: string;
     description: string;
     transportToNext?: string;
+    estimatedCost: string;
     activities: string[];
 }
 
@@ -21,32 +22,33 @@ export interface RoadtripProposal {
 export async function runRoadtripAgent(context: TripContext): Promise<RoadtripProposal> {
     const prompt = `
 Tu es un agent expert mondial en création d'itinéraires de voyage et de roadtrips.
-L'utilisateur souhaite un roadtrip mémorable.
+L'utilisateur souhaite un roadtrip mémorable, réaliste et chiffré.
 Destination de base ciblée par l'utilisateur : ${context.destinationName} ${context.country ? `(${context.country})` : ''}.
 Ville d'origine : ${context.originCity}.
 Nombre de voyageurs : ${context.travelers}.
 Préférences de l'utilisateur : ${context.preferences || 'Aventure, découverte, incontournables'}.
 
 Instructions :
-- Génère un itinéraire de roadtrip multi-étapes très logique et réaliste.
-- Si la destination de base est très connue pour des roadtrips (ex: Thaïlande), n'hésite pas à faire un parcours emblématique (ex: Nord vers le Sud) ou même traverser des frontières (ex: Thaïlande vers Malaisie) si ça a du sens.
-- Sois inspirant, concret et professionnel.
-- Ne propose pas de prix inventés, concentre-toi sur l'itinéraire, les transports et les activités.
+- Génère un itinéraire de roadtrip multi-étapes très logique, ambitieux et hyper réaliste.
+- Si la destination s'y prête (ex: Grèce, Thaïlande, Europe de l'Est), n'hésite SURTOUT PAS à proposer un roadtrip multi-pays (ex: Grèce -> Turquie -> Chypre, ou Thaïlande -> Malaisie). L'itinéraire doit être une vraie aventure.
+- Pour chaque étape, fournis une estimation RÉALISTE du coût (transport, logement basique et activités) dans la devise locale ou en EUR (ex: "Environ 150€ / pers"). Sers-toi de tes connaissances pour donner de vrais prix de marché.
+- Précise le moyen de transport exact et son prix estimé (ex: "Ferry rapide (60€)", "Vol interne AirAsia (45€)").
 - REPONDS UNIQUEMENT AVEC DU JSON VALIDE.
 
 Le JSON doit ABSOLUMENT respecter ce format exact :
 {
-    "title": "Titre accrocheur du roadtrip",
-    "summary": "Résumé du concept de ce roadtrip et pourquoi il est génial",
-    "totalDays": 10,
+    "title": "Titre accrocheur du roadtrip (ex: Odyssée en mer Égée : Grèce, Turquie & Chypre)",
+    "summary": "Résumé du concept de ce roadtrip, pourquoi c'est génial, et l'estimation du budget global.",
+    "totalDays": 14,
     "steps": [
         {
             "dayRange": "Jour 1 à 3",
-            "locationName": "Nom de la ville ou région étape",
-            "country": "Pays de cette étape",
-            "description": "Description de l'ambiance et de ce qu'on y fait",
-            "transportToNext": "Train de nuit (12h)",
-            "activities": ["Activité 1", "Activité 2"]
+            "locationName": "Athènes",
+            "country": "Grèce",
+            "description": "Description de l'ambiance et de ce qu'on y fait.",
+            "transportToNext": "Ferry vers Izmir (Turquie) - env. 80€",
+            "estimatedCost": "120€ / jour / pers.",
+            "activities": ["Visite de l'Acropole (20€)", "Dîner typique à Plaka (25€)"]
         }
     ]
 }

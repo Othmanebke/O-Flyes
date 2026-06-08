@@ -156,7 +156,12 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
                                             <Calendar className="w-3 h-3" /> {step.dayRange}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">{step.description}</p>
+                                    <div className="mb-4">
+                                        <p className="text-sm text-zinc-400 leading-relaxed mb-1">{step.description}</p>
+                                        {step.estimatedCost && (
+                                            <p className="text-[10px] uppercase tracking-wider text-gold font-bold">Estimation : {step.estimatedCost}</p>
+                                        )}
+                                    </div>
                                     
                                     <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-4">
                                         <h5 className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold mb-3 flex items-center gap-1.5">

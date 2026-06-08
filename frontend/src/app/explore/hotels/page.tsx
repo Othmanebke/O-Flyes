@@ -347,10 +347,12 @@ function HotelsContent() {
                                             <p className="text-[8px] text-white/20 uppercase tracking-[0.15em] mb-1">Prix / nuit</p>
                                             <p className="text-2xl font-serif text-white">{hotel.price_per_night} <span className="text-base text-gold">{hotel.currency}</span></p>
                                         </div>
-                                        <button onClick={() => handleBook(hotel)}
-                                            className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
-                                            Booking.com <ArrowRight className="w-3 h-3" />
-                                        </button>
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => handleBook(hotel)}
+                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
+                                                {tripIdFromUrl ? "Ajouter au voyage" : "Booking.com"} <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>

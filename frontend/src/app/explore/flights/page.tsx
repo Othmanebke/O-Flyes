@@ -449,7 +449,7 @@ function FlightsContent() {
                                             onClick={() => handleBook(flight)}
                                             className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95"
                                         >
-                                            Skyscanner <ArrowRight className="w-3.5 h-3.5" />
+                                            {tripIdFromUrl ? "Ajouter au voyage" : "Skyscanner"} <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
                                         {(flight as any).google_flights_url && (
                                             <a

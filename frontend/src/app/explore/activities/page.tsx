@@ -285,7 +285,7 @@ function ActivitiesContent() {
                                         <div className="flex flex-col gap-2">
                                             <button onClick={() => handleBook(activity)}
                                                 className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-5 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
-                                                GetYourGuide <ArrowRight className="w-3 h-3" />
+                                                {tripIdFromUrl ? "Ajouter au voyage" : "GetYourGuide"} <ArrowRight className="w-3 h-3" />
                                             </button>
                                             {activity.viator_url && (
                                                 <a href={activity.viator_url} target="_blank" rel="noopener noreferrer"
