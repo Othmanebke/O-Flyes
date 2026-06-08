@@ -9,6 +9,7 @@ import TripProposal from "@/components/TripProposal";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
 import TripBudgetPanel from "@/components/TripBudgetPanel";
+import GlobalLoader from "@/components/ui/GlobalLoader";
 
 interface Trip {
     id: string;
@@ -360,12 +361,7 @@ export default function DashboardPage() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center space-y-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                <div className="w-8 h-8 rounded-full border-t-2 border-r-2 animate-spin" style={{ borderColor: 'var(--text-primary)' }}></div>
-                <p className="text-xs font-mono uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Initialisation de l'espace de travail...</p>
-            </div>
-        );
+        return <GlobalLoader />;
     }
 
     return (
