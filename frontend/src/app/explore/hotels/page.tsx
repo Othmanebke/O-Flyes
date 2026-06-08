@@ -15,7 +15,7 @@ interface Hotel {
     amenities?: string[];
 }
 
-export default function HotelsPage() {
+function HotelsContent() {
     const searchParams = useSearchParams();
     const tripIdFromUrl = searchParams.get("tripId");
     const destFromUrl = searchParams.get("dest");
@@ -140,7 +140,6 @@ export default function HotelsPage() {
     };
 
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
         <>
             <TripContextBanner />
             <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -422,6 +421,13 @@ export default function HotelsPage() {
             </AnimatePresence>
         </div>
         </>
+    );
+}
+
+export default function HotelsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+            <HotelsContent />
         </Suspense>
     );
 }

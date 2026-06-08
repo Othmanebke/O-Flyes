@@ -25,7 +25,7 @@ interface Flight {
     booking_url: string;
 }
 
-export default function FlightsPage() {
+function FlightsContent() {
     const searchParams = useSearchParams();
     const tripIdFromUrl = searchParams.get("tripId");
     const destFromUrl = searchParams.get("dest");
@@ -188,7 +188,6 @@ export default function FlightsPage() {
     };
 
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
         <>
             <TripContextBanner />
             <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -551,6 +550,13 @@ export default function FlightsPage() {
             </AnimatePresence>
         </div>
         </>
+    );
+}
+
+export default function FlightsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+            <FlightsContent />
         </Suspense>
     );
 }

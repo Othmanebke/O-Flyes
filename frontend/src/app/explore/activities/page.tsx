@@ -25,7 +25,7 @@ interface Activity {
     duration?: string;
 }
 
-export default function ActivitiesPage() {
+function ActivitiesContent() {
     const searchParams = useSearchParams();
     const tripIdFromUrl = searchParams.get("tripId");
     const destFromUrl = searchParams.get("dest");
@@ -130,7 +130,6 @@ export default function ActivitiesPage() {
     };
 
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
         <>
             <TripContextBanner />
             <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -362,6 +361,13 @@ export default function ActivitiesPage() {
             </AnimatePresence>
         </div>
         </>
+    );
+}
+
+export default function ActivitiesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+            <ActivitiesContent />
         </Suspense>
     );
 }
