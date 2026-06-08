@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
+import { AnimatePresence } from "framer-motion";
+import AIProposalModal from "./AIProposalModal";
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface Activity { name: string; price: number | null; emoji: string; }
@@ -28,107 +30,36 @@ const SUGGESTIONS = [
   "Plage tropicale 2 semaines, 2 pers.",
 ];
 
-// ── Destination card ─────────────────────────────────────────────────────
-function DestinationCard({ dest }: { dest: EnrichedDestination }) {
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      await axios.post("/api/trips", {
-        title: "Voyage : " + dest.name,
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      });
-      setSaved(true);
-      window.dispatchEvent(new Event("trip-saved"));
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
-        alert("Vous devez être connecté pour enregistrer un voyage.");
-      } else {
-        console.error("Erreur lors de la sauvegarde du voyage:", err);
-        alert("Erreur lors de la sauvegarde du voyage.");
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
+function DestinationCard({ dest, onOpenProposal }: { dest: EnrichedDestination, onOpenProposal: () => void }) {
   return (
-    <div className="mt-2 rounded-2xl overflow-hidden border border-white/10 bg-[#141822]">
-      {/* Top */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
+    <div className="mt-2 rounded-2xl overflow-hidden border border-[#C9A84C]/30 bg-gradient-to-br from-[#141822] to-[#0A0D14] p-5 shadow-lg relative">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 blur-[40px] rounded-full pointer-events-none -mr-10 -mt-10" />
+      <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
             {dest.emoji}
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">{dest.name}</p>
-            <p className="text-white/50 text-xs flex items-center gap-1 mt-0.5">
-              <MapPin className="w-2.5 h-2.5 text-gold" />{dest.country}
+            <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold mb-1">AIVANA a trouvé</p>
+            <p className="font-serif text-white text-xl leading-none">{dest.name}</p>
+            <p className="text-white/50 text-xs flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3 text-gold" />{dest.country}
             </p>
           </div>
         </div>
-        <div className="text-right">
-          {dest.dataSource === "real" && dest.price_estimate !== null ? (
-            <>
-              <p className="text-[10px] text-emerald-400/70 flex items-center justify-end gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />Prix réel actuel
-              </p>
-              <p className="text-gold font-bold text-base">{dest.price_estimate.toLocaleString("fr-FR")} €</p>
-              <p className="text-white/30 text-[9px]">vol + hôtel / 2 pers.</p>
-            </>
-          ) : (
-            <>
-              <p className="text-[10px] text-white/30">Prix indisponible</p>
-              <p className="text-white/40 text-[10px] max-w-[110px]">Réessaie dans un instant</p>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Activities */}
-      {dest.activities?.length > 0 && (
-        <div className="px-4 py-3">
-          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-2">Activités à {dest.name}</p>
-          <div className="space-y-1">
-            {dest.activities.slice(0, 3).map((act, i) => (
-              <div key={i} className="flex items-center justify-between text-xs">
-                <span className="text-white/70 flex items-center gap-1.5">
-                  <span>{act.emoji}</span>{act.name}
-                </span>
-                {act.price !== null && (
-                  <span className="text-gold font-medium ml-2 whitespace-nowrap">~{act.price} €</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Buttons */}
-      <div className="px-4 pb-3 flex flex-col gap-2">
-        <div className="flex gap-2">
-          <button onClick={handleSave} disabled={saving || saved}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-gold hover:bg-gold-600 disabled:opacity-50 text-dark-900 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
-            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : (saved ? "✓ Enregistré" : <><Sparkles className="w-3 h-3" /> Enregistrer</>)}
-          </button>
-          <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
-            <Hotel className="w-3 h-3" /> Hôtels
-          </a>
-          <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors">
-            <Plane className="w-3 h-3" /> Vols
-          </a>
-        </div>
-        {saved && (
-          <Link href="/dashboard"
-            className="w-full flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors border border-white/20">
-            <ArrowUpRight className="w-3 h-3" /> Voir mon dashboard
-          </Link>
+        
+        {dest.price_estimate && (
+          <p className="text-[11px] text-white/40 italic">
+            Estimation : à partir de <strong className="text-white">{dest.price_estimate}€</strong>
+          </p>
         )}
+
+        <button 
+          onClick={onOpenProposal}
+          className="w-full bg-gold hover:bg-yellow-400 text-[#0A0D14] font-black uppercase text-xs tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-[0_0_15px_rgba(201,168,76,0.3)]"
+        >
+          <Sparkles className="w-4 h-4" /> Découvrir la proposition
+        </button>
       </div>
     </div>
   );
@@ -137,6 +68,7 @@ function DestinationCard({ dest }: { dest: EnrichedDestination }) {
 // ── Widget ───────────────────────────────────────────────────────────────
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<EnrichedDestination | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -288,7 +220,7 @@ export default function Chatbot() {
                   }`}>
                   {msg.content}
                 </div>
-                {msg.enriched?.map((dest, j) => <DestinationCard key={j} dest={dest} />)}
+                {msg.enriched?.map((dest, j) => <DestinationCard key={j} dest={dest} onOpenProposal={() => setSelectedProposal(dest)} />)}
               </div>
             </div>
           ))}
@@ -391,6 +323,15 @@ export default function Chatbot() {
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
         )}
       </button>
+
+      <AnimatePresence>
+        {selectedProposal && (
+          <AIProposalModal 
+            dest={selectedProposal} 
+            onClose={() => setSelectedProposal(null)} 
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
