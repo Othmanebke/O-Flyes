@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Plane, Send, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { Plane, Send, ArrowRight, Cookie, X, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Destinations" },
@@ -9,12 +9,6 @@ const NAV_LINKS = [
   { href: "/explore/hotels", label: "Hôtels" },
   { href: "/explore/activities", label: "Activités" },
   { href: "/blog", label: "Blog" },
-];
-
-const LEGAL_LINKS = [
-  { href: "#", label: "Confidentialité" },
-  { href: "#", label: "Conditions" },
-  { href: "#", label: "Cookies" },
 ];
 
 const SOCIALS = [
@@ -60,6 +54,25 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [cookieVisible, setCookieVisible] = useState(false);
+
+  useEffect(() => {
+    const accepted = localStorage.getItem("cookie_consent");
+    if (!accepted) {
+      const t = setTimeout(() => setCookieVisible(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const acceptCookies = () => {
+    localStorage.setItem("cookie_consent", "accepted");
+    setCookieVisible(false);
+  };
+
+  const declineCookies = () => {
+    localStorage.setItem("cookie_consent", "declined");
+    setCookieVisible(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +84,35 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden border-t footer-root">
+    <>
+      {/* ── Cookie Consent Banner ── */}
+      <div className={`cookie-banner ${cookieVisible ? "cookie-banner--visible" : ""}`}>
+        <div className="cookie-banner-inner">
+          <div className="cookie-banner-icon">
+            <Cookie className="w-5 h-5 text-gold" />
+          </div>
+          <div className="cookie-banner-content">
+            <p className="cookie-banner-title">Nous utilisons des cookies 🍪</p>
+            <p className="cookie-banner-text">
+              Ces cookies nous permettent d&apos;améliorer votre expérience et d&apos;analyser notre trafic.
+              Aucune donnée n&apos;est vendue à des tiers.{" "}
+              <Link href="#" className="cookie-banner-link">En savoir plus</Link>
+            </p>
+          </div>
+          <div className="cookie-banner-actions">
+            <button onClick={declineCookies} className="cookie-btn-decline">
+              <X className="w-3.5 h-3.5" />
+              Refuser
+            </button>
+            <button onClick={acceptCookies} className="cookie-btn-accept">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Accepter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer className="relative overflow-hidden border-t footer-root">
       {/* ── Animated background orbs ── */}
       <div className="footer-orb footer-orb-1" />
       <div className="footer-orb footer-orb-2" />
@@ -180,24 +221,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── BOTTOM ── */}
-        <div className="footer-divider mt-12" />
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs footer-muted">
-            © {new Date().getFullYear()} AIVANA · Tous droits réservés · Fait avec{" "}
-            <span className="text-gold">✦</span> et beaucoup d&apos;IA
-          </p>
-          <div className="flex items-center gap-4">
-            {LEGAL_LINKS.map(({ href, label }, i) => (
-              <span key={href} className="flex items-center gap-4">
-                {i > 0 && <span className="footer-dot">·</span>}
-                <Link href={href} className="text-xs footer-muted hover:text-gold transition-colors duration-200">
-                  {label}
-                </Link>
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── Floating animated plane ── */}
@@ -418,7 +441,105 @@ export default function Footer() {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50%       { transform: translateY(-8px) rotate(5deg); }
         }
+
+        /* ── Cookie Banner ── */
+        .cookie-banner {
+          position: fixed;
+          bottom: 24px; left: 50%;
+          transform: translateX(-50%) translateY(120px);
+          z-index: 9999;
+          width: calc(100% - 32px);
+          max-width: 720px;
+          opacity: 0;
+          pointer-events: none;
+          transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+        }
+        .cookie-banner--visible {
+          transform: translateX(-50%) translateY(0);
+          opacity: 1;
+          pointer-events: all;
+        }
+        .cookie-banner-inner {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px 20px;
+          border-radius: 16px;
+          background: var(--bg-secondary);
+          border: 1px solid rgba(197,160,89,0.25);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(197,160,89,0.08);
+          backdrop-filter: blur(20px);
+        }
+        .cookie-banner-icon {
+          flex-shrink: 0;
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(197,160,89,0.1);
+          border: 1px solid rgba(197,160,89,0.2);
+        }
+        .cookie-banner-content { flex: 1; min-width: 0; }
+        .cookie-banner-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-primary);
+          margin-bottom: 3px;
+        }
+        .cookie-banner-text {
+          font-size: 12px;
+          color: var(--text-muted);
+          line-height: 1.5;
+        }
+        .cookie-banner-link {
+          color: #C5A059;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+        .cookie-banner-actions {
+          display: flex;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+        .cookie-btn-decline {
+          display: flex; align-items: center; gap-: 6px;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text-muted);
+          background: transparent;
+          border: 1px solid var(--border-color);
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex; align-items: center; gap: 5px;
+        }
+        .cookie-btn-decline:hover {
+          color: var(--text-primary);
+          border-color: var(--text-muted);
+        }
+        .cookie-btn-accept {
+          display: flex; align-items: center; gap: 5px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 800;
+          color: #0a1128;
+          background: linear-gradient(135deg, #C5A059, #d4b070);
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+        .cookie-btn-accept:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(197,160,89,0.35);
+        }
+        @media (max-width: 580px) {
+          .cookie-banner-inner { flex-direction: column; align-items: flex-start; }
+          .cookie-banner-actions { width: 100%; justify-content: flex-end; }
+        }
       `}</style>
     </footer>
+    </>
   );
 }
