@@ -351,7 +351,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div className="flex font-sans min-h-[calc(100vh-80px)] relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Sidebar */}
             <aside className="w-64 hidden md:flex flex-col sticky top-20 h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
 
