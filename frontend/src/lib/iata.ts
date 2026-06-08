@@ -184,9 +184,10 @@ export function skyscannerFlightUrl(params: {
     return `https://www.skyscanner.fr/transport/vols/${path}?adults=${adults}&currency=EUR`;
 }
 
-/** Build a Booking.com hotel search deep link */
+/** Build a Booking.com search deep link — targets a specific hotel by name when provided, so the link surfaces that exact property instead of a generic city search */
 export function bookingHotelUrl(params: {
     city: string;
+    hotelName?: string;
     checkin?: string;  // YYYY-MM-DD
     checkout?: string; // YYYY-MM-DD
     adults?: number;
@@ -194,7 +195,7 @@ export function bookingHotelUrl(params: {
 }): string {
     const base = 'https://www.booking.com/searchresults.fr.html';
     const p = new URLSearchParams({
-        ss: params.city,
+        ss: params.hotelName ? `${params.hotelName}, ${params.city}` : params.city,
         lang: 'fr',
         ...(params.checkin ? { checkin: params.checkin } : {}),
         ...(params.checkout ? { checkout: params.checkout } : {}),
@@ -202,6 +203,21 @@ export function bookingHotelUrl(params: {
         no_rooms: String(params.rooms || 1),
     });
     return `${base}?${p.toString()}`;
+}
+
+/** Build a Google Flights search deep link scoped to a specific airline + route + date, so the link reflects the exact flight chosen rather than a generic route search */
+export function googleFlightsUrl(params: {
+    origin: string;
+    destination: string;
+    depart: string;  // YYYY-MM-DD
+    return?: string; // YYYY-MM-DD
+    airline?: string;
+}): string {
+    const formatDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const parts = [`Vols de ${params.origin} à ${params.destination}`, `le ${formatDate(params.depart)}`];
+    if (params.return) parts.push(`retour le ${formatDate(params.return)}`);
+    if (params.airline) parts.push(`avec ${params.airline}`);
+    return `https://www.google.com/travel/flights?q=${encodeURIComponent(parts.join(' '))}`;
 }
 
 /** Build a GetYourGuide activity search deep link */

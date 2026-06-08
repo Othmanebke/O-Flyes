@@ -39,13 +39,24 @@ function addDays(date: Date, days: number): string {
     return new Date(date.getTime() + days * 86400000).toISOString().split('T')[0];
 }
 
+// Validates an LLM-estimated travel date: must be a real, parseable, future date.
+// Falls back to null (caller defaults to +45 days) for anything malformed or in the past —
+// we'd rather ground prices on a sane default than on a hallucinated/expired date.
+function parseTravelDate(estimate: unknown): string | null {
+    if (typeof estimate !== 'string') return null;
+    const d = new Date(estimate + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    if (d.getTime() < Date.now()) return null;
+    return estimate;
+}
+
 const ACTIVITY_EMOJIS = ['🏛️', '🌅', '🍽️', '🚶', '🎭', '🌿', '🏖️', '🛶'];
 
 // Ground a single LLM-suggested destination in real flight/hotel/activity data.
 // Returns dataSource: 'unavailable' (rather than fabricated numbers) when no real source responds.
-async function groundDestination(draft: DraftDestination, originCity: string): Promise<EnrichedDestination> {
+async function groundDestination(draft: DraftDestination, originCity: string, travelDate: string | null): Promise<EnrichedDestination> {
     const nights = draft.nights && draft.nights > 0 ? Math.min(draft.nights, 21) : 7;
-    const departDate = addDays(new Date(), 45);
+    const departDate = travelDate || addDays(new Date(), 45);
     const checkin = departDate;
     const checkout = addDays(new Date(departDate + 'T00:00:00'), nights);
     const originCode = getIATA(originCity);
@@ -114,16 +125,19 @@ export async function POST(request: Request) {
         // IMPORTANT: the LLM only proposes destination *ideas* here — it must NOT invent
         // prices or activities. Real prices/activities are fetched server-side afterwards
         // from Amadeus/OpenTripMap and merged in, so users never see fabricated numbers.
+        const today = new Date().toISOString().split('T')[0];
         const systemPrompt = {
             role: 'system' as const,
             content: `Tu es AIVANA, un assistant de voyage expert, luxueux et intelligent.
+Nous sommes le ${today}.
 Ton objectif est de planifier des voyages parfaits selon le budget et les envies de l'utilisateur.
 Tu dois TOUJOURS répondre au format JSON valide.
 La structure JSON doit être EXACTEMENT :
 {
   "content": "Ta réponse textuelle amicale, formatée en Markdown, détaillant le plan de voyage ou posant des questions...",
   "originCity": "Nom de la ville de départ mentionnée par l'utilisateur (ex: Lyon), ou null si non mentionnée",
-  "budgetEur": 1500, // Nombre entier = budget total en euros mentionné par l'utilisateur, ou null si non mentionné
+  "budgetEur": 1500, // Nombre entier = budget TOTAL en euros mentionné par l'utilisateur, ou null si non mentionné
+  "travelDateEstimate": "2026-09-15", // Date de départ au format AAAA-MM-JJ. Déduis-la de ce que dit l'utilisateur (mois, "dans X semaines", saison...) en te basant sur la date du jour ci-dessus. Mets null si vraiment aucun indice de période n'est donné.
   "enriched": [
     {
       "name": "Nom de la ville",
@@ -133,7 +147,10 @@ La structure JSON doit être EXACTEMENT :
     }
   ] // Liste d'idées de destinations si applicable, sinon tableau vide []
 }
-IMPORTANT :
+RÈGLES DE CONVERSATION (très important) :
+- Les DEUX informations minimales pour proposer de vraies destinations chiffrées sont : le BUDGET et la PÉRIODE/DATE du voyage. Si l'utilisateur ne t'a donné NI l'une NI l'autre dans la conversation, ne remplis PAS "enriched" (tableau vide []) et demande-lui ces deux infos dans "content", de façon chaleureuse et concise — ne pose pas 10 questions, juste budget + période (et éventuellement ville de départ).
+- Si l'utilisateur a donné au moins une des deux infos (budget OU période), tu peux proposer des idées de destinations dans "enriched", mais mentionne dans "content" l'info manquante pour affiner les prochaines suggestions.
+- Si le budget annoncé est manifestement trop bas pour la/les destination(s) demandée(s) ou évoquées (ex : "50€ pour Dubaï"), dis-le clairement et tout de suite dans "content" — explique que ce budget ne permettra pas de couvrir vol + hôtel pour cette destination, et invite l'utilisateur à soit augmenter son budget, soit choisir une destination plus abordable. Les prix réels affichés ensuite confirmeront ton message.
 - N'INVENTE JAMAIS de prix, de noms d'hôtels ou d'activités : ne mets PAS ces champs dans le JSON, ils seront ajoutés automatiquement à partir de données réelles après ta réponse.
 - Dans "content", ne donne pas de chiffres de prix précis toi-même — limite-toi aux idées, ambiances, période, conseils. Les prix réels seront affichés séparément dans les cartes destination.
 - Ne renvoie QUE le JSON, pas de code markdown ou d'explications avant ou après. Rédige ton texte de \`content\` en Markdown.`
@@ -151,6 +168,7 @@ IMPORTANT :
         let draftDestinations: DraftDestination[] = [];
         let originCity = "Paris";
         let budgetEur: number | null = null;
+        let travelDate: string | null = null;
 
         try {
             const parsed = JSON.parse(responseText);
@@ -162,6 +180,7 @@ IMPORTANT :
             if (typeof parsed.budgetEur === 'number' && parsed.budgetEur > 0) {
                 budgetEur = parsed.budgetEur;
             }
+            travelDate = parseTravelDate(parsed.travelDateEstimate);
         } catch (e) {
             console.error("Failed to parse AI JSON response", responseText);
             // Fallback in case the LLM didn't respect the JSON format
@@ -170,7 +189,7 @@ IMPORTANT :
 
         // Ground each suggested destination in real flight/hotel/activity data (parallel, capped)
         const toGround = draftDestinations.slice(0, MAX_DESTINATIONS_TO_GROUND);
-        const grounded = await Promise.all(toGround.map(d => groundDestination(d, originCity)));
+        const grounded = await Promise.all(toGround.map(d => groundDestination(d, originCity, travelDate)));
 
         if (grounded.some(d => d.dataSource === 'unavailable')) {
             assistantMessage += `\n\n_Note : pour certaines destinations, les prix en temps réel n'ont pas pu être récupérés à l'instant — pas de chiffre affiché plutôt qu'une estimation peu fiable. Réessaie dans un instant pour des prix à jour._`;

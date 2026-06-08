@@ -168,7 +168,7 @@ async function fetchAmadeusHotels(city: string, checkin: string, checkout: strin
                 image_url: `https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80`,
                 description: hotel.description?.text || `Séjour à ${hotel.name}`,
                 amenities: [],
-                booking_url: bookingHotelUrl({ city, checkin, checkout, adults }),
+                booking_url: bookingHotelUrl({ city, hotelName: hotel.name, checkin, checkout, adults }),
             };
         });
     } catch {
@@ -217,7 +217,7 @@ export async function GET(request: Request) {
             image_url: `https://images.unsplash.com/photo-${photoId}?w=600&q=80`,
             description: `Profitez d'un séjour exceptionnel au ${name}, idéalement situé à ${city}.`,
             amenities,
-            booking_url: bookingHotelUrl({ city, checkin, checkout, adults }),
+            booking_url: bookingHotelUrl({ city, hotelName: name, checkin, checkout, adults }),
         };
     });
 

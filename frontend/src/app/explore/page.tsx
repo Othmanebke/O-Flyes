@@ -325,7 +325,8 @@ export default function ExplorePage() {
   const topFive = DESTINATIONS.filter(d => d.topDest);
   const activeCount = (continent !== "Tous" ? 1 : 0) + (budgetTier !== "tous" ? 1 : 0) + (style !== "Tous" ? 1 : 0);
 
-  // ── Estimations réelles vol + hôtel pour chaque destination du Top 5 ──
+  // ── Estimations réelles vol + hôtel récupérées en direct pour tout le catalogue ──
+  // (alimente à la fois le carrousel Top 5 et la grille de destinations en dessous)
   const [liveEstimates, setLiveEstimates] = useState<Record<string, LiveEstimate>>({});
   const [loadingEstimates, setLoadingEstimates] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -334,7 +335,7 @@ export default function ExplorePage() {
     let cancelled = false;
     setLoadingEstimates(true);
     Promise.allSettled(
-      topFive.map(d => Promise.allSettled([
+      DESTINATIONS.map(d => Promise.allSettled([
         axios.get("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
         axios.get("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
       ]))
@@ -342,7 +343,7 @@ export default function ExplorePage() {
       if (cancelled) return;
       const next: Record<string, LiveEstimate> = {};
       results.forEach((res, i) => {
-        const d = topFive[i];
+        const d = DESTINATIONS[i];
         if (res.status !== "fulfilled") { next[d.id] = { flightFrom: null, hotelFrom: null, estimatedTotal: null }; return; }
         const [flightsRes, hotelsRes] = res.value;
         const flights = flightsRes.status === "fulfilled" ? (flightsRes.value.data as Array<{ price: number }>) : [];
@@ -581,12 +582,34 @@ export default function ExplorePage() {
                     </div>
                     <p className="text-xs leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{d.description}</p>
                     <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-                      <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>Budget total 2 pers / 2 semaines</p>
-                      <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{d.tripBudget.min.toLocaleString()}€<span className="font-normal text-sm" style={{ color: 'var(--text-muted)' }}> — {d.tripBudget.max.toLocaleString()}€</span></p>
-                      <div className="flex gap-4 mt-1.5">
-                        <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Plane className="w-3 h-3 text-gold" /> ~{d.flightFrom}€ <span style={{ color: 'var(--text-muted)' }}>A/R/pers</span></span>
-                        <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Hotel className="w-3 h-3 text-gold" /> ~{d.hotelPerNight}€ <span style={{ color: 'var(--text-muted)' }}>/nuit</span></span>
-                      </div>
+                      {(() => {
+                        const est = liveEstimates[d.id];
+                        if (loadingEstimates || !est) {
+                          return (
+                            <div className="animate-pulse space-y-2">
+                              <div className="h-2 w-32 rounded bg-white/10" />
+                              <div className="h-4 w-24 rounded bg-white/10" />
+                              <div className="h-2 w-40 rounded bg-white/5" />
+                            </div>
+                          );
+                        }
+                        if (est.estimatedTotal === null) {
+                          return <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Estimation indisponible pour le moment</p>;
+                        }
+                        return (
+                          <>
+                            <p className="text-[10px] uppercase tracking-wider mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                              Estimation réelle — 2 pers / 2 semaines
+                            </p>
+                            <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{est.estimatedTotal.toLocaleString()}€ <span className="font-normal text-sm" style={{ color: 'var(--text-muted)' }}>estimé</span></p>
+                            <div className="flex gap-4 mt-1.5">
+                              <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Plane className="w-3 h-3 text-gold" /> dès {est.flightFrom}€ <span style={{ color: 'var(--text-muted)' }}>A/R/pers</span></span>
+                              <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Hotel className="w-3 h-3 text-gold" /> dès {est.hotelFrom}€ <span style={{ color: 'var(--text-muted)' }}>/nuit</span></span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-2 mb-4">
                       <Calendar className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />

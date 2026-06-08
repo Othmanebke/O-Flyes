@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getIATA, skyscannerFlightUrl } from '@/lib/iata';
+import { getIATA, googleFlightsUrl } from '@/lib/iata';
 
 // ── Static airline data ────────────────────────────────────────────────────
 const AIRLINES = [
@@ -165,7 +165,7 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
                 currency: 'EUR',
                 type: offer.itineraries[0].segments.length === 1 ? 'Direct' : 'Escale',
                 class: offer.travelerPricings[0].fareDetailsBySegment[0].cabin === 'BUSINESS' ? 'Business' : 'Economy',
-                booking_url: skyscannerFlightUrl({ origin: originCity, destination: destCity, depart: departDate, adults }),
+                booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, airline: seg.carrierCode }),
             };
         });
     } catch {
@@ -229,8 +229,8 @@ export async function GET(request: Request) {
             currency: "EUR",
             type: isStop ? "1 escale" : "Direct",
             class: i === 3 ? "Business" : "Economy",
-            booking_url: skyscannerFlightUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), adults }),
-            google_flights_url: `https://www.google.com/travel/flights?q=Vols+${encodeURIComponent(origin)}+vers+${encodeURIComponent(destination)}`,
+            booking_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
+            google_flights_url: googleFlightsUrl({ origin, destination, depart, ...(returnDate ? { return: returnDate } : {}), airline: airline.name }),
         };
     });
 
