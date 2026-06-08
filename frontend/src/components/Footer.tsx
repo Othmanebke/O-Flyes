@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Plane } from "lucide-react";
+import { Plane, Send, ArrowRight } from "lucide-react";
+import { useState } from "react";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Destinations" },
@@ -56,35 +57,48 @@ const SOCIALS = [
 ];
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [focused, setFocused] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+      setEmail("");
+    }
+  };
+
   return (
-    <footer
-      className="relative border-t"
-      style={{
-        backgroundColor: "var(--bg-secondary)",
-        borderTopColor: "var(--border-color)",
-      }}
-    >
-      {/* Top gold line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-gold to-transparent opacity-30" />
+    <footer className="relative overflow-hidden border-t footer-root">
+      {/* ── Animated background orbs ── */}
+      <div className="footer-orb footer-orb-1" />
+      <div className="footer-orb footer-orb-2" />
+      <div className="footer-orb footer-orb-3" />
 
-      <div className="max-w-6xl mx-auto px-6 sm:px-8 py-14">
-        {/* Main grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16">
+      {/* ── Animated top border ── */}
+      <div className="footer-top-line" />
 
-          {/* Brand */}
-          <div className="space-y-4">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 pt-16 pb-10">
+
+        {/* ── MAIN GRID ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
+
+          {/* ── Col 1 · Brand ── */}
+          <div className="space-y-5">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center border border-gold/20 bg-gold/10 group-hover:bg-gold/20 transition-colors"
-              >
+              <div className="footer-logo-icon group-hover:scale-110 transition-transform duration-300">
                 <Plane className="w-4 h-4 text-gold group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <span className="font-serif text-base font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+              <span className="font-serif text-base font-bold tracking-tight footer-brand-text">
                 AI<span className="text-gold">VANA</span>
               </span>
             </Link>
-            <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--text-muted)" }}>
-              Planifiez vos voyages avec l&apos;intelligence artificielle. Simple, rapide, personnalisé.
+
+            <p className="text-sm leading-relaxed max-w-xs footer-muted">
+              Explorez le monde avec l&apos;intelligence artificielle. Vos voyages
+              de rêve, planifiés à la perfection.
             </p>
 
             {/* Socials */}
@@ -96,112 +110,88 @@ export default function Footer() {
                   title={s.name}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 hover:text-gold border"
-                  style={{
-                    color: "var(--text-muted)",
-                    borderColor: "var(--border-color)",
-                    backgroundColor: "transparent",
-                  }}
+                  className="footer-social-btn group"
                 >
-                  {s.icon}
+                  <span className="footer-social-icon">{s.icon}</span>
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="space-y-4">
-            <h3
-              className="text-[11px] font-black uppercase tracking-[0.18em]"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Explorer
-            </h3>
+          {/* ── Col 2 · Navigation ── */}
+          <div className="space-y-5">
+            <h3 className="footer-section-title">Explorer</h3>
             <nav className="flex flex-col gap-2.5">
               {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm transition-all duration-200 hover:text-gold hover:translate-x-0.5"
-                  style={{ color: "var(--text-muted)" }}
+                  className="footer-nav-link group flex items-center gap-2"
                 >
-                  {label}
+                  <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-gold" />
+                  <span>{label}</span>
                 </Link>
               ))}
             </nav>
           </div>
 
-          {/* Contact */}
-          <div className="space-y-4">
-            <h3
-              className="text-[11px] font-black uppercase tracking-[0.18em]"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Contact
-            </h3>
-            <div className="space-y-3">
-              <a
-                href="mailto:contact@aivana.io"
-                className="text-sm transition-all hover:text-gold block"
-                style={{ color: "var(--text-muted)" }}
-              >
-                contact@aivana.io
-              </a>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Lun – Ven · 9h – 18h GMT+1
-              </p>
+          {/* ── Col 3 · Newsletter ── */}
+          <div className="space-y-5">
+            <h3 className="footer-section-title">Newsletter</h3>
+            <p className="text-sm footer-muted leading-relaxed">
+              Recevez nos meilleures offres et inspirations voyage directement dans votre boîte mail.
+            </p>
 
-              {/* Newsletter inline */}
-              <form
-                onSubmit={(e) => e.preventDefault()}
-                className="flex gap-2 pt-1"
-              >
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className={`footer-input-wrap ${focused ? "footer-input-focused" : ""}`}>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
                   placeholder="votre@email.com"
-                  className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs focus:outline-none transition-all"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    border: "1px solid var(--border-color)",
-                    color: "var(--text-primary)",
-                  }}
+                  className="footer-input"
                 />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
-                  style={{
-                    backgroundColor: "var(--gold)",
-                    color: "#0a1128",
-                  }}
-                >
-                  OK
-                </button>
-              </form>
-            </div>
+              </div>
+              <button
+                type="submit"
+                className={`footer-submit-btn ${submitted ? "footer-submit-success" : ""}`}
+              >
+                {submitted ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Inscrit !
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Send className="w-3.5 h-3.5" />
+                    S&apos;inscrire
+                  </span>
+                )}
+              </button>
+            </form>
+
+            <p className="text-xs footer-muted opacity-60">
+              Pas de spam · Désabonnement en 1 clic
+            </p>
           </div>
         </div>
 
-        {/* Bottom */}
-        <div
-          className="mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3"
-          style={{ borderTop: "1px solid var(--border-color)" }}
-        >
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            © {new Date().getFullYear()} AIVANA · Tous droits réservés
+        {/* ── BOTTOM ── */}
+        <div className="footer-divider mt-12" />
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs footer-muted">
+            © {new Date().getFullYear()} AIVANA · Tous droits réservés · Fait avec{" "}
+            <span className="text-gold">✦</span> et beaucoup d&apos;IA
           </p>
           <div className="flex items-center gap-4">
             {LEGAL_LINKS.map(({ href, label }, i) => (
               <span key={href} className="flex items-center gap-4">
-                {i > 0 && (
-                  <span className="text-xs" style={{ color: "var(--border-color)" }}>
-                    ·
-                  </span>
-                )}
-                <Link
-                  href={href}
-                  className="text-xs transition-all hover:text-gold"
-                  style={{ color: "var(--text-muted)" }}
-                >
+                {i > 0 && <span className="footer-dot">·</span>}
+                <Link href={href} className="text-xs footer-muted hover:text-gold transition-colors duration-200">
                   {label}
                 </Link>
               </span>
@@ -209,6 +199,226 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* ── Floating animated plane ── */}
+      <div className="footer-plane" aria-hidden>
+        <Plane className="w-full h-full text-gold" />
+      </div>
+
+      <style>{`
+        /* ── Root ── */
+        .footer-root {
+          background: var(--bg-secondary);
+          border-top-color: var(--border-color);
+        }
+
+        /* ── Animated top gradient line ── */
+        .footer-top-line {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(197,160,89,0.6) 30%,
+            rgba(197,160,89,1) 50%,
+            rgba(197,160,89,0.6) 70%,
+            transparent 100%
+          );
+          background-size: 200% 100%;
+          animation: shimmer-line 4s ease-in-out infinite;
+        }
+        @keyframes shimmer-line {
+          0%   { background-position: 200% center; opacity: 0.4; }
+          50%  { background-position: 0% center;   opacity: 1;   }
+          100% { background-position: -200% center; opacity: 0.4; }
+        }
+
+        /* ── Background orbs ── */
+        .footer-orb {
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          filter: blur(80px);
+          animation: orb-drift 10s ease-in-out infinite;
+        }
+        .footer-orb-1 {
+          width: 400px; height: 300px;
+          top: -80px; left: -80px;
+          background: radial-gradient(circle, rgba(197,160,89,0.12) 0%, transparent 70%);
+          animation-duration: 12s;
+        }
+        .footer-orb-2 {
+          width: 350px; height: 350px;
+          top: -60px; right: -60px;
+          background: radial-gradient(circle, rgba(80,105,138,0.10) 0%, transparent 70%);
+          animation-duration: 15s;
+          animation-delay: -4s;
+        }
+        .footer-orb-3 {
+          width: 250px; height: 200px;
+          bottom: 0; left: 40%;
+          background: radial-gradient(circle, rgba(197,160,89,0.07) 0%, transparent 70%);
+          animation-duration: 18s;
+          animation-delay: -8s;
+        }
+        @keyframes orb-drift {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33%       { transform: translate(20px, -15px) scale(1.05); }
+          66%       { transform: translate(-15px, 10px) scale(0.97); }
+        }
+
+        /* ── Logo icon ── */
+        .footer-logo-icon {
+          width: 36px; height: 36px;
+          border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(197,160,89,0.1);
+          border: 1px solid rgba(197,160,89,0.25);
+          box-shadow: 0 0 20px rgba(197,160,89,0.08);
+        }
+
+        /* ── Brand text ── */
+        .footer-brand-text { color: var(--text-primary); }
+
+        /* ── Muted text ── */
+        .footer-muted { color: var(--text-muted); }
+
+        /* ── Section title ── */
+        .footer-section-title {
+          font-size: 11px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          color: var(--text-primary);
+          position: relative;
+          padding-bottom: 10px;
+        }
+        .footer-section-title::after {
+          content: '';
+          position: absolute;
+          bottom: 0; left: 0;
+          width: 24px; height: 2px;
+          background: linear-gradient(90deg, #C5A059, transparent);
+          border-radius: 2px;
+          animation: title-bar 3s ease-in-out infinite;
+        }
+        @keyframes title-bar {
+          0%, 100% { width: 24px; opacity: 0.8; }
+          50%       { width: 40px; opacity: 1; }
+        }
+
+        /* ── Nav links ── */
+        .footer-nav-link {
+          font-size: 14px;
+          color: var(--text-muted);
+          transition: color 0.2s, transform 0.2s;
+        }
+        .footer-nav-link:hover { color: #C5A059; transform: translateX(4px); }
+
+        /* ── Social buttons ── */
+        .footer-social-btn {
+          width: 32px; height: 32px;
+          border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid var(--border-color);
+          color: var(--text-muted);
+          transition: all 0.25s;
+          position: relative;
+          overflow: hidden;
+        }
+        .footer-social-btn::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05));
+          opacity: 0;
+          transition: opacity 0.25s;
+        }
+        .footer-social-btn:hover::before { opacity: 1; }
+        .footer-social-btn:hover {
+          color: #C5A059;
+          border-color: rgba(197,160,89,0.5);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(197,160,89,0.15);
+        }
+
+        /* ── Newsletter input ── */
+        .footer-input-wrap {
+          border-radius: 10px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          transition: border-color 0.3s, box-shadow 0.3s;
+          overflow: hidden;
+        }
+        .footer-input-focused {
+          border-color: rgba(197,160,89,0.6);
+          box-shadow: 0 0 0 3px rgba(197,160,89,0.08), 0 0 20px rgba(197,160,89,0.1);
+        }
+        .footer-input {
+          width: 100%; padding: 10px 14px;
+          background: transparent;
+          color: var(--text-primary);
+          font-size: 13px;
+          outline: none;
+          border: none;
+        }
+        .footer-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+        /* ── Submit button ── */
+        .footer-submit-btn {
+          width: 100%; padding: 10px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          background: linear-gradient(135deg, #C5A059, #d4b070);
+          color: #0a1128;
+          border: none; cursor: pointer;
+          transition: all 0.3s;
+          position: relative;
+          overflow: hidden;
+        }
+        .footer-submit-btn::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+        .footer-submit-btn:hover::before { opacity: 1; }
+        .footer-submit-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 24px rgba(197,160,89,0.35);
+        }
+        .footer-submit-btn:active { transform: scale(0.97); }
+        .footer-submit-success {
+          background: linear-gradient(135deg, #5a9e6f, #3d8058) !important;
+          color: #fff !important;
+        }
+
+        /* ── Divider ── */
+        .footer-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--border-color) 30%, var(--border-color) 70%, transparent);
+        }
+
+        /* ── Dot separator ── */
+        .footer-dot { color: var(--border-color); font-size: 12px; }
+
+        /* ── Floating plane ── */
+        .footer-plane {
+          position: absolute;
+          bottom: 16px; right: 24px;
+          width: 28px; height: 28px;
+          opacity: 0.08;
+          animation: plane-float 6s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes plane-float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50%       { transform: translateY(-8px) rotate(5deg); }
+        }
+      `}</style>
     </footer>
   );
 }
