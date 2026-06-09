@@ -361,7 +361,7 @@ export default function DashboardPage() {
                         initial={{ opacity: 0, y: 50, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] bg-[#141822] border border-gold/30 rounded-2xl p-4 shadow-2xl flex items-center gap-5 backdrop-blur-xl"
+                        className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[150] bg-[#141822] border border-gold/30 rounded-2xl p-4 shadow-2xl flex flex-wrap items-center gap-4 backdrop-blur-xl max-w-[calc(100vw-2rem)]"
                     >
                         <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 shrink-0">
                             <Sparkles className="w-5 h-5 text-gold" />
@@ -447,7 +447,7 @@ export default function DashboardPage() {
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none z-0" />
 
                 {/* Header */}
-                <header className="h-16 px-8 flex items-center justify-between z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
+                <header className="h-16 px-4 sm:px-8 flex items-center justify-between z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
                     <div className="flex items-center gap-4">
                         <h1 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                             {showSettings ? "Paramètres du compte" : (selectedTrip ? selectedTrip.title : "Vue Générale")}
@@ -483,7 +483,7 @@ export default function DashboardPage() {
                 </header>
 
                 {/* Scrollable Area */}
-                <div className="flex-1 p-4 md:p-8 z-10">
+                <div className="flex-1 p-4 pb-28 md:p-8 md:pb-8 z-10">
                     <div className="max-w-6xl mx-auto">
                         {showSettings ? (
                             /* Settings View */
@@ -653,7 +653,7 @@ export default function DashboardPage() {
                                 {/* Welcome */}
                                 <div className="mb-12 flex items-end justify-between">
                                     <div className="space-y-1">
-                                        <h2 className="text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
+                                        <h2 className="text-2xl sm:text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
                                         <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
                                     </div>
                                 </div>
@@ -746,7 +746,7 @@ export default function DashboardPage() {
                             /* Trip Details View */
                             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                                 {/* Tab Switcher */}
-                                <div className="flex items-center gap-6 border-b border-white/[0.04] mb-8 overflow-x-auto scroolbar-hide">
+                                <div className="flex items-center gap-2 sm:gap-6 border-b border-white/[0.04] mb-8 overflow-x-auto scrollbar-hide pb-px">
                                     <button
                                         onClick={() => setSelectedTrip(null)}
                                         className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors pb-4 mr-4 flex-shrink-0"
@@ -868,7 +868,7 @@ export default function DashboardPage() {
                                                     </div>
                                                     <div className="space-y-3 relative z-10">
                                                         {analysis.coverage.missingOutboundFlight && (
-                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
                                                                         <Plane className="w-4 h-4 text-orange-400" />
@@ -882,7 +882,7 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
                                                         {analysis.coverage.missingHotelNights > 0 && (
-                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                                                                         <MapPin className="w-4 h-4 text-blue-400" />
@@ -896,7 +896,7 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
                                                         {!analysis.coverage.hasActivity && (
-                                                            <div className="flex items-center justify-between bg-black/40 rounded-xl p-4 border border-white/[0.04]">
+                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                                                                         <Compass className="w-4 h-4 text-emerald-400" />
@@ -996,8 +996,8 @@ export default function DashboardPage() {
                                 )}
 
                                 {activeTab === 'itinerary' && (
-                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-8">
-                                        <div className="flex items-center justify-between mb-10">
+                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-4 sm:p-8">
+                                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-10">
                                             <h3 className="text-xl font-medium text-white">Itinéraire détaillé</h3>
                                             <div className="flex items-center gap-3">
                                                 <button
@@ -1117,8 +1117,8 @@ export default function DashboardPage() {
                                 )}
 
                                 {activeTab === 'documents' && (
-                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-8">
-                                        <div className="flex items-center justify-between mb-10">
+                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-4 sm:p-8">
+                                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-10">
                                             <div>
                                                 <h3 className="text-xl font-medium text-white mb-1">Coffre-fort Documents</h3>
                                                 <p className="text-xs text-zinc-500 font-medium">Billets, passeports et confirmations sécurisés</p>
@@ -1172,7 +1172,7 @@ export default function DashboardPage() {
             </main>
 
             {/* Mobile Bottom Navigation */}
-            < nav className="fixed bottom-0 left-0 right-0 h-20 bg-[#0A0D14]/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-6 lg:hidden z-40" >
+            < nav className="fixed bottom-0 left-0 right-0 h-20 bg-[#0A0D14]/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-6 md:hidden z-40" >
                 <button onClick={() => { setSelectedTrip(null); setShowSettings(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${!selectedTrip && !showSettings ? "text-gold translate-y-[-4px]" : "text-white/30 hover:text-white/60"}`}>
                     <div className={`p-2 rounded-xl transition-all ${!selectedTrip && !showSettings ? "bg-gold/10" : ""}`}>
                         <LayoutDashboard className="w-5 h-5" />
