@@ -12,6 +12,7 @@ const links = [
   { href: "/explore", label: "Destinations" },
   { href: "/explore/flights", label: "Vols" },
   { href: "/explore/hotels", label: "Hôtels" },
+  { href: "/explore/activities", label: "Activités" },
   { href: "/blog", label: "Blog" },
 ];
 

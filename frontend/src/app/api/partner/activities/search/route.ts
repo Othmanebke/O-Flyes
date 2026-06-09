@@ -123,7 +123,7 @@ async function fetchOpenTripMap(city: string): Promise<any[] | null> {
                 currency: 'EUR',
                 rating: (4.2 + Math.random() * 0.7).toFixed(1),
                 reviews: Math.floor(800 + Math.random() * 5000),
-                image_url: `https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&q=80`,
+                image_url: `https://images.unsplash.com/photo-${['1533105079780-92b9be482077', '1499678783-d2352b98df87'][i % 2]}?w=600&q=80`,
                 description: `Visitez ${p.name}, une attraction incontournable de ${city}.`,
                 booking_url: gygActivityUrl(city),
                 viator_url: viatorActivityUrl(city),
