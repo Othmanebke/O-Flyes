@@ -353,7 +353,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex font-sans min-h-[calc(100vh-80px)] relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div className="flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Smart Replacement Prompt (Toast) */}
             <AnimatePresence>
                 {replacementPrompt && (
@@ -389,7 +389,7 @@ export default function DashboardPage() {
             </AnimatePresence>
             
             {/* Sidebar */}
-            <aside className="w-64 hidden md:flex flex-col sticky top-20 h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
+            <aside className="w-64 hidden md:flex flex-col sticky top-0 h-screen" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
 
 
                 <nav className="flex-1 px-4 space-y-1">
@@ -442,7 +442,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col relative min-h-[calc(100vh-80px)]" style={{ backgroundColor: 'var(--bg-primary)' }}>
+            <main className="flex-1 flex flex-col relative min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 {/* Subtle top gradient */}
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none z-0" />
 
@@ -651,7 +651,7 @@ export default function DashboardPage() {
                         ) : !selectedTrip ? (
                             <>
                                 {/* Welcome */}
-                                <div className="mb-12 flex items-end justify-between">
+                                <div className="mb-6 sm:mb-12 flex items-end justify-between">
                                     <div className="space-y-1">
                                         <h2 className="text-2xl sm:text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
                                         <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
@@ -778,11 +778,11 @@ export default function DashboardPage() {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.98 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                className="rounded-2xl p-8 flex flex-col md:flex-row gap-8 items-stretch relative overflow-hidden"
+                                                className="rounded-2xl p-4 sm:p-8 flex flex-col md:flex-row gap-4 sm:gap-8 items-stretch relative overflow-hidden"
                                                 style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
                                             >
                                                 {/* Score Scoreboard */}
-                                                <div className="flex-shrink-0 flex flex-col items-center justify-center p-8 rounded-xl min-w-[220px] relative z-10" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
+                                                <div className="flex-shrink-0 flex flex-col items-center justify-center p-4 sm:p-8 rounded-xl sm:min-w-[220px] relative z-10" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
                                                     <span className="text-xs font-medium text-zinc-400 mb-6">Indice de complétion</span>
                                                     <div className="relative w-28 h-28 flex items-center justify-center mb-4">
                                                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -805,7 +805,7 @@ export default function DashboardPage() {
                                                         <div>
                                                             <span className="text-xs font-medium text-zinc-400 block mb-2">Budget Estimé</span>
                                                             <div className="flex items-baseline gap-3">
-                                                                <span className="text-4xl font-medium text-white">{analysis.budget.used}€</span>
+                                                                <span className="text-3xl sm:text-4xl font-medium text-white">{analysis.budget.used}€</span>
                                                                 <span className="text-sm text-zinc-500 font-medium">/ {analysis.budget.total > 0 ? `${analysis.budget.total}€` : 'Non défini'}</span>
                                                             </div>
                                                         </div>
@@ -825,7 +825,7 @@ export default function DashboardPage() {
                                                     </div>
 
                                                     {/* Quick metrics row */}
-                                                    <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/5">
+                                                    <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-4 sm:pt-8 border-t border-white/5">
                                                         <div className="space-y-1">
                                                             <p className="text-xs text-zinc-500 font-medium">Réservations</p>
                                                             <p className="text-xl font-medium text-white">{bookings.length}</p>
@@ -949,7 +949,7 @@ export default function DashboardPage() {
                                         </div>
 
                                         <div className="lg:col-span-1">
-                                            <div className="bg-zinc-900/50 rounded-2xl p-8 border border-white/[0.04] sticky top-8">
+                                            <div className="bg-zinc-900/50 rounded-2xl p-4 sm:p-8 border border-white/[0.04] lg:sticky lg:top-8">
                                                 <div className="flex items-center gap-3 mb-8">
                                                     <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                                                         <Sparkles className="w-4 h-4 text-zinc-300" />

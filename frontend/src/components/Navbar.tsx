@@ -94,7 +94,7 @@ export default function Navbar() {
           <div className="w-10 h-10 bg-gold/10 rounded-2xl flex items-center justify-center border border-gold/20 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(184,134,11,0.1)]">
             <Plane className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform" />
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="hidden md:flex flex-col justify-center">
             <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
           </div>
         </Link>

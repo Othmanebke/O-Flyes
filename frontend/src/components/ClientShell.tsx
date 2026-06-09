@@ -10,7 +10,7 @@ import PageTransition, { FloatingParticles } from "@/components/PageTransition";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 
 /* Routes qui ont leur propre layout complet — on ne leur affiche ni Navbar, ni Footer */
-const STANDALONE_ROUTES = ["/onboarding"];
+const STANDALONE_ROUTES = ["/onboarding", "/dashboard"];
 
 /* Ecran d'intro cinématique : affiché une seule fois par session, au tout premier
    chargement du site (Next.js App Router rend les pages côté client, donc app/loading.tsx
