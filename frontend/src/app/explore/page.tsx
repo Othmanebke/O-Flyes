@@ -334,29 +334,42 @@ export default function ExplorePage() {
   useEffect(() => {
     let cancelled = false;
     setLoadingEstimates(true);
-    Promise.allSettled(
-      DESTINATIONS.map(d => Promise.allSettled([
-        axios.get("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
-        axios.get("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
-      ]))
-    ).then(results => {
-      if (cancelled) return;
+
+    // Batch requests in groups of 5 to avoid overwhelming Amadeus test-tier rate limits
+    const BATCH = 5;
+    const processResult = (res: PromiseSettledResult<PromiseSettledResult<any>[]>, d: typeof DESTINATIONS[0]) => {
+      if (res.status !== "fulfilled") return { flightFrom: null, hotelFrom: null, estimatedTotal: null };
+      const [flightsRes, hotelsRes] = res.value;
+      const flights = flightsRes.status === "fulfilled" ? (flightsRes.value.data as Array<{ price: number }>) : [];
+      const hotels = hotelsRes.status === "fulfilled" ? (hotelsRes.value.data as Array<{ price_per_night: number }>) : [];
+      // `flightFrom` = prix aller-retour TOTAL pour 2 personnes (API toujours round-trip maintenant)
+      const flightFrom = flights.length ? Math.min(...flights.map(f => f.price)) : null;
+      const hotelFrom = hotels.length ? Math.min(...hotels.map(h => h.price_per_night)) : null;
+      const estimatedTotal = (flightFrom !== null && hotelFrom !== null) ? flightFrom + (hotelFrom * NIGHTS) : null;
+      return { flightFrom, hotelFrom, estimatedTotal };
+    };
+
+    (async () => {
       const next: Record<string, LiveEstimate> = {};
-      results.forEach((res, i) => {
-        const d = DESTINATIONS[i];
-        if (res.status !== "fulfilled") { next[d.id] = { flightFrom: null, hotelFrom: null, estimatedTotal: null }; return; }
-        const [flightsRes, hotelsRes] = res.value;
-        const flights = flightsRes.status === "fulfilled" ? (flightsRes.value.data as Array<{ price: number }>) : [];
-        const hotels = hotelsRes.status === "fulfilled" ? (hotelsRes.value.data as Array<{ price_per_night: number }>) : [];
-        // `flightFrom` = prix aller-retour TOTAL pour 2 personnes (API toujours round-trip maintenant)
-        const flightFrom = flights.length ? Math.min(...flights.map(f => f.price)) : null;
-        const hotelFrom = hotels.length ? Math.min(...hotels.map(h => h.price_per_night)) : null;
-        const estimatedTotal = (flightFrom !== null && hotelFrom !== null) ? flightFrom + (hotelFrom * NIGHTS) : null;
-        next[d.id] = { flightFrom, hotelFrom, estimatedTotal };
-      });
-      setLiveEstimates(next);
-      setLoadingEstimates(false);
-    });
+      for (let i = 0; i < DESTINATIONS.length; i += BATCH) {
+        if (cancelled) return;
+        const batch = DESTINATIONS.slice(i, i + BATCH);
+        const batchResults = await Promise.allSettled(
+          batch.map(d => Promise.allSettled([
+            axios.get("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, adults: 2 } }),
+            axios.get("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
+          ]))
+        );
+        batchResults.forEach((res, j) => {
+          const d = batch[j];
+          next[d.id] = processResult(res, d);
+        });
+        // Publish results incrementally so the UI fills in progressively
+        if (!cancelled) setLiveEstimates(prev => ({ ...prev, ...next }));
+      }
+      if (!cancelled) setLoadingEstimates(false);
+    })();
+
     return () => { cancelled = true; };
   }, []);
 
