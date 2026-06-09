@@ -201,7 +201,7 @@ function FlightsContent() {
             <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
-            <div className="relative h-[70vh] min-h-[500px]">
+            <div className="relative h-[55vh] sm:h-[70vh] min-h-[360px] sm:min-h-[500px]">
                 <div className="absolute inset-0 overflow-hidden">
                     <img
                         src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1800&q=85"
@@ -218,12 +218,12 @@ function FlightsContent() {
                 </div>
 
                 {/* Hero content */}
-                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-16">
+                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-8 sm:pt-16">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
                             <Plane className="w-3 h-3" /> Navigation Aérienne Privée
                         </div>
-                        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-5 leading-[1.05]">
+                        <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white mb-4 sm:mb-5 leading-[1.05]">
                             Envolez-vous<br />avec <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold italic">distinction</span>
                         </h1>
                         <p className="text-white/50 text-lg max-w-xl mx-auto">
@@ -233,12 +233,12 @@ function FlightsContent() {
                 </div>
 
                 {/* Search bar floats at bottom of hero */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-1/2 px-6">
+                <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-[38%] sm:translate-y-1/2 px-6">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="max-w-5xl mx-auto">
                         <form onSubmit={handleSearch} className="relative flex flex-col bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden backdrop-blur-2xl">
                             <div className="flex flex-col md:flex-row">
                             {/* Origin */}
-                            <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] relative">
+                            <div className="flex-1 flex items-center gap-4 px-6 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] relative">
                                 <MapPin className="w-4 h-4 text-gold/60 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Départ</p>
@@ -261,7 +261,7 @@ function FlightsContent() {
                             </div>
 
                             {/* Destination */}
-                            <div className="flex-1 flex items-center gap-4 px-6 py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
+                            <div className="flex-1 flex items-center gap-4 px-6 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
                                 <MapPin className="w-4 h-4 text-gold shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Destination</p>
@@ -277,7 +277,7 @@ function FlightsContent() {
                             </div>
 
                             {/* Départ date */}
-                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
                                 <Calendar className="w-4 h-4 text-gold/60 shrink-0" />
                                 <div>
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Aller</p>
@@ -292,7 +292,7 @@ function FlightsContent() {
                             </div>
 
                             {/* Retour date */}
-                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
                                 <Calendar className="w-4 h-4 text-white/20 shrink-0" />
                                 <div>
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Retour</p>
@@ -307,7 +307,7 @@ function FlightsContent() {
                             </div>
 
                             {/* Passengers */}
-                            <div className="flex items-center gap-3 px-5 py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
+                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
                                 <Users className="w-4 h-4 text-gold/60 shrink-0" />
                                 <div>
                                     <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Passagers</p>
@@ -325,7 +325,7 @@ function FlightsContent() {
 
                             </div>
 
-                            <button type="submit" className="w-full bg-gold text-[#0A0D14] font-black py-5 hover:bg-yellow-400 transition-all flex items-center justify-center gap-2.5 text-xs uppercase tracking-[0.2em] border-t border-white/[0.06]">
+                            <button type="submit" className="w-full bg-gold text-[#0A0D14] font-black py-4 sm:py-5 hover:bg-yellow-400 transition-all flex items-center justify-center gap-2.5 text-xs uppercase tracking-[0.2em] border-t border-white/[0.06]">
                                 <Search className="w-4 h-4" /> Rechercher les vols
                             </button>
 
@@ -360,7 +360,7 @@ function FlightsContent() {
             </div>
 
             {/* ── RESULTS ───────────────────────────────────────────────── */}
-            <div className="max-w-6xl mx-auto px-6 pt-40 pb-24 relative z-10">
+            <div className="max-w-6xl mx-auto px-6 pt-28 sm:pt-40 pb-24 relative z-10">
 
                 {/* Section header */}
                 <div className="flex items-center justify-between mb-12 pb-8 border-b border-white/[0.06]">

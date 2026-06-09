@@ -280,7 +280,7 @@ export default function Chatbot() {
       </div>
 
       {/* ── Pop-up Notification ────────────────────────────────────────── */}
-      <div className={`fixed bottom-[90px] right-4 sm:right-6 z-40 transition-all duration-500 origin-bottom-right max-w-[calc(100%-2rem)]
+      <div className={`fixed bottom-28 sm:bottom-[90px] right-4 sm:right-6 z-40 transition-all duration-500 origin-bottom-right max-w-[280px] sm:max-w-[calc(100%-3rem)]
         ${showPopup && !open ? "opacity-100 scale-100 translate-y-0 translate-x-0" : "opacity-0 scale-95 translate-y-4 pointer-events-none"}`}>
         <div className="bg-dark-900/80 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/10 p-4 pr-10 relative
           after:content-[''] after:absolute after:-bottom-2 after:right-6 after:w-4 after:h-4 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass } from "lucide-react";
+import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import TripProposal from "@/components/TripProposal";
@@ -389,10 +389,22 @@ export default function DashboardPage() {
             </AnimatePresence>
             
             {/* Sidebar */}
-            <aside className="w-64 hidden md:flex flex-col sticky top-0 h-screen" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-light)' }}>
+            <aside className="w-64 hidden md:flex flex-col sticky top-0 h-screen border-r border-white/[0.05]" style={{ background: 'linear-gradient(180deg, #0E1119 0%, #0A0D14 100%)' }}>
 
+                {/* Logo */}
+                <div className="px-5 py-6 border-b border-white/[0.05]">
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <div className="w-9 h-9 bg-gold/10 border border-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(184,134,11,0.12)]">
+                            <Plane className="w-4 h-4 text-gold" />
+                        </div>
+                        <div>
+                            <span className="font-bold text-sm text-white leading-none">AI<span className="text-gold">VANA</span></span>
+                            <p className="text-[9px] text-white/25 uppercase tracking-widest mt-0.5">Dashboard</p>
+                        </div>
+                    </Link>
+                </div>
 
-                <nav className="flex-1 px-4 space-y-1">
+                <nav className="flex-1 px-3 py-4 space-y-1">
                     {[
                         {
                             icon: Calendar,
@@ -410,32 +422,44 @@ export default function DashboardPage() {
                         <button
                             key={item.label}
                             onClick={item.onClick}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${item.active ? "font-medium shadow-sm" : ""}`}
-                            style={item.active ? { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' } : { color: 'var(--text-muted)' }}
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-sm group/nav border ${
+                                item.active
+                                    ? "bg-gold/10 border-gold/20 text-gold font-medium shadow-[0_0_20px_rgba(184,134,11,0.08)]"
+                                    : "border-transparent text-white/40 hover:text-white hover:bg-white/[0.05]"
+                            }`}
                         >
-                            <item.icon className="w-4 h-4" />
+                            <item.icon className={`w-4 h-4 transition-transform ${item.active ? "" : "group-hover/nav:scale-110"}`} />
                             <span>{item.label}</span>
+                            {item.active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />}
                         </button>
                     ))}
+
+                    <Link
+                        href="/"
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-sm border border-transparent text-white/40 hover:text-white hover:bg-white/[0.05] group/nav"
+                    >
+                        <Home className="w-4 h-4 group-hover/nav:scale-110 transition-transform" />
+                        <span>Accueil</span>
+                    </Link>
+
                     {emailConnected && (
-                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm bg-emerald-500/[0.06] border border-emerald-500/20 mt-2">
                             <Mail className="w-4 h-4 text-emerald-400" />
                             <span className="text-emerald-400 text-xs font-medium">Email synchronisé</span>
                         </div>
                     )}
                 </nav>
 
-                <div className="p-4" style={{ borderTop: '1px solid var(--border-light)' }}>
+                <div className="p-3 border-t border-white/[0.05]">
                     <button
                         onClick={async () => {
                             const supabase = createClient();
                             await supabase.auth.signOut();
                             router.push("/");
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors text-sm"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-sm border border-transparent text-white/30 hover:text-red-400 hover:bg-red-400/[0.08] hover:border-red-400/20 group/nav"
                     >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-4 h-4 group-hover/nav:scale-110 transition-transform" />
                         <span>Déconnexion</span>
                     </button>
                 </div>
