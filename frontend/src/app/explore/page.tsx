@@ -348,9 +348,10 @@ export default function ExplorePage() {
         const [flightsRes, hotelsRes] = res.value;
         const flights = flightsRes.status === "fulfilled" ? (flightsRes.value.data as Array<{ price: number }>) : [];
         const hotels = hotelsRes.status === "fulfilled" ? (hotelsRes.value.data as Array<{ price_per_night: number }>) : [];
+        // `flightFrom` = prix aller-retour TOTAL pour 2 personnes (API toujours round-trip maintenant)
         const flightFrom = flights.length ? Math.min(...flights.map(f => f.price)) : null;
         const hotelFrom = hotels.length ? Math.min(...hotels.map(h => h.price_per_night)) : null;
-        const estimatedTotal = (flightFrom !== null && hotelFrom !== null) ? (flightFrom * 2) + (hotelFrom * NIGHTS) : null;
+        const estimatedTotal = (flightFrom !== null && hotelFrom !== null) ? flightFrom + (hotelFrom * NIGHTS) : null;
         next[d.id] = { flightFrom, hotelFrom, estimatedTotal };
       });
       setLiveEstimates(next);
@@ -461,7 +462,7 @@ export default function ExplorePage() {
                           </p>
                           <p className="text-white font-bold text-lg">{est?.estimatedTotal?.toLocaleString()}€ <span className="text-white/50 text-sm font-normal">estimé</span></p>
                           <div className="flex gap-3 mt-1.5">
-                            <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5 text-gold/80" /> Vol dès {est?.flightFrom}€/pers</span>
+                            <span className="text-white/60 text-[10px] flex items-center gap-1"><Plane className="w-2.5 h-2.5 text-gold/80" /> Vol A/R dès {est?.flightFrom != null ? Math.round(est.flightFrom / 2) : '—'}€/pers</span>
                             <span className="text-white/60 text-[10px] flex items-center gap-1"><Hotel className="w-2.5 h-2.5 text-gold/80" /> Hôtel dès {est?.hotelFrom}€/nuit</span>
                           </div>
                         </div>
@@ -604,7 +605,7 @@ export default function ExplorePage() {
                             </p>
                             <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{est.estimatedTotal.toLocaleString()}€ <span className="font-normal text-sm" style={{ color: 'var(--text-muted)' }}>estimé</span></p>
                             <div className="flex gap-4 mt-1.5">
-                              <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Plane className="w-3 h-3 text-gold" /> dès {est.flightFrom}€ <span style={{ color: 'var(--text-muted)' }}>A/R/pers</span></span>
+                              <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Plane className="w-3 h-3 text-gold" /> dès {Math.round(est.flightFrom! / 2)}€ <span style={{ color: 'var(--text-muted)' }}>A/R/pers</span></span>
                               <span className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}><Hotel className="w-3 h-3 text-gold" /> dès {est.hotelFrom}€ <span style={{ color: 'var(--text-muted)' }}>/nuit</span></span>
                             </div>
                           </>

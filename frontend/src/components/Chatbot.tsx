@@ -50,7 +50,7 @@ function DestinationCard({ dest, onOpenProposal }: { dest: EnrichedDestination, 
         
         {dest.price_estimate && (
           <p className="text-[11px] text-white/40 italic">
-            Estimation : à partir de <strong className="text-white">{dest.price_estimate}€</strong>
+            Vol A/R + hôtel · 2 pers : à partir de <strong className="text-white">{dest.price_estimate.toLocaleString("fr-FR")}€</strong>
           </p>
         )}
 
