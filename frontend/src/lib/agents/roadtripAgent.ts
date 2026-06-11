@@ -1,24 +1,10 @@
 import { getGroqChatCompletion } from '../ai/groq';
 import type { TripContext } from './types';
+import type { RoadtripProposal } from '@/types/roadtrip';
 
-export interface RoadtripStep {
-    dayRange: string;
-    locationName: string;
-    country: string;
-    description: string;
-    transportToNext?: string;
-    estimatedCost: string;
-    activities: string[];
-}
-
-export interface RoadtripProposal {
-    title: string;
-    summary: string;
-    totalDays: number;
-    steps: RoadtripStep[];
-    generatedAt?: string;
-}
-
+// Contrairement à api/chat/route.ts, pas de grounding ici : les coûts par étape
+// (estimatedCost) viennent directement du LLM, à prendre comme un ordre de grandeur
+// et non comme un prix Amadeus réel.
 export async function runRoadtripAgent(context: TripContext): Promise<RoadtripProposal> {
     const prompt = `
 Tu es un agent expert mondial en création d'itinéraires de voyage et de roadtrips.
@@ -61,6 +47,8 @@ Le JSON doit ABSOLUMENT respecter ce format exact :
 
     const response = await getGroqChatCompletion(messages, "llama-3.3-70b-versatile", 3000, true);
     
+    // Le mode JSON de Groq garantit en théorie un JSON valide, mais on parse quand
+    // même dans un try/catch au cas où le modèle renverrait du texte tronqué.
     let parsed: any;
     try {
         parsed = JSON.parse(response.choices[0].message.content);

@@ -4,13 +4,7 @@ import { useRouter } from "next/navigation";
 import { X, Plus, Check, Loader2, MapPin, ChevronRight, Plane, Hotel, Compass } from "lucide-react";
 import axios from "axios";
 import { createClient } from "@/lib/supabase/browser";
-
-interface Trip {
-  id: string;
-  title: string;
-  destination_name?: string;
-  start_date?: string;
-}
+import type { Trip } from "@/types/trip";
 
 interface ItemPayload {
   title: string;
@@ -46,7 +40,6 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
   const [newTripName, setNewTripName] = useState("");
   const [creatingLoading, setCreatingLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);

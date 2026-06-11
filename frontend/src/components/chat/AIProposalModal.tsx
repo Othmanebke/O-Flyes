@@ -6,15 +6,7 @@ import { X, Plane, Hotel, Compass, Calendar, Check, Loader2, Sparkles, MapPin, A
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { DESTINATIONS } from "@/lib/destinations";
-
-// Reprise de l'interface du Chatbot
-interface Activity { name: string; price: number | null; emoji: string; }
-interface EnrichedDestination {
-  name: string; country: string; emoji: string;
-  dataSource: "real" | "unavailable";
-  price_estimate: number | null; booking_url: string;
-  flights_url: string; activities: Activity[];
-}
+import type { EnrichedDestination } from "@/types/chat";
 
 interface Props {
   dest: EnrichedDestination;

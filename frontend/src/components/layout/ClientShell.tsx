@@ -2,11 +2,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Chatbot from "@/components/Chatbot";
-import PlaneBackground from "@/components/PlaneBackground";
-import PageTransition, { FloatingParticles } from "@/components/PageTransition";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import Chatbot from "@/components/chat/Chatbot";
+import PlaneBackground from "@/components/layout/PlaneBackground";
+import PageTransition, { FloatingParticles } from "@/components/layout/PageTransition";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 
 /* Routes qui ont leur propre layout complet — on ne leur affiche ni Navbar, ni Footer */

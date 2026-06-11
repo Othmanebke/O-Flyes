@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 import { Suspense } from "react";
-import TripContextBanner from "@/components/TripContextBanner";
+import TripContextBanner from "@/components/trip/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Hotel {
@@ -18,7 +18,6 @@ interface Hotel {
 function HotelsContent() {
     const searchParams = useSearchParams();
     const tripIdFromUrl = searchParams.get("tripId");
-    const destFromUrl = searchParams.get("dest");
     const router = useRouter();
     const [hotels, setHotels] = useState<Hotel[]>([]);
     const [loading, setLoading] = useState(true);

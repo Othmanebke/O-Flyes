@@ -7,10 +7,10 @@ import {
     MapPin, Star, Plane, Hotel, Calendar, ArrowLeft,
     Clock, Wifi, Waves, Utensils, Dumbbell, Wind,
     ExternalLink, Sparkles, CheckCircle2, AlertTriangle,
-    Plus, Compass
+    Plus
 } from "lucide-react";
 import { DESTINATIONS, BUDGET_BADGE, BUDGET_TIERS, ALL_MONTHS } from "@/lib/destinations";
-import AddToTripModal from "@/components/AddToTripModal";
+import AddToTripModal from "@/components/trip/AddToTripModal";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 const BUDGET_LABEL: Record<string, string> = {

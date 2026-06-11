@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ThemeProvider from "@/components/ThemeProvider";
-import PremiumCursor from "@/components/PremiumCursor";
-import ClientShell from "@/components/ClientShell";
+import ThemeProvider from "@/components/layout/ThemeProvider";
+import PremiumCursor from "@/components/layout/PremiumCursor";
+import ClientShell from "@/components/layout/ClientShell";
 
 export const metadata: Metadata = {
   title: "AIVANA – Votre assistant voyage intelligent",

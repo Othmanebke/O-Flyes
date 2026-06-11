@@ -8,20 +8,7 @@ import Link from "next/link";
 import axios from "axios";
 import { AnimatePresence } from "framer-motion";
 import AIProposalModal from "./AIProposalModal";
-
-// ── Types ────────────────────────────────────────────────────────────────
-interface Activity { name: string; price: number | null; emoji: string; }
-interface EnrichedDestination {
-  name: string; country: string; emoji: string;
-  dataSource: "real" | "unavailable";
-  price_estimate: number | null; booking_url: string;
-  flights_url: string; activities: Activity[];
-}
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  enriched?: EnrichedDestination[];
-}
+import type { EnrichedDestination, ChatMessage as Message } from "@/types/chat";
 
 const SUGGESTIONS = [
   "Soleil en juillet avec 1500€",

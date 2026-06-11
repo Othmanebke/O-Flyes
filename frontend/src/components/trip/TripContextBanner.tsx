@@ -4,8 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { ArrowLeft, MapPin } from "lucide-react";
-
-interface Trip { id: string; title: string; destination_name?: string; }
+import type { Trip } from "@/types/trip";
 
 /* Bandeau affiché en haut d'une page explore quand tripId est dans l'URL */
 export default function TripContextBanner() {

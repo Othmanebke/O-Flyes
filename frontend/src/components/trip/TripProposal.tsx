@@ -4,28 +4,10 @@ import axios from "axios";
 import {
     Sparkles, Loader2, MapPin, Compass, RefreshCcw, Car, ArrowRight, Calendar, Info
 } from "lucide-react";
-import { motion } from "framer-motion";
-
-interface RoadtripStep {
-    dayRange: string;
-    locationName: string;
-    country: string;
-    description: string;
-    transportToNext?: string;
-    estimatedCost?: string;
-    activities: string[];
-}
-
-interface RoadtripProposalData {
-    title: string;
-    summary: string;
-    totalDays: number;
-    steps: RoadtripStep[];
-    generatedAt?: string;
-}
+import type { RoadtripProposal } from "@/types/roadtrip";
 
 export default function TripProposal({ tripId, destinationName }: { tripId: string, destinationName?: string }) {
-    const [proposal, setProposal] = useState<RoadtripProposalData | null>(null);
+    const [proposal, setProposal] = useState<RoadtripProposal | null>(null);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);

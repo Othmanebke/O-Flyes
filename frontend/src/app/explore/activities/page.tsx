@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 import { Suspense } from "react";
-import TripContextBanner from "@/components/TripContextBanner";
+import TripContextBanner from "@/components/trip/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Activity {
