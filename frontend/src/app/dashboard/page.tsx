@@ -4,54 +4,13 @@ import { useRouter } from "next/navigation";
 import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-import TripProposal from "@/components/TripProposal";
+import TripProposal from "@/components/trip/TripProposal";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/browser";
-import TripBudgetPanel from "@/components/TripBudgetPanel";
+import TripBudgetPanel from "@/components/trip/TripBudgetPanel";
 import GlobalLoader from "@/components/ui/GlobalLoader";
-
-interface Trip {
-    id: string;
-    title: string;
-    destination_name?: string;
-    country?: string;
-    start_date?: string;
-    end_date?: string;
-    status?: string;
-    img?: string;
-}
-
-interface Booking {
-    id: string;
-    trip_id: string;
-    type: 'flight' | 'hotel' | 'activity' | 'transport';
-    title: string;
-    provider?: string;
-    confirmation_number?: string;
-    start_datetime?: string;
-    end_datetime?: string;
-    price_estimate?: number;
-    currency?: string;
-    location?: string;
-    status?: string;
-    external_reference?: string;
-    external_url?: string;
-    booking_url?: string;
-    raw_data?: Record<string, any>;
-}
-
-interface TripAnalysis {
-    budget: { total: number; used: number; percentage: number };
-    coverage: {
-        missingHotelNights: number;
-        missingOutboundFlight: boolean;
-        missingReturnFlight: boolean;
-        emptyDays: string[];
-        hasActivity: boolean;
-    };
-    warnings: string[];
-    score: number;
-}
+import { calculateTripAnalysis } from "@/lib/trip";
+import type { Trip, Booking, TripAnalysis } from "@/types/trip";
 
 const getTripDestination = (trip: Trip | null): string => {
     if (!trip) return '';
@@ -199,37 +158,10 @@ export default function DashboardPage() {
             const res = await axios.get(`/api/trips/${tripId}/items`);
             const items: Booking[] = res.data || [];
             setBookings(items);
-            calculateAnalysis(items);
+            setAnalysis(calculateTripAnalysis(items));
         } catch (err) {
             console.error("Failed to fetch bookings", err);
         }
-    };
-
-    const calculateAnalysis = (items: Booking[]) => {
-        const flights = items.filter(b => b.type === 'flight');
-        const hotels = items.filter(b => b.type === 'hotel');
-        const activities = items.filter(b => b.type === 'activity');
-        const totalCost = items.reduce((sum, b) => sum + (b.price_estimate || 0), 0);
-        const hasOutbound = flights.length > 0;
-        const hasReturn = flights.length >= 2;
-        const hasHotel = hotels.length > 0;
-        const hasActivity = activities.length > 0;
-        let score = 0;
-        if (hasOutbound) score += 30;
-        if (hasReturn) score += 20;
-        if (hasHotel) score += 30;
-        if (hasActivity) score += 20;
-        const warnings: string[] = [];
-        if (!hasOutbound) warnings.push("Aucun vol aller réservé");
-        else if (!hasReturn) warnings.push("Vol retour manquant");
-        if (!hasHotel) warnings.push("Hébergement non réservé");
-        if (!hasActivity) warnings.push("Aucune activité planifiée");
-        setAnalysis({
-            budget: { total: 0, used: totalCost, percentage: totalCost > 0 ? 100 : 0 },
-            coverage: { missingHotelNights: hasHotel ? 0 : 1, missingOutboundFlight: !hasOutbound, missingReturnFlight: !hasReturn, emptyDays: [], hasActivity },
-            warnings,
-            score,
-        });
     };
 
     const handleSaveProfile = async () => {
@@ -872,10 +804,7 @@ export default function DashboardPage() {
                                         )}
                                         
                                         {bookings.length > 0 && (
-                                            <TripBudgetPanel
-                                                bookings={bookings}
-                                                tripTitle={selectedTrip?.title || ""}
-                                            />
+                                            <TripBudgetPanel bookings={bookings} />
                                         )}
                                     </div>
                                 )}

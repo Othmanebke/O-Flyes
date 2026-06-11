@@ -1,18 +1,11 @@
 "use client";
 import { motion } from "framer-motion";
-import { Plane, Hotel, Compass, AlertCircle, TrendingUp, CheckCircle2 } from "lucide-react";
-
-interface Booking {
-  id: string;
-  type: "flight" | "hotel" | "activity" | "transport";
-  title: string;
-  price_estimate?: number;
-  status?: string;
-}
+import { Plane, Hotel, Compass, AlertCircle } from "lucide-react";
+import { calculateTripBudget, calculateTripCompletionScore } from "@/lib/trip";
+import type { Booking } from "@/types/trip";
 
 interface Props {
   bookings: Booking[];
-  tripTitle: string;
 }
 
 const TYPES = [
@@ -22,10 +15,9 @@ const TYPES = [
   { key: "transport", label: "Transport", icon: Plane, color: "#A78BFA", bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.25)" },
 ] as const;
 
-export default function TripBudgetPanel({ bookings, tripTitle }: Props) {
-  const total = bookings.reduce((s, b) => s + (b.price_estimate || 0), 0);
+export default function TripBudgetPanel({ bookings }: Props) {
+  const total = calculateTripBudget(bookings);
   const hasUnknownPrice = bookings.some(b => !b.price_estimate);
-  const confirmed = bookings.filter(b => b.status === "confirmed").length;
 
   // Per-type breakdown
   const breakdown = TYPES.map(t => {
@@ -35,11 +27,9 @@ export default function TripBudgetPanel({ bookings, tripTitle }: Props) {
     return { ...t, items, amount, pct, count: items.length };
   }).filter(t => t.count > 0);
 
-  // Completion score based on required types
   const hasFlight = bookings.some(b => b.type === "flight");
   const hasHotel = bookings.some(b => b.type === "hotel");
-  const hasActivity = bookings.some(b => b.type === "activity");
-  const score = (hasFlight ? 35 : 0) + (hasHotel ? 35 : 0) + (hasActivity ? 20 : 0) + (bookings.length > 0 ? 10 : 0);
+  const score = calculateTripCompletionScore(bookings);
 
   if (bookings.length === 0) return null;
 
