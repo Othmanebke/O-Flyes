@@ -1,48 +1,103 @@
-# ✈️ AIVANA 
+# AIVANA
 
-> AI-powered scalable SaaS platform built with Next.js and Supabase.
+Plateforme de voyage assistée par IA : recherche de destinations, vols et hôtels (données réelles via Amadeus), activités (OpenTripMap), chatbot de planification et génération de roadtrips.
 
-## Architecture:
+## Stack technique
+
+- **Next.js 14** (App Router) + **TypeScript** + **Tailwind CSS**
+- **Supabase** (PostgreSQL, authentification, Row Level Security)
+- **Groq API** (`llama-3.3-70b-versatile`) pour le chatbot et les agents IA
+- **Amadeus** (vols/hôtels) et **OpenTripMap** (activités) pour les données réelles
+- **Framer Motion** pour les animations
+
+## Structure du projet
 
 ```text
-AIVANA/
-├── frontend/                  # Next.js 14 + TypeScript + Tailwind
-│   ├── src/app/               # App Router pages
-│   ├── src/components/        # UI Components
-│   ├── src/app/api/           # Serverless Route Handlers (Backend)
-│   └── supabase/              # Supabase migrations & seed data
+frontend/
+├── src/app/                # Pages (App Router)
+│   ├── api/                 # Route Handlers (backend)
+│   │   ├── chat/             # Chatbot IA (grounding sur prix réels)
+│   │   ├── trips/             # CRUD voyages + items + proposition de roadtrip
+│   │   ├── partner/           # Recherche vols/hôtels/activités/lieux
+│   │   ├── recommendations/   # Recommandations IA
+│   │   ├── email/             # Connexion boîtes mail (Google/Outlook) + sync
+│   │   └── ...
+│   ├── dashboard/, explore/, destination/[id]/, onboarding/, auth/, ...
+├── src/components/
+│   ├── layout/               # Navbar, Footer, ClientShell, ThemeProvider, ...
+│   ├── chat/                  # Chatbot, AIProposalModal
+│   ├── trip/                  # AddToTripModal, TripBudgetPanel, TripProposal, ...
+│   └── ui/                    # Composants génériques (GlobalLoader, ...)
+├── src/lib/
+│   ├── ai/                    # Client Groq
+│   ├── agents/                # Agents IA (roadtripAgent, ...)
+│   ├── travel/                # Clients Amadeus, OpenTripMap
+│   ├── supabase/              # Clients Supabase (browser/server)
+│   ├── validation/             # Schémas Zod
+│   ├── trip.ts                 # Calculs purs (budget, score de complétion)
+│   ├── destinations.ts         # Catalogue de destinations
+│   └── iata.ts                  # Résolution des codes IATA
+├── src/types/                # Types TypeScript partagés (trip, chat, destination, roadtrip)
+└── supabase/migrations/       # Schéma SQL + policies RLS
 ```
 
-## Tech Stack
+## Installation
 
-| Layer           | Technology                           |
-|-----------------|--------------------------------------|
-| Frontend        | Next.js 14, React, Tailwind CSS      |
-| Backend & API   | Next.js Route Handlers               |
-| Auth & DB       | Supabase (PostgreSQL + RLS + OAuth)  |
-| AI Engine       | Groq API                             |
-| Deployment      | Vercel / Render                      |
+### Prérequis
 
-## Local Development Setup
+- Node.js 18+
+- Un projet Supabase (URL + clés)
 
-### 1. Environment Variables
-Create `.env.local` in `frontend/`:
+### Variables d'environnement
+
+Copier `frontend/.env.example` vers `frontend/.env.local` et renseigner :
+
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role
-GROQ_API_KEY=your_groq_api_key
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# IA (Groq)
+GROQ_API_KEY=
+
+# Vols & hôtels (Amadeus, environnement test)
+AMADEUS_CLIENT_ID=
+AMADEUS_CLIENT_SECRET=
+
+# Activités (OpenTripMap) — optionnel, fallback sur données statiques si absent
+OPENTRIPMAP_API_KEY=
+
+# SMS de confirmation (Brevo) — optionnel
+BREVO_API_KEY=
 ```
 
-### 2. Install Dependencies & Run
+### Lancer le projet
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. Database (Supabase)
-Ensure your Supabase project is set up and run the migrations found in `frontend/supabase/migrations`.
+L'application est accessible sur `http://localhost:3000`.
 
----
-*Refactored to Option B: Removed legacy Express microservices in favor of Next.js Route Handlers + Supabase.*
+### Base de données
+
+Le schéma (tables + policies RLS) se trouve dans `frontend/supabase/migrations/`. À appliquer sur le projet Supabase via le SQL Editor ou la CLI Supabase.
+
+## Scripts disponibles
+
+Depuis `frontend/` :
+
+| Commande        | Description                          |
+|-----------------|---------------------------------------|
+| `npm run dev`   | Serveur de développement (hot reload) |
+| `npm run build` | Build de production                   |
+| `npm run start` | Démarre le build de production        |
+| `npm run lint`  | Linter ESLint                         |
+| `npm test`      | Tests unitaires (Jest)                |
+
+## Déploiement
+
+Le projet est conçu pour être déployé sur **Vercel** (root directory : `frontend/`). Penser à renseigner les variables d'environnement ci-dessus dans les paramètres du projet Vercel.
