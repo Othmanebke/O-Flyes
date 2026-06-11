@@ -48,6 +48,8 @@ export async function POST(request: Request, { params }: { params: { tripId: str
         const body = await request.json().catch(() => ({}));
         const validated = generateProposalSchema.parse(body);
 
+        // Pas de .eq('user_id', user.id) : la RLS sur trips ne renvoie ce voyage que s'il
+        // appartient à l'utilisateur connecté, donc un id qui n'est pas le nôtre tombe ici en 404.
         const { data: trip, error: tripError } = await supabase
             .from('trips')
             .select('*, destinations(name, country)')

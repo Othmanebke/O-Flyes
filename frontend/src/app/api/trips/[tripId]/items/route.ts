@@ -19,7 +19,9 @@ export async function GET(request: Request, { params }: { params: { tripId: stri
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // RLS will ensure we only get items for trips we own
+    // Pas de filtre user_id ici : la policy RLS "Users can view own trip items" vérifie déjà
+    // que trip_id appartient à un trip dont user_id = auth.uid(), donc Supabase renvoie []
+    // si on essaie de lire les items d'un voyage qui n'est pas le nôtre.
     const { data: items, error } = await supabase
         .from('trip_items')
         .select('*')
@@ -45,6 +47,8 @@ export async function POST(request: Request, { params }: { params: { tripId: str
         const body = await request.json();
         const validatedData = createTripItemSchema.parse(body);
 
+        // Idem côté insert : la policy "Users can insert own trip items" rejette l'insertion
+        // si trip_id ne correspond pas à un voyage de l'utilisateur connecté.
         const { data: newItem, error } = await supabase
             .from('trip_items')
             .insert({

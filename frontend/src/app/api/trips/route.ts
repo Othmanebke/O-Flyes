@@ -18,6 +18,8 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // .eq('user_id', ...) en plus de la RLS : ceinture et bretelles, mais surtout ça
+    // évite de dépendre uniquement des policies si jamais elles changent un jour
     const { data: trips, error } = await supabase
         .from('trips')
         .select('*, destinations(name, country, image_url)')
