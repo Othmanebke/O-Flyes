@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { getIATA, bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
 import { searchFlights, searchHotelOffers } from '@/lib/travel/amadeus';
 import { searchRealActivities } from '@/lib/travel/opentripmap';
+import type { DraftDestination, EnrichedDestination } from '@/types/chat';
 
 const chatRequestSchema = z.object({
     messages: z.array(
@@ -14,24 +15,6 @@ const chatRequestSchema = z.object({
         })
     ).min(1).max(50), // Limited message history
 });
-
-interface DraftDestination {
-    name: string;
-    country: string;
-    emoji: string;
-    nights?: number;
-}
-
-interface EnrichedDestination {
-    name: string;
-    country: string;
-    emoji: string;
-    dataSource: 'real' | 'unavailable';
-    price_estimate: number | null;
-    booking_url: string;
-    flights_url: string;
-    activities: { name: string; emoji: string; price: number | null }[];
-}
 
 const MAX_DESTINATIONS_TO_GROUND = 3;
 

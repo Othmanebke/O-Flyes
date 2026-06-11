@@ -4,28 +4,7 @@ import Link from "next/link";
 import axios from "axios";
 import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-export interface Destination {
-  id: string;
-  name: string;
-  country: string;
-  continent: string;
-  climate: string;
-  style: string[];
-  budgetTier: "petit" | "moyen" | "confort" | "luxe";
-  tripBudget: { min: number; max: number };
-  flightFrom: number;
-  hotelPerNight: number;
-  bestMonths: string[];
-  duration: string;
-  description: string;
-  highlight: string;
-  img: string;
-  topDest?: boolean;
-  continentRank?: string;
-  rating: number;
-}
+import type { Destination } from "@/types/destination";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const DESTINATIONS: Destination[] = [
