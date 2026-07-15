@@ -1,7 +1,3 @@
-// ── Shared OpenTripMap client ───────────────────────────────────────────────
-// Returns null whenever real activity data isn't available so callers can
-// avoid presenting invented activities as real ones.
-
 export interface RealActivity {
     id: string;
     title: string;
@@ -10,6 +6,7 @@ export interface RealActivity {
     description: string;
 }
 
+// retourne null si pas de clé ou si l'API ne répond pas, le caller gère le fallback
 export async function searchRealActivities(city: string, limit: number = 8): Promise<RealActivity[] | null> {
     const apiKey = process.env.OPENTRIPMAP_API_KEY;
     if (!apiKey) return null;

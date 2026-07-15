@@ -1,7 +1,3 @@
-// ── Shared Amadeus client (test environment) ───────────────────────────────
-// Returns null whenever real data isn't available (no keys, API error, no results)
-// so callers can fall back gracefully instead of presenting invented numbers as real.
-
 let amadeusToken: string | null = null;
 let amadeusTokenExpiry = 0;
 
@@ -26,6 +22,7 @@ export async function getAmadeusToken(): Promise<string | null> {
         if (!res.ok) return null;
         const data = await res.json();
         amadeusToken = data.access_token;
+        // 60s de marge pour éviter d'utiliser un token expiré en cours de requête
         amadeusTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
         return amadeusToken;
     } catch {
@@ -41,11 +38,9 @@ export interface RealFlightOffer {
     departure: string;
     arrival: string;
     duration: string;
-    // Présents uniquement quand une date de retour est fournie (vol aller-retour)
     returnDeparture?: string;
     returnArrival?: string;
     returnDuration?: string;
-    // `price` est le total aller-retour quand `returnDate` est fourni, sinon le prix aller simple
     price: number;
     currency: string;
     stops: number;
@@ -96,6 +91,7 @@ export async function searchFlights(
                 destination: lastSeg.arrival.iataCode,
                 departure: seg.departure.at,
                 arrival: lastSeg.arrival.at,
+                // Amadeus renvoie "PT2H30M", on reformate pour l'affichage
                 duration: outbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
                 price: Math.round(parseFloat(offer.price.total)),
                 currency: offer.price.currency || 'EUR',

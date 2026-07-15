@@ -6,7 +6,6 @@ import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown
 import { motion } from "framer-motion";
 import type { Destination } from "@/types/destination";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 const DESTINATIONS: Destination[] = [
   // ── TOP 5 — 1 par continent ──
   {
@@ -262,7 +261,6 @@ const DESTINATIONS: Destination[] = [
   },
 ];
 
-// ─── Config filtres ────────────────────────────────────────────────────────────
 const CONTINENTS = ["Tous", "Europe", "Asie", "Afrique", "Amérique", "Océanie"];
 const BUDGET_TIERS = [
   { id: "tous", label: "Tous", color: "bg-[#141822] text-white border-white/20", emoji: "" },
@@ -279,7 +277,6 @@ const BUDGET_BADGE: Record<string, string> = {
 };
 const STYLES = ["Tous", "plage", "culture", "nature", "aventure", "gastronomie", "bien-être", "luxe"];
 
-// ─── Estimations live (vol + hôtel) ───────────────────────────────────────────
 interface LiveEstimate {
   flightFrom: number | null;
   hotelFrom: number | null;
@@ -304,8 +301,6 @@ export default function ExplorePage() {
   const topFive = DESTINATIONS.filter(d => d.topDest);
   const activeCount = (continent !== "Tous" ? 1 : 0) + (budgetTier !== "tous" ? 1 : 0) + (style !== "Tous" ? 1 : 0);
 
-  // ── Estimations réelles vol + hôtel récupérées en direct pour tout le catalogue ──
-  // (alimente à la fois le carrousel Top 5 et la grille de destinations en dessous)
   const [liveEstimates, setLiveEstimates] = useState<Record<string, LiveEstimate>>({});
   const [loadingEstimates, setLoadingEstimates] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);

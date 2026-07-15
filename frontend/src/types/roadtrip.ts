@@ -1,5 +1,3 @@
-// Types pour la proposition de roadtrip générée par l'agent IA (lib/agents/roadtripAgent.ts).
-
 export interface RoadtripStep {
     dayRange: string;
     locationName: string;

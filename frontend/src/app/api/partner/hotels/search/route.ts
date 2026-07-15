@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { bookingHotelUrl } from '@/lib/iata';
 
-// ── Curated hotel data by city ─────────────────────────────────────────────
-// Each entry: [name, stars, category, priceMin, priceMax, amenities[], unsplash_photo_id]
+// [name, stars, category, priceMin, priceMax, amenities[], unsplash_photo_id]
 type HotelTemplate = [string, number, string, number, number, string[], string];
 
 const HOTELS_BY_CITY: Record<string, HotelTemplate[]> = {
@@ -108,14 +107,12 @@ function generateGenericHotels(city: string): HotelTemplate[] {
     ];
 }
 
-// ── Amadeus Hotel Search ────────────────────────────────────────────────────
 async function fetchAmadeusHotels(city: string, checkin: string, checkout: string, adults: number) {
     const clientId = process.env.AMADEUS_CLIENT_ID;
     const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
     if (!clientId || !clientSecret) return null;
 
     try {
-        // Step 1: Get city code (keyword search)
         const tokenRes = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -133,7 +130,6 @@ async function fetchAmadeusHotels(city: string, checkin: string, checkout: strin
         const cityCode = cityData.data?.[0]?.iataCode;
         if (!cityCode) return null;
 
-        // Step 2: Get hotels by city
         const hotelsRes = await fetch(
             `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`,
             { headers: { Authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(5000) }
@@ -143,7 +139,6 @@ async function fetchAmadeusHotels(city: string, checkin: string, checkout: strin
         const hotelIds = (hotelsData.data || []).slice(0, 8).map((h: any) => h.hotelId).join(',');
         if (!hotelIds) return null;
 
-        // Step 3: Get hotel offers (pricing)
         const offersRes = await fetch(
             `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${hotelIds}&adults=${adults}&checkInDate=${checkin}&checkOutDate=${checkout}&currencyCode=EUR`,
             { headers: { Authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(8000) }
@@ -176,7 +171,6 @@ async function fetchAmadeusHotels(city: string, checkin: string, checkout: strin
     }
 }
 
-// ── Main route ─────────────────────────────────────────────────────────────
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
@@ -184,13 +178,12 @@ export async function GET(request: Request) {
     const checkout = searchParams.get('checkout') || new Date(Date.now() + 37 * 86400000).toISOString().split('T')[0];
     const adults = parseInt(searchParams.get('adults') || '2', 10);
 
-    // Try Amadeus first
     const amadeusHotels = await fetchAmadeusHotels(city, checkin, checkout, adults);
     if (amadeusHotels && amadeusHotels.length > 0) {
         return NextResponse.json(amadeusHotels);
     }
 
-    // Static curated fallback
+    // fallback sur les données statiques si Amadeus ne répond pas
     const cityKey = Object.keys(HOTELS_BY_CITY).find(k =>
         city.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(city.toLowerCase())
     );

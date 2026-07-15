@@ -34,7 +34,6 @@ function buildPreferencesText(prefs: Record<string, unknown> | null | undefined)
     return parts.join(' ; ');
 }
 
-// NOTE: We don't fetch from DB in GET anymore, we return 404 so the frontend knows it has to generate or load from local storage.
 export async function GET(request: Request, { params }: { params: { tripId: string } }) {
     return NextResponse.json({ proposal: null, generatedAt: null });
 }
@@ -48,8 +47,7 @@ export async function POST(request: Request, { params }: { params: { tripId: str
         const body = await request.json().catch(() => ({}));
         const validated = generateProposalSchema.parse(body);
 
-        // Pas de .eq('user_id', user.id) : la RLS sur trips ne renvoie ce voyage que s'il
-        // appartient à l'utilisateur connecté, donc un id qui n'est pas le nôtre tombe ici en 404.
+        // RLS on trips handles ownership — no explicit user_id filter needed
         const { data: trip, error: tripError } = await supabase
             .from('trips')
             .select('*, destinations(name, country)')
@@ -83,8 +81,6 @@ export async function POST(request: Request, { params }: { params: { tripId: str
 
         const proposal = await runRoadtripAgent(context);
 
-        // We DO NOT save to the database here to avoid the missing column error.
-        // The frontend will save it in localStorage.
         return NextResponse.json({ proposal, generatedAt: proposal.generatedAt }, { status: 201 });
     } catch (err: unknown) {
         if (err instanceof z.ZodError) {

@@ -9,17 +9,10 @@ import PlaneBackground from "@/components/layout/PlaneBackground";
 import PageTransition, { FloatingParticles } from "@/components/layout/PageTransition";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 
-/* Routes qui ont leur propre layout complet — on ne leur affiche ni Navbar, ni Footer */
 const STANDALONE_ROUTES = ["/onboarding", "/dashboard"];
-
-/* Ecran d'intro cinématique : affiché une seule fois par session, au tout premier
-   chargement du site (Next.js App Router rend les pages côté client, donc app/loading.tsx
-   ne se déclenche jamais — c'est ici, dans le shell racine, qu'on contrôle l'intro). */
 const INTRO_SEEN_KEY = "oflyes_intro_seen";
 
 function IntroSplash({ children }: { children: React.ReactNode }) {
-  // Démarre à `false` : le contenu s'affiche immédiatement (pas d'écran blanc),
-  // l'intro vient ensuite se superposer par-dessus si elle n'a jamais été vue.
   const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
@@ -56,7 +49,6 @@ export default function ClientShell({ children }: { children: React.ReactNode })
   const isStandalone = STANDALONE_ROUTES.some((r) => pathname.startsWith(r));
 
   if (isStandalone) {
-    /* Dashboard / onboarding : on render juste les enfants + chatbot */
     return (
       <IntroSplash>
         <main className="flex-1">{children}</main>
@@ -65,7 +57,6 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     );
   }
 
-  /* Pages normales : Navbar + animations + Footer */
   return (
     <IntroSplash>
       <FloatingParticles />

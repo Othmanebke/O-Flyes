@@ -1,4 +1,4 @@
-/** Map of city/airport name → IATA code (3-letter) */
+// city → IATA code, utilisé pour construire les liens Skyscanner/Google Flights
 export const IATA: Record<string, string> = {
     // France
     "Paris": "CDG",
@@ -142,35 +142,28 @@ export const IATA: Record<string, string> = {
     "Seychelles": "SEZ",
 };
 
-/**
- * Returns the IATA code for a city, or a 3-letter abbreviation as fallback.
- */
 export function getIATA(city: string): string {
     if (!city) return 'XXX';
-    // Direct match
     if (IATA[city]) return IATA[city];
-    // Case-insensitive
     const lower = city.toLowerCase();
     const found = Object.keys(IATA).find(k => k.toLowerCase() === lower);
     if (found) return IATA[found];
-    // Partial match (city contains key or key contains city)
+    // gère les cas "Lyon, France" ou "Barcelone (Espagne)" renvoyés par l'autocomplete
     const partial = Object.keys(IATA).find(k => lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower));
     if (partial) return IATA[partial];
-    // Fallback: first 3 uppercase letters
     return city.substring(0, 3).toUpperCase().replace(/\s/g, 'X');
 }
 
-/** Format a date string YYYY-MM-DD → YYMMDD (Skyscanner format) */
+// YYYY-MM-DD → YYMMDD (format attendu par Skyscanner dans l'URL)
 export function toSkyscannerDate(dateStr: string): string {
-    return dateStr.replace(/-/g, '').substring(2); // "2025-06-01" → "250601"
+    return dateStr.replace(/-/g, '').substring(2);
 }
 
-/** Build a Skyscanner deep link */
 export function skyscannerFlightUrl(params: {
     origin: string;
     destination: string;
-    depart: string;  // YYYY-MM-DD
-    return?: string; // YYYY-MM-DD
+    depart: string;
+    return?: string;
     adults?: number;
 }): string {
     const orig = getIATA(params.origin);
@@ -184,7 +177,6 @@ export function skyscannerFlightUrl(params: {
     return `https://www.skyscanner.fr/transport/vols/${path}?adults=${adults}&currency=EUR`;
 }
 
-/** Build a Booking.com search deep link — targets a specific hotel by name when provided, so the link surfaces that exact property instead of a generic city search */
 export function bookingHotelUrl(params: {
     city: string;
     hotelName?: string;
@@ -205,12 +197,11 @@ export function bookingHotelUrl(params: {
     return `${base}?${p.toString()}`;
 }
 
-/** Build a Google Flights search deep link scoped to a specific airline + route + date, so the link reflects the exact flight chosen rather than a generic route search */
 export function googleFlightsUrl(params: {
     origin: string;
     destination: string;
-    depart: string;  // YYYY-MM-DD
-    return?: string; // YYYY-MM-DD
+    depart: string;
+    return?: string;
     airline?: string;
 }): string {
     const formatDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -220,12 +211,10 @@ export function googleFlightsUrl(params: {
     return `https://www.google.com/travel/flights?q=${encodeURIComponent(parts.join(' '))}`;
 }
 
-/** Build a GetYourGuide activity search deep link */
 export function gygActivityUrl(city: string): string {
     return `https://www.getyourguide.fr/s/?q=${encodeURIComponent(city)}&et=2&currency=EUR`;
 }
 
-/** Build a Viator activity search deep link */
 export function viatorActivityUrl(city: string): string {
     return `https://www.viator.com/fr-FR/search?text=${encodeURIComponent(city)}`;
 }

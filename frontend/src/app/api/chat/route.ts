@@ -11,20 +11,18 @@ const chatRequestSchema = z.object({
     messages: z.array(
         z.object({
             role: z.enum(['user', 'assistant', 'system']),
-            content: z.string().min(1).max(50000), // Increased max length for detailed itineraries
+            content: z.string().min(1).max(50000),
         })
-    ).min(1).max(50), // Limited message history
+    ).min(1).max(50),
 });
 
+// on limite à 3 pour pas exploser le quota Amadeus à chaque message
 const MAX_DESTINATIONS_TO_GROUND = 3;
 
 function addDays(date: Date, days: number): string {
     return new Date(date.getTime() + days * 86400000).toISOString().split('T')[0];
 }
 
-// Validates an LLM-estimated travel date: must be a real, parseable, future date.
-// Falls back to null (caller defaults to +45 days) for anything malformed or in the past —
-// we'd rather ground prices on a sane default than on a hallucinated/expired date.
 function parseTravelDate(estimate: unknown): string | null {
     if (typeof estimate !== 'string') return null;
     const d = new Date(estimate + 'T00:00:00');
@@ -35,10 +33,9 @@ function parseTravelDate(estimate: unknown): string | null {
 
 const ACTIVITY_EMOJIS = ['🏛️', '🌅', '🍽️', '🚶', '🎭', '🌿', '🏖️', '🛶'];
 
-// Ground a single LLM-suggested destination in real flight/hotel/activity data.
-// Returns dataSource: 'unavailable' (rather than fabricated numbers) when no real source responds.
 async function groundDestination(draft: DraftDestination, originCity: string, travelDate: string | null): Promise<EnrichedDestination> {
     const nights = draft.nights && draft.nights > 0 ? Math.min(draft.nights, 21) : 7;
+    // 45 jours = première fenêtre dispo sur la plupart des compagnies low-cost
     const departDate = travelDate || addDays(new Date(), 45);
     const checkin = departDate;
     const checkout = addDays(new Date(departDate + 'T00:00:00'), nights);
@@ -52,7 +49,6 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
         searchRealActivities(draft.name, 6),
     ]);
 
-    // `flights` is now a round-trip search (returnDate = checkout) — `price` is already the full aller-retour total
     const cheapestFlight = flights ? Math.min(...flights.map(f => f.price)) : null;
     const cheapestHotel = hotels ? Math.min(...hotels.map(h => h.pricePerNight)) : null;
 
@@ -67,7 +63,7 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
     const realActivities = (activities || []).slice(0, 3).map((a, i) => ({
         name: a.title,
         emoji: ACTIVITY_EMOJIS[i % ACTIVITY_EMOJIS.length],
-        price: null, // OpenTripMap exposes real places but not real pricing — never invent a number here
+        price: null,
     }));
 
     return {
@@ -104,10 +100,6 @@ export async function POST(request: Request) {
         const body = await request.json();
         const validatedData = chatRequestSchema.parse(body);
 
-        // Inject a system prompt to guide the AI and force a JSON structure.
-        // IMPORTANT: the LLM only proposes destination *ideas* here — it must NOT invent
-        // prices or activities. Real prices/activities are fetched server-side afterwards
-        // from Amadeus/OpenTripMap and merged in, so users never see fabricated numbers.
         const today = new Date().toISOString().split('T')[0];
         const systemPrompt = {
             role: 'system' as const,
@@ -141,10 +133,7 @@ RÈGLES DE CONVERSATION (très important) :
 
         const messagesWithSystem = [systemPrompt, ...validatedData.messages];
 
-        // Call Groq AI Helper with json mode
         const completion = await getGroqChatCompletion(messagesWithSystem, "llama-3.3-70b-versatile", 2000, true);
-
-        // Extract the text content from the Groq message format
         const responseText = completion.choices[0]?.message?.content || "{}";
 
         let assistantMessage = "";
@@ -166,11 +155,9 @@ RÈGLES DE CONVERSATION (très important) :
             travelDate = parseTravelDate(parsed.travelDateEstimate);
         } catch (e) {
             console.error("Failed to parse AI JSON response", responseText);
-            // Fallback in case the LLM didn't respect the JSON format
             assistantMessage = responseText;
         }
 
-        // Ground each suggested destination in real flight/hotel/activity data (parallel, capped)
         const toGround = draftDestinations.slice(0, MAX_DESTINATIONS_TO_GROUND);
         const grounded = await Promise.all(toGround.map(d => groundDestination(d, originCity, travelDate)));
 
@@ -178,8 +165,6 @@ RÈGLES DE CONVERSATION (très important) :
             assistantMessage += `\n\n_Note : pour certaines destinations, les prix en temps réel n'ont pas pu être récupérés à l'instant — pas de chiffre affiché plutôt qu'une estimation peu fiable. Réessaie dans un instant pour des prix à jour._`;
         }
 
-        // If we silently defaulted the departure city to Paris (LLM found no mention of one),
-        // say so explicitly rather than letting the user think the price reflects their own city.
         if (originCity === "Paris" && grounded.length > 0) {
             const userMentionedParis = JSON.stringify(validatedData.messages).toLowerCase().includes('paris');
             if (!userMentionedParis) {

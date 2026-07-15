@@ -1,6 +1,3 @@
-// Types partagés entre le chatbot, l'API /api/chat et la modale de proposition IA.
-
-// Idée de destination brute proposée par le LLM, avant enrichissement par les vraies données partenaires.
 export interface DraftDestination {
     name: string;
     country: string;
@@ -14,7 +11,6 @@ export interface ChatActivity {
     emoji: string;
 }
 
-// Destination "groundée" : prix et activités viennent d'Amadeus / OpenTripMap, jamais inventés par le LLM.
 export interface EnrichedDestination {
     name: string;
     country: string;

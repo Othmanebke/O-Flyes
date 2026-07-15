@@ -2,19 +2,11 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-/* ─────────────────────────────────────────
-   PageTransition
-   Injecte 3 systèmes d'animation globaux :
-   1. Transition de page (fade + slide)
-   2. Scroll-reveal automatique (IntersectionObserver)
-   3. Particules dorées flottantes en fond
-───────────────────────────────────────── */
 export default function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const mainRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  /* ── 1. Scroll-reveal auto ── */
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -37,7 +29,6 @@ export default function PageTransition({ children }: { children: React.ReactNode
     };
 
     scan();
-    // Re-scan after a short delay to catch dynamically-rendered elements
     const t = setTimeout(scan, 600);
     return () => {
       clearTimeout(t);
@@ -45,7 +36,6 @@ export default function PageTransition({ children }: { children: React.ReactNode
     };
   }, [pathname]);
 
-  /* ── 2. Page-entry animation ── */
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
@@ -66,10 +56,6 @@ export default function PageTransition({ children }: { children: React.ReactNode
   );
 }
 
-/* ─────────────────────────────────────────
-   FloatingParticles
-   Petites particules dorées flottantes
-───────────────────────────────────────── */
 export function FloatingParticles() {
   const particles = Array.from({ length: 12 }, (_, i) => ({
     id: i,

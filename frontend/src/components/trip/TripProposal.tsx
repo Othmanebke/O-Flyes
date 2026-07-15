@@ -13,13 +13,12 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Load from local storage
         const cached = localStorage.getItem(`roadtrip_${tripId}`);
         if (cached) {
             try {
                 setProposal(JSON.parse(cached));
-            } catch (e) {
-                // Error parsing, ignore
+            } catch {
+                // ignore
             }
         }
         setLoading(false);
@@ -79,7 +78,6 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
 
     return (
         <div className="space-y-6">
-            {/* Header / regenerate */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
                     <h3 className="text-2xl font-serif text-white">{proposal.title}</h3>
@@ -98,7 +96,6 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
 
             {error && <p className="text-red-400 text-xs">{error}</p>}
 
-            {/* Summary */}
             <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 blur-[50px] pointer-events-none rounded-full" />
                 <div className="flex items-center gap-2 mb-3">
@@ -110,7 +107,6 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
                 <p className="text-sm text-zinc-300 leading-relaxed relative z-10">{proposal.summary}</p>
             </div>
 
-            {/* Steps Timeline */}
             <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6 sm:p-8">
                 <div className="flex items-center gap-2 mb-8">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
@@ -122,7 +118,6 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
                 <div className="space-y-8 relative">
                     {proposal.steps.map((step, index) => (
                         <div key={index} className="relative group">
-                            {/* Vertical Line */}
                             {index !== proposal.steps.length - 1 && (
                                 <div className="absolute left-[19px] top-10 bottom-[-2rem] w-[2px] bg-white/5 z-0"></div>
                             )}

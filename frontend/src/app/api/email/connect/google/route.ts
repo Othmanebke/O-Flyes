@@ -9,14 +9,7 @@ export async function POST() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // TODO: Full Gmail OAuth flow
-    // 1. Generate state & PKCE loop
-    // 2. Redirect to Google OAuth consent
-    // 3. Handle callback, securely encrypt tokens
-    // 4. Update 'email_connections' table with encrypted tokens
+    // TODO: Gmail OAuth flow
 
-    return NextResponse.json({
-        message: 'Gmail connection feature is not fully implemented yet in the new architecture.',
-        status: 'pending_implementation'
-    }, { status: 501 });
+    return NextResponse.json({ error: 'Fonctionnalité non disponible pour le moment.' }, { status: 501 });
 }

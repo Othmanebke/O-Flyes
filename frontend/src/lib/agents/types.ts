@@ -1,20 +1,14 @@
-// Shared types for the multi-agent trip proposal pipeline.
-// Each agent receives a narrow slice of context and returns a structured,
-// independently-renderable section. Numeric fields are always grounded in
-// real search results (Amadeus/OpenTripMap) — agents only narrate around them,
-// they never invent prices, names or figures.
-
 export interface TripContext {
     tripId: string;
     title: string;
     destinationName: string | null;
     country: string | null;
     originCity: string;
-    startDate: string | null;  // ISO date, may be null if undecided
+    startDate: string | null;
     endDate: string | null;
     travelers: number;
     budgetEur: number | null;
-    preferences: string;       // free-text wishes gathered from the trip/chat context
+    preferences: string;
 }
 
 export interface DestinationBrief {

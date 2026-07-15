@@ -1,5 +1,3 @@
-// Types liés aux voyages de l'utilisateur et à leurs réservations (table trips / bookings côté Supabase).
-
 export interface Trip {
     id: string;
     title: string;

@@ -44,7 +44,6 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
   const [creatingLoading, setCreatingLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  /* ── Auth check ── */
   useEffect(() => {
     if (!isOpen) return;
     const check = async () => {

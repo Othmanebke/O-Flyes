@@ -1,5 +1,3 @@
-// Types liés au catalogue de destinations (catalogue statique enrichi de données partenaires).
-
 export interface Flight {
     airline: string;
     type: string;

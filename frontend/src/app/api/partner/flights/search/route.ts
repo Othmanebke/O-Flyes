@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getIATA, googleFlightsUrl } from '@/lib/iata';
 
-// ── Static airline data ────────────────────────────────────────────────────
 const AIRLINES = [
     { name: "Air France", logo: "AF", hub: "CDG" },
     { name: "Emirates", logo: "EK", hub: "DXB" },
@@ -15,8 +14,7 @@ const AIRLINES = [
     { name: "Iberia", logo: "IB", hub: "MAD" },
 ];
 
-// ── Base prices by route distance (estimated EUR) ──────────────────────────
-// Very rough distance buckets from Paris
+// buckets approximatifs au départ de Paris, utilisés en fallback si Amadeus ne répond pas
 const ROUTE_PRICES: Record<string, { base: number; range: number; duration: string }> = {
     // Europe (short-haul)
     "LHR": { base: 80,  range: 120, duration: "01:20" },
@@ -97,7 +95,6 @@ function parseDuration(dur: string): number {
     return h + m / 60;
 }
 
-// ── Amadeus OAuth token cache ──────────────────────────────────────────────
 let amadeusToken: string | null = null;
 let amadeusTokenExpiry = 0;
 
@@ -155,7 +152,7 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
             const inbound = offer.itineraries[1];
             const seg = outbound.segments[0];
             const lastSeg = outbound.segments[outbound.segments.length - 1];
-            // `price.total` est le prix ALLER-RETOUR complet quand `returnDate` est fourni
+            // price.total = aller-retour complet, pas le prix par personne
             const price = parseFloat(offer.price.total);
             const fareDetails = offer.travelerPricings[0].fareDetailsBySegment[0];
             const includedBags = fareDetails.includedCheckedBags?.quantity || 0;
@@ -190,26 +187,24 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
     }
 }
 
-// ── Main route ─────────────────────────────────────────────────────────────
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const origin = searchParams.get('origin') || 'Paris';
     const destination = searchParams.get('destination') || 'New York';
     const depart = searchParams.get('depart') || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    // Le site ne propose plus que des recherches aller-retour : on impose toujours une date de retour
+    // on impose toujours un retour, pas de one-way sur le site
     const returnDate = searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0];
     const adults = parseInt(searchParams.get('adults') || '1', 10);
 
     const originCode = getIATA(origin);
     const destCode = getIATA(destination);
 
-    // ── Try Amadeus first ──────────────────────────────────────────────────
     const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults, origin, destination, returnDate);
     if (amadeusFlights && amadeusFlights.length > 0) {
         return NextResponse.json(amadeusFlights);
     }
 
-    // ── Smart static fallback ──────────────────────────────────────────────
+    // fallback statique si Amadeus est KO ou quota atteint
     const routeInfo = ROUTE_PRICES[destCode] || { base: 200, range: 400, duration: "05:00" };
     const durationH = parseDuration(routeInfo.duration);
 

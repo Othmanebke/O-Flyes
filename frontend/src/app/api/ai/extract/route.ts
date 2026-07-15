@@ -5,7 +5,6 @@ export async function POST(request: Request) {
         const body = await request.json();
         const text = body.emailBody || "";
 
-        // Trivial mock logic for email parsing
         let type = 'flight';
         if (text.toLowerCase().includes("hotel") || text.toLowerCase().includes("chambre")) {
             type = 'hotel';

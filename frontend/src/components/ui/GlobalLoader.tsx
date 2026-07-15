@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 interface GlobalLoaderProps {
-    /** Appelé une seule fois lorsque la barre de progression atteint 100%. */
     onComplete?: () => void;
 }
 
@@ -36,11 +35,9 @@ export default function GlobalLoader({ onComplete }: GlobalLoaderProps) {
 
     return (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0A0D14] overflow-hidden">
-            {/* Lueur discrète centrale */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] bg-gold/[0.05] rounded-full blur-[160px] pointer-events-none" />
 
             <div className="relative z-10 flex flex-col items-center">
-                {/* Lettres animées une par une */}
                 <div className="flex">
                     {LETTERS.map((letter, i) => (
                         <span key={i} className="overflow-hidden inline-block">
@@ -56,7 +53,6 @@ export default function GlobalLoader({ onComplete }: GlobalLoaderProps) {
                     ))}
                 </div>
 
-                {/* Trait fin sous le titre */}
                 <motion.div
                     initial={{ width: 0, opacity: 0 }}
                     animate={{ width: "100%", opacity: 1 }}
@@ -64,7 +60,6 @@ export default function GlobalLoader({ onComplete }: GlobalLoaderProps) {
                     className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent mt-6 mb-10 w-40 md:w-56"
                 />
 
-                {/* Barre de progression épurée */}
                 <div className="flex flex-col items-center w-44 md:w-56">
                     <div className="w-full h-px bg-white/10 overflow-hidden rounded-full">
                         <motion.div

@@ -52,7 +52,6 @@ function DestinationCard({ dest, onOpenProposal }: { dest: EnrichedDestination, 
   );
 }
 
-// ── Widget ───────────────────────────────────────────────────────────────
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<EnrichedDestination | null>(null);
@@ -81,7 +80,6 @@ export default function Chatbot() {
   };
 
   useEffect(() => {
-    // Show popup after 5 seconds if not opened
     const timer = setTimeout(() => {
       if (!open) setShowPopup(true);
     }, 5000);
@@ -95,7 +93,6 @@ export default function Chatbot() {
   useEffect(() => {
     const handleOpen = () => setOpen(true);
 
-    // Listen for preset event
     const handlePreset = (e: any) => {
       if (e.detail?.open) setOpen(true);
       if (e.detail?.text) setInput(e.detail.text);
@@ -114,20 +111,10 @@ export default function Chatbot() {
   }, []);
 
   useEffect(() => {
-    const loadHistory = async () => {
-      const pathParts = window.location.pathname.split("/");
-      const tripIdx = pathParts.indexOf("trips");
-      if (tripIdx !== -1 && pathParts[tripIdx + 1]) {
-        const tId = pathParts[tripIdx + 1];
-        // Chat history not persisted in current architecture
-      }
-    };
-
     if (open) {
       setUnread(0);
       setShowPopup(false);
       setTimeout(() => inputRef.current?.focus(), 100);
-      loadHistory();
     }
   }, [open]);
 
@@ -164,13 +151,11 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* ── Panel ──────────────────────────────────────────────────────── */}
       <div className={`fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-[380px] max-h-[70vh] sm:max-h-[82vh] flex flex-col rounded-3xl overflow-hidden
         shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-white/10 bg-dark-900
         transition-all duration-300 origin-bottom-right
         ${open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}`}>
 
-        {/* Header */}
         <div className="px-5 py-4 flex items-center gap-3 flex-shrink-0 bg-dark-900 border-b border-white/10">
           <div className="w-8 h-8 bg-[#C9A84C]/20 border border-[#C9A84C]/40 rounded-xl flex items-center justify-center flex-shrink-0">
             <Plane className="w-3.5 h-3.5 text-[#C9A84C] -rotate-45" />
@@ -191,7 +176,6 @@ export default function Chatbot() {
           </button>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5 min-h-0 bg-dark-900">
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
@@ -212,7 +196,6 @@ export default function Chatbot() {
             </div>
           ))}
 
-          {/* Typing */}
           {loading && (
             <div className="flex gap-2.5">
               <div className="flex-shrink-0 w-7 h-7 bg-dark-800 border border-white/10 rounded-xl flex items-center justify-center">
@@ -245,7 +228,6 @@ export default function Chatbot() {
           </div>
         )}
 
-        {/* Input */}
         <div className="p-3 border-t border-white/10 bg-dark-900 flex-shrink-0">
           <form onSubmit={e => { e.preventDefault(); send(input); }} className="flex gap-2">
             <input
@@ -266,7 +248,6 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* ── Pop-up Notification ────────────────────────────────────────── */}
       <div className={`fixed bottom-28 sm:bottom-[90px] right-4 sm:right-6 z-40 transition-all duration-500 origin-bottom-right max-w-[280px] sm:max-w-[calc(100%-3rem)]
         ${showPopup && !open ? "opacity-100 scale-100 translate-y-0 translate-x-0" : "opacity-0 scale-95 translate-y-4 pointer-events-none"}`}>
         <div className="bg-dark-900/80 backdrop-blur-lg rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/10 p-4 pr-10 relative
@@ -289,7 +270,6 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* ── FAB ────────────────────────────────────────────────────────── */}
       <button
         onClick={() => setOpen(v => !v)}
         aria-label={open ? "Fermer" : "Assistant voyage IA"}

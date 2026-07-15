@@ -18,13 +18,10 @@ export default function AIProposalModal({ dest, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Image réelle : on réutilise la photo du catalogue destinations si elle existe (jamais d'image générée/inventée)
   const heroImg = DESTINATIONS.find(
     d => d.name.toLowerCase() === dest.name.toLowerCase()
   )?.img || "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=80";
 
-  // Répartition indicative de l'estimation réelle (vol + hôtel / 2 pers., 7 nuits) — jamais de prix inventés :
-  // si aucune donnée réelle n'est disponible, on l'affiche clairement plutôt que d'afficher un chiffre fictif.
   const hasRealEstimate = dest.dataSource === "real" && dest.price_estimate !== null;
   const flightShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.4) : null;
   const hotelShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.6) : null;
@@ -34,7 +31,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
   const handleSaveTrip = async () => {
     try {
       setSaving(true);
-      // 1. Créer le voyage
       const tripRes = await axios.post("/api/trips", {
         title: `Voyage : ${dest.name}`,
         destination_name: dest.name,
@@ -45,7 +41,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
 
       const tripId = tripRes.data.id;
 
-      // 2. Ajouter vol + hôtel à partir des VRAIES données groundées (prix réels Amadeus, ou rien si indisponible)
       await axios.post(`/api/trips/${tripId}/items`, {
         type: 'flight',
         title: `Vol aller-retour vers ${dest.name}`,
@@ -60,7 +55,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
         external_url: dest.booking_url,
       });
 
-      // 3. Ajouter les activités réelles (OpenTripMap) — on garde le prix `null` tel quel quand il est inconnu
       for (const act of dest.activities.slice(0, 3)) {
         await axios.post(`/api/trips/${tripId}/items`, {
           type: 'activity',
@@ -107,7 +101,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden scroolbar-hide relative">
           
-          {/* HERO HEADER */}
           <div className="relative h-[25vh] min-h-[180px] w-full shrink-0">
             <img
               src={heroImg}
@@ -132,7 +125,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
             </div>
           </div>
 
-          {/* CONTENU PROPOSITION */}
           <div className="p-6 md:p-8 space-y-8">
 
             {!hasRealEstimate && (
@@ -144,9 +136,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
 
-              {/* COLONNE GAUCHE : Vol & Hôtel (données réelles groundées) */}
               <div className="space-y-8">
-                {/* Vol */}
                 <section>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
@@ -171,7 +161,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                   </div>
                 </section>
 
-                {/* Hôtel */}
                 <section>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
@@ -200,7 +189,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                 </section>
               </div>
 
-              {/* COLONNE DROITE : Activités & Résumé */}
               <div className="space-y-8">
                 <section>
                   <div className="flex items-center gap-3 mb-4">
@@ -217,7 +205,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                           <div className="text-2xl">{act.emoji}</div>
                           <div>
                             <h4 className="text-white text-sm font-medium">{act.name}</h4>
-                            <p className="text-[10px] text-white/30 mt-1">Lieu réel (OpenTripMap)</p>
+                            <p className="text-[10px] text-white/30 mt-1">Via OpenTripMap</p>
                           </div>
                         </div>
                         <div className="text-emerald-400 font-medium text-sm whitespace-nowrap">
@@ -230,7 +218,6 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                   </div>
                 </section>
 
-                {/* Bloc Total */}
                 <div className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 rounded-3xl p-6 relative overflow-hidden mt-auto">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-gold/10 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
                   <p className="text-gold/80 text-[10px] font-bold uppercase tracking-widest mb-2">Estimation réelle (vol + hôtel + activités)</p>

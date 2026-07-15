@@ -1,11 +1,3 @@
-/**
- * Safely decodes a JWT payload, handling base64url encoding and unicode characters.
- * This avoids the common `Failed to execute 'atob' on 'Window'` error when
- * encountering unpadded base64 or special characters (like accents in names).
- *
- * @param token The raw JWT string.
- * @returns The parsed payload object, or null if the token is invalid.
- */
 export function parseJwt(token: string | null): any {
     if (!token) return null;
 

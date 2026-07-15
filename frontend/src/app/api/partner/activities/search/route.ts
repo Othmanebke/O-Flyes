@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { gygActivityUrl, viatorActivityUrl } from '@/lib/iata';
 
-// ── Curated activities by city ─────────────────────────────────────────────
 // [title, category, price, duration, rating, reviews, description, unsplash_id]
 type ActivityTemplate = [string, string, number, string, number, number, string, string];
 
@@ -87,13 +86,11 @@ function generateGenericActivities(city: string): ActivityTemplate[] {
     ];
 }
 
-// ── OpenTripMap integration ───────────────────────────────────────────────
 async function fetchOpenTripMap(city: string): Promise<any[] | null> {
     const apiKey = process.env.OPENTRIPMAP_API_KEY;
     if (!apiKey) return null;
 
     try {
-        // Step 1: Geocode city
         const geoRes = await fetch(
             `https://api.opentripmap.com/0.1/fr/places/geoname?name=${encodeURIComponent(city)}&apikey=${apiKey}`,
             { signal: AbortSignal.timeout(5000) }
@@ -102,7 +99,6 @@ async function fetchOpenTripMap(city: string): Promise<any[] | null> {
         const geo = await geoRes.json();
         const { lon, lat } = geo;
 
-        // Step 2: Fetch nearby attractions
         const placesRes = await fetch(
             `https://api.opentripmap.com/0.1/fr/places/radius?radius=5000&lon=${lon}&lat=${lat}&kinds=interesting_places,tourist_facilities,cultural,natural&format=json&limit=12&apikey=${apiKey}`,
             { signal: AbortSignal.timeout(5000) }
@@ -133,7 +129,6 @@ async function fetchOpenTripMap(city: string): Promise<any[] | null> {
     }
 }
 
-// ── Main route ─────────────────────────────────────────────────────────────
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();

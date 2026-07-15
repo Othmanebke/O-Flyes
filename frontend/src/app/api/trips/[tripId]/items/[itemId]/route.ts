@@ -12,7 +12,6 @@ export async function DELETE(
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify ownership via RLS: item must belong to a trip owned by the user
     const { error } = await supabase
         .from('trip_items')
         .delete()
