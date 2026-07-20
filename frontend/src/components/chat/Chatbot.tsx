@@ -41,11 +41,11 @@ function DestinationCard({ dest, onOpenProposal }: { dest: EnrichedDestination, 
           </p>
         )}
 
-        <button 
+        <button
           onClick={onOpenProposal}
-          className="w-full bg-gold hover:bg-yellow-400 text-[#0A0D14] font-black uppercase text-xs tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-[0_0_15px_rgba(201,168,76,0.3)]"
+          className="w-full bg-gold hover:bg-yellow-400 text-[#0A0D14] font-black uppercase text-xs tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 mt-2 shadow-[0_0_15px_rgba(201,168,76,0.3)]"
         >
-          <Sparkles className="w-4 h-4" /> Découvrir la proposition
+          <Sparkles className="w-4 h-4" />Découvrir la proposition
         </button>
       </div>
     </div>

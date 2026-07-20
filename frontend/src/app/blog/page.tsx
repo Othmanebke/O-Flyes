@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Plane } from "lucide-react";
 import { motion } from "framer-motion";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 const posts = [
   {
@@ -82,6 +83,7 @@ export default function BlogPage() {
           <img
             src={featured.img}
             alt={featured.title}
+            onError={withAivanaFallback}
             className="w-full h-[400px] md:h-[480px] object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 via-[#0A0D14]/20 to-transparent" />
@@ -101,6 +103,7 @@ export default function BlogPage() {
               <img
                 src={post.img}
                 alt={post.title}
+                onError={withAivanaFallback}
                 className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 to-transparent" />

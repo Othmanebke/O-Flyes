@@ -5,6 +5,7 @@ import axios from "axios";
 import { ArrowUpRight, MapPin, Plane, Hotel, Calendar, Star, Filter, ChevronDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Destination } from "@/types/destination";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 const DESTINATIONS: Destination[] = [
   // ── TOP 5 — 1 par continent ──
@@ -423,7 +424,7 @@ export default function ExplorePage() {
                     className="relative shrink-0 w-[300px] sm:w-[360px] rounded-3xl overflow-hidden group hover:shadow-[0_0_30px_rgba(201,168,76,0.15)] transition-all snap-start"
                   >
                     <Link href={`/destination/${d.id}`} className="block">
-                      <img src={d.img} alt={d.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <img src={d.img} alt={d.name} onError={withAivanaFallback} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                       <div className="absolute top-3 left-3">
                         <span className="text-[10px] font-semibold backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(20,24,34,0.9)' }}>{d.continentRank}</span>
@@ -546,7 +547,7 @@ export default function ExplorePage() {
               >
                 <Link href={`/destination/${d.id}`} className="rounded-3xl overflow-hidden group block transition-all hover:shadow-[0_0_30px_var(--shadow-gold)]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                   <div className="relative h-48 overflow-hidden">
-                    <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={d.img} alt={d.name} onError={withAivanaFallback} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <span className={`absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full ${BUDGET_BADGE[d.budgetTier]}`}>
                       {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.emoji} {BUDGET_TIERS.find(b => b.id === d.budgetTier)?.label}

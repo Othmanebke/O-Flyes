@@ -15,7 +15,7 @@ Application de planification de voyages avec assistant IA. L'utilisateur décrit
 
 - Next.js 14 (App Router) + TypeScript + Tailwind CSS
 - Supabase (PostgreSQL + Auth + RLS)
-- Groq API — `llama-3.3-70b-versatile`
+- Groq API 
 - Amadeus (vols & hôtels) + OpenTripMap (activités)
 - Framer Motion + Zod
 
@@ -88,4 +88,4 @@ Migrations dans `frontend/supabase/migrations/`, à appliquer via le SQL Editor 
 
 ## Déploiement
 
-Vercel, root directory : `frontend/`.
+Vercel, 

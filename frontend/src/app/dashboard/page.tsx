@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/browser";
 import TripBudgetPanel from "@/components/trip/TripBudgetPanel";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 import { calculateTripAnalysis } from "@/lib/trip";
+import { withAivanaFallback } from "@/lib/placeholder";
 import type { Trip, Booking, TripAnalysis } from "@/types/trip";
 
 const getTripDestination = (trip: Trip | null): string => {
@@ -423,6 +424,13 @@ export default function DashboardPage() {
                                 <span className="text-[10px] font-medium text-emerald-400">Email Sync</span>
                             </div>
                         )}
+                        <button
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
+                            title="Nouvelle demande à l'assistant AIVANA"
+                            className="w-8 h-8 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold hover:text-[#0A0D14] hover:scale-105 transition-all shrink-0"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
                         <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
                         <div className="text-right hidden sm:block">
                             <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{userName}</p>
@@ -648,7 +656,7 @@ export default function DashboardPage() {
                                             >
                                                 <div className="h-40 relative overflow-hidden">
                                                     {trip.img ? (
-                                                        <img src={trip.img} alt={trip.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
+                                                        <img src={trip.img} alt={trip.title} onError={withAivanaFallback} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
                                                     ) : (
                                                         <div className={`absolute inset-0 bg-gradient-to-br ${grad} group-hover:opacity-90 transition-opacity`}>
                                                             <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[80px] font-black select-none">

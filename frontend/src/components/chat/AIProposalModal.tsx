@@ -7,6 +7,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { DESTINATIONS } from "@/lib/destinations";
 import type { EnrichedDestination } from "@/types/chat";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 interface Props {
   dest: EnrichedDestination;
@@ -105,6 +106,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
             <img
               src={heroImg}
               alt={dest.name}
+              onError={withAivanaFallback}
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14] via-[#0A0D14]/60 to-transparent" />

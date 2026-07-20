@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { DESTINATIONS, BUDGET_BADGE, BUDGET_TIERS, ALL_MONTHS } from "@/lib/destinations";
 import AddToTripModal from "@/components/trip/AddToTripModal";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 const BUDGET_LABEL: Record<string, string> = {
@@ -149,7 +150,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
 
                 {/* ── HERO ─────────────────────────────────────────────────────── */}
                 <div className="dest-hero">
-                    <img src={d.img} alt={d.name} className="dest-hero-img" />
+                    <img src={d.img} alt={d.name} onError={withAivanaFallback} className="dest-hero-img" />
                     <div className="dest-hero-overlay" />
 
                     {/* Back */}
@@ -342,7 +343,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                     <div key={h.id} className={`dest-card dest-card-hotel premium-card ${i === 0 ? "dest-card-best" : ""}`}>
                                         {i === 0 && <span className="dest-best-badge">⭐ Meilleur rapport</span>}
                                         <div className="dest-hotel-img-wrap">
-                                            <img src={h.image_url} alt={h.name} className="dest-hotel-img" />
+                                            <img src={h.image_url} alt={h.name} onError={withAivanaFallback} className="dest-hotel-img" />
                                             <div className="dest-hotel-img-overlay" />
                                             <span className="dest-hotel-category">{h.category}</span>
                                             <div className="dest-hotel-stars-wrap"><Stars n={h.stars} /></div>
@@ -407,7 +408,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                 activities.slice(0, 8).map((a) => (
                                     <div key={a.id} className="dest-activity-card premium-card">
                                         <div className="dest-activity-img-wrap">
-                                            <img src={a.image_url} alt={a.title} className="dest-activity-img" />
+                                            <img src={a.image_url} alt={a.title} onError={withAivanaFallback} className="dest-activity-img" />
                                             <span className="dest-activity-category">{a.category}</span>
                                         </div>
                                         <div className="dest-card-body">

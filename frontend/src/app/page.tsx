@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 const HERO_SLIDES = [
   {
@@ -65,7 +66,7 @@ export default function HomePage() {
             className="absolute inset-0 transition-opacity duration-[900ms]"
             style={{ opacity: i === slide ? 1 : 0, zIndex: i === slide ? 2 : i === prevSlide ? 1 : 0 }}
           >
-            <img src={s.img} alt={s.location} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={s.img} alt={s.location} onError={withAivanaFallback} className="absolute inset-0 w-full h-full object-cover" />
           </div>
         ))}
 

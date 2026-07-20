@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Maximize2, Plane, X, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 // Add country and location to photos for the modal
 const photos = [
@@ -83,6 +84,7 @@ export default function GalleryPage() {
                 <img
                   src={photo.src}
                   alt={photo.alt}
+                  onError={withAivanaFallback}
                   className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out"
                   loading={i < 2 ? "eager" : "lazy"}
                 />
@@ -166,6 +168,7 @@ export default function GalleryPage() {
               <img
                 src={selectedPhoto.src}
                 alt={selectedPhoto.alt}
+                onError={withAivanaFallback}
                 className="w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
               />
             </div>

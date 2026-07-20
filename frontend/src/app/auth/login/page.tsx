@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { Plane, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 function LoginContent() {
   const params = useSearchParams();
@@ -131,7 +132,7 @@ export default function LoginPage() {
             { label: "Marrakech", sub: "Maroc", img: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=120&q=70" },
           ].map((d) => (
             <div key={d.label} className="rounded-2xl overflow-hidden relative flex-1 border border-white/5">
-              <img src={d.img} alt={d.label} className="w-full h-24 object-cover" />
+              <img src={d.img} alt={d.label} onError={withAivanaFallback} className="w-full h-24 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/90 to-transparent" />
               <div className="absolute bottom-2 left-3">
                 <p className="text-white text-xs font-semibold">{d.label}</p>

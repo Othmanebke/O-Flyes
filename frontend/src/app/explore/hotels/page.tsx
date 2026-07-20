@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/browser";
 import { Suspense } from "react";
 import TripContextBanner from "@/components/trip/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
+import { withAivanaFallback } from "@/lib/placeholder";
 
 interface Hotel {
     id: string; name: string; city: string; country: string;
@@ -312,7 +313,7 @@ function HotelsContent() {
                             >
                                 <div className="relative h-60 overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14] via-[#0A0D14]/20 to-transparent z-10" />
-                                    <img src={hotel.image_url} alt={hotel.name}
+                                    <img src={hotel.image_url} alt={hotel.name} onError={withAivanaFallback}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1500ms]" />
                                     <div className="absolute top-5 left-5 z-20 flex flex-col gap-1.5">
                                         <span className="bg-[#0A0D14]/80 backdrop-blur-md text-white/80 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-white/10">
