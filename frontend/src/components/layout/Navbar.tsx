@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plane, Menu, X, Sparkles, Sun, Moon } from "lucide-react";
+import { Menu, X, Sparkles, Sun, Moon } from "lucide-react";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,13 +90,8 @@ export default function Navbar() {
         }}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 font-serif text-lg tracking-tight group" style={{ color: 'var(--text-primary)' }}>
-          <div className="w-10 h-10 bg-gold/10 rounded-2xl flex items-center justify-center border border-gold/20 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(184,134,11,0.1)]">
-            <Plane className="w-5 h-5 text-gold group-hover:rotate-12 transition-transform" />
-          </div>
-          <div className="hidden md:flex flex-col justify-center">
-            <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
-          </div>
+        <Link href="/" className="flex items-center font-serif text-lg tracking-tight group" style={{ color: 'var(--text-primary)' }}>
+          <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
         </Link>
 
         {/* Nav links - Desktop */}
@@ -128,13 +123,7 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
-            style={{
-              backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(10,17,40,0.05)',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: theme === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(10,17,40,0.10)',
-              color: 'var(--text-primary)',
-            }}
+            style={{ color: 'var(--text-primary)' }}
             title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
           >
             {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
@@ -143,18 +132,12 @@ export default function Navbar() {
           {isLoggedIn ? (
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 hover:bg-gold transition-all pl-2 pr-5 py-2 rounded-2xl group active:scale-95"
-              style={{
-                backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(10,17,40,0.05)',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border-color)',
-              }}
+              className="flex items-center gap-2.5 group active:scale-95 transition-all"
             >
               <div className="w-8 h-8 bg-gold rounded-xl flex items-center justify-center text-[10px] font-black" style={{ color: 'var(--text-inverse)' }}>
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <span className="text-[10px] uppercase font-black tracking-widest group-hover:text-dark" style={{ color: 'var(--text-primary)' }}>Profil</span>
+              <span className="text-[10px] uppercase font-black tracking-widest group-hover:text-gold transition-colors" style={{ color: 'var(--text-primary)' }}>Profil</span>
             </Link>
           ) : (
             <Link
