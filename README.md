@@ -88,4 +88,4 @@ Migrations dans `frontend/supabase/migrations/`, à appliquer via le SQL Editor 
 
 ## Déploiement
 
-Vercel, 
+Vercel : https://aivanaflyes.vercel.app/
