@@ -53,6 +53,7 @@ export default function DashboardPage() {
     const [isEditingPhone, setIsEditingPhone] = useState(false);
     const [isSavingPhone, setIsSavingPhone] = useState(false);
     const [notification, setNotification] = useState<string | null>(null);
+    const [showAddTripHint, setShowAddTripHint] = useState(false);
 
     useEffect(() => {
         const checkUser = async () => {
@@ -113,6 +114,14 @@ export default function DashboardPage() {
             setLoading(false);
         }
     };
+
+    // Show a 5s hint pointing at the "+" button so users know it adds a trip
+    useEffect(() => {
+        if (loading) return;
+        setShowAddTripHint(true);
+        const timer = setTimeout(() => setShowAddTripHint(false), 5000);
+        return () => clearTimeout(timer);
+    }, [loading]);
 
     // Refresh trips when chatbot saves a new destination
     useEffect(() => {
@@ -424,13 +433,6 @@ export default function DashboardPage() {
                                 <span className="text-[10px] font-medium text-emerald-400">Email Sync</span>
                             </div>
                         )}
-                        <button
-                            onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
-                            title="Nouvelle demande à l'assistant AIVANA"
-                            className="w-8 h-8 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold hover:text-[#0A0D14] hover:scale-105 transition-all shrink-0"
-                        >
-                            <Plus className="w-4 h-4" />
-                        </button>
                         <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
                         <div className="text-right hidden sm:block">
                             <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{userName}</p>
@@ -439,6 +441,31 @@ export default function DashboardPage() {
                                     <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-white" /> Pro</span>
                                     : "Basic"}
                             </p>
+                        </div>
+                        <div className="relative shrink-0">
+                            <button
+                                onClick={() => { setShowAddTripHint(false); window.dispatchEvent(new CustomEvent("open-chatbot")); }}
+                                title="Ajouter un nouveau voyage"
+                                className="w-8 h-8 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold hover:text-[#0A0D14] hover:scale-105 transition-all"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                            <AnimatePresence>
+                                {showAddTripHint && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                                        className="absolute top-full right-0 mt-3 z-50 w-max max-w-[220px]"
+                                    >
+                                        <div className="relative bg-[#141822] border border-gold/30 rounded-xl px-4 py-3 shadow-2xl">
+                                            <div className="absolute -top-1.5 right-3 w-3 h-3 bg-[#141822] border-t border-l border-gold/30 rotate-45" />
+                                            <p className="text-xs text-white font-medium leading-snug">Ajoutez un nouveau voyage</p>
+                                            <p className="text-[10px] text-white/40 mt-0.5 leading-snug">Cliquez ici pour lancer l'assistant IA</p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                         <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                             {userName[0]?.toUpperCase()}
