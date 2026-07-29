@@ -3,6 +3,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
 import PremiumCursor from "@/components/layout/PremiumCursor";
 import ClientShell from "@/components/layout/ClientShell";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "AIVANA – Votre assistant voyage intelligent",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </ClientShell>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
