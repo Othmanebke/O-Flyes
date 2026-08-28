@@ -9,6 +9,7 @@ interface GroqRequestBody {
     temperature: number;
     max_tokens: number;
     response_format?: { type: string };
+    reasoning_format?: string;
 }
 
 export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "qwen/qwen3.6-27b", maxTokens: number = 2000, jsonMode: boolean = false) {
@@ -26,6 +27,7 @@ export async function getGroqChatCompletion(messages: GroqMessage[], model: stri
 
     if (jsonMode) {
         body.response_format = { type: "json_object" };
+        body.reasoning_format = "hidden";
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
