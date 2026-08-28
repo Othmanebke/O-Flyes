@@ -42,7 +42,7 @@ Le JSON doit ABSOLUMENT respecter ce format exact :
         { role: 'user' as const, content: prompt }
     ];
 
-    const response = await getGroqChatCompletion(messages, "llama-3.3-70b-versatile", 3000, true);
+    const response = await getGroqChatCompletion(messages, "qwen/qwen3.6-27b", 3000, true);
     
     // le mode JSON de Groq garantit pas toujours un JSON valide si le texte est tronqué
     let parsed: any;

@@ -29,7 +29,7 @@ ${context}
   // Request a JSON response from Groq
   // Some Groq models natively support response_format: { type: "json_object" }
   // we will try to extract the JSON from text just in case.
-  const completion = await getGroqChatCompletion(messages, "llama-3.3-70b-versatile", 1500);
+  const completion = await getGroqChatCompletion(messages, "qwen/qwen3.6-27b", 1500);
 
   return completion.choices[0]?.message?.content || "{}";
 }

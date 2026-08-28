@@ -133,7 +133,7 @@ RÈGLES DE CONVERSATION (très important) :
 
         const messagesWithSystem = [systemPrompt, ...validatedData.messages];
 
-        const completion = await getGroqChatCompletion(messagesWithSystem, "llama-3.3-70b-versatile", 2000, true);
+        const completion = await getGroqChatCompletion(messagesWithSystem, "qwen/qwen3.6-27b", 2000, true);
         const responseText = completion.choices[0]?.message?.content || "{}";
 
         let assistantMessage = "";
