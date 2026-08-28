@@ -12,7 +12,7 @@ interface GroqRequestBody {
     reasoning_format?: string;
 }
 
-export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "qwen/qwen3.6-27b", maxTokens: number = 2000, jsonMode: boolean = false) {
+export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "openai/gpt-oss-20b", maxTokens: number = 2000, jsonMode: boolean = false) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         throw new Error("GROQ_API_KEY is not set in the environment variables.");
@@ -27,7 +27,6 @@ export async function getGroqChatCompletion(messages: GroqMessage[], model: stri
 
     if (jsonMode) {
         body.response_format = { type: "json_object" };
-        body.reasoning_format = "hidden";
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

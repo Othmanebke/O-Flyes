@@ -133,7 +133,7 @@ RÈGLES DE CONVERSATION (très important) :
 
         const messagesWithSystem = [systemPrompt, ...validatedData.messages];
 
-        const completion = await getGroqChatCompletion(messagesWithSystem, "qwen/qwen3.6-27b", 2000, true);
+        const completion = await getGroqChatCompletion(messagesWithSystem, "openai/gpt-oss-20b", 2000, true);
         const responseText = completion.choices[0]?.message?.content || "{}";
 
         let assistantMessage = "";
