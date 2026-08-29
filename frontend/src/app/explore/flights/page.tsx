@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight, ChevronRight } from "lucide-react";
+import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight, ChevronRight, Plus } from "lucide-react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
@@ -362,8 +362,8 @@ function FlightsContent() {
             <div className="max-w-6xl mx-auto px-6 pt-28 sm:pt-40 pb-24 relative z-10">
 
                 {/* Section header */}
-                <div className="flex items-center justify-between mb-12 pb-8 border-b border-white/[0.06]">
-                    <h2 className="text-2xl font-serif text-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 pb-8 border-b border-white/[0.06] gap-4">
+                    <h2 className="text-xl sm:text-2xl font-serif text-white">
                         <span className="text-white/30">Itinéraire</span> <span className="text-gold italic">{originSearch} → {destSearch}</span>
                     </h2>
                     <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08]">
@@ -490,19 +490,31 @@ function FlightsContent() {
                                     </div>
 
                                     {/* Price & CTA */}
-                                    <div className="flex flex-col items-end gap-4 shrink-0 border-l border-white/[0.06] pl-8">
-                                        <div className="text-right">
+                                    <div className="flex flex-col items-start lg:items-end gap-4 shrink-0 w-full lg:w-auto border-t lg:border-t-0 lg:border-l border-white/[0.06] pt-6 lg:pt-0 lg:pl-8 mt-4 lg:mt-0">
+                                        <div className="text-left lg:text-right">
                                             <p className="text-[9px] text-white/20 uppercase tracking-[0.15em] mb-1">Tarif aller-retour</p>
                                             <p className="text-3xl font-serif text-white">
                                                 {flight.price} <span className="text-gold text-xl">{flight.currency}</span>
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => handleBook(flight)}
-                                            className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95"
-                                        >
-                                            {tripIdFromUrl ? "Ajouter au voyage" : "Skyscanner"} <ArrowRight className="w-3.5 h-3.5" />
-                                        </button>
+                                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full lg:w-auto">
+                                            {userId && !tripIdFromUrl && (
+                                                <button
+                                                    onClick={() => handleBook(flight)}
+                                                    className="border border-gold/30 text-gold hover:bg-gold/10 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Ajouter au voyage
+                                                </button>
+                                            )}
+                                            <a
+                                                href={flight.booking_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto"
+                                            >
+                                                Skyscanner <ArrowRight className="w-3.5 h-3.5" />
+                                            </a>
+                                        </div>
                                         {(flight as any).google_flights_url && (
                                             <a
                                                 href={(flight as any).google_flights_url}
@@ -528,7 +540,7 @@ function FlightsContent() {
                     className="mt-24 relative"
                 >
                     <div className="absolute inset-0 bg-gold/8 rounded-[40px] blur-[80px]" />
-                    <div className="relative bg-white/[0.03] rounded-[40px] p-14 border border-white/[0.06] hover:border-gold/20 transition-colors overflow-hidden">
+                    <div className="relative bg-white/[0.03] rounded-[40px] p-8 sm:p-14 border border-white/[0.06] hover:border-gold/20 transition-colors overflow-hidden">
                         <div className="absolute top-0 right-0 w-72 h-72 bg-gold/[0.06] blur-[100px] rounded-full -mr-36 -mt-36" />
                         <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
                             <div className="flex-1">

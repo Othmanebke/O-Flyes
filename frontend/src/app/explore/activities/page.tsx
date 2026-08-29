@@ -216,8 +216,8 @@ function ActivitiesContent() {
 
             {/* ── RESULTS ───────────────────────────────────────────── */}
             <div className="max-w-6xl mx-auto px-6 pt-28 sm:pt-40 pb-24 relative z-10">
-                <div className="flex items-center justify-between mb-12 pb-8 border-b border-white/[0.06]">
-                    <h2 className="text-2xl font-serif text-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 pb-8 border-b border-white/[0.06] gap-4">
+                    <h2 className="text-xl sm:text-2xl font-serif text-white">
                         <span className="text-white/30">Decouvertes a</span>{" "}
                         <span className="text-gold italic">{selectedLocation}</span>
                     </h2>
@@ -303,7 +303,7 @@ function ActivitiesContent() {
                 {/* AI CTA */}
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-24 relative">
                     <div className="absolute inset-0 bg-gold/8 rounded-[40px] blur-[80px]" />
-                    <div className="relative bg-white/[0.03] rounded-[40px] p-16 border border-white/[0.06] hover:border-gold/20 transition-colors text-center overflow-hidden">
+                    <div className="relative bg-white/[0.03] rounded-[40px] p-8 sm:p-16 border border-white/[0.06] hover:border-gold/20 transition-colors text-center overflow-hidden">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-gold/[0.05] blur-[80px] rounded-full -mt-24 pointer-events-none" />
                         <div className="relative z-10">
                             <p className="text-[9px] text-gold/60 uppercase tracking-[0.3em] font-black mb-4">Intelligence Artificielle</p>
@@ -323,7 +323,7 @@ function ActivitiesContent() {
             {/* ── Trip Selector Modal ──────────────────────────────── */}
             <AnimatePresence>
                 {showTripSelector && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setShowTripSelector(false)}
                             className="absolute inset-0 bg-[#06080C]/95 backdrop-blur-2xl" />
