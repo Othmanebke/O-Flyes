@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
-import PremiumCursor from "@/components/layout/PremiumCursor";
 import ClientShell from "@/components/layout/ClientShell";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -15,7 +14,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" className="dark">
       <body className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <ThemeProvider>
-          <PremiumCursor />
           <ClientShell>
             {children}
           </ClientShell>

@@ -501,54 +501,8 @@ body {
   }
 }
 
-/* ── 4. Premium Cursor ── */
-@media (pointer: fine) {
-  body { cursor: none; }
-  a, button, [role="button"], input, select, textarea, label {
-    cursor: none;
-  }
-}
-.cursor-dot {
-  position: fixed;
-  width: 6px; height: 6px;
-  background: #C5A059;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 99999;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, opacity 0.2s;
-  will-change: transform;
-}
-.cursor-ring {
-  position: fixed;
-  width: 32px; height: 32px;
-  border: 1.5px solid rgba(197, 160, 89, 0.5);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 99998;
-  transform: translate(-50%, -50%);
-  transition: width 0.35s cubic-bezier(0.22,1,0.36,1),
-              height 0.35s cubic-bezier(0.22,1,0.36,1),
-              border-color 0.25s,
-              opacity 0.25s;
-  will-change: transform;
-}
-.cursor-dot.cursor-hover {
-  width: 10px; height: 10px;
-  background: #d4b070;
-}
-.cursor-ring.cursor-hover {
-  width: 52px; height: 52px;
-  border-color: rgba(197, 160, 89, 0.8);
-  background: rgba(197, 160, 89, 0.04);
-}
-.cursor-dot.cursor-click {
-  width: 4px; height: 4px;
-}
-.cursor-ring.cursor-click {
-  width: 44px; height: 44px;
-  background: rgba(197, 160, 89, 0.12);
-}
+
+
 
 /* ── 5. Micro-interactions & Hover Effects ── */
 
