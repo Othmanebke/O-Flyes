@@ -23,9 +23,21 @@ export default function AIProposalModal({ dest, onClose }: Props) {
     d => d.name.toLowerCase() === dest.name.toLowerCase()
   )?.img || "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=80";
 
+  const matchingDest = DESTINATIONS.find(
+    d => d.name.toLowerCase() === dest.name.toLowerCase()
+  );
+
   const hasRealEstimate = dest.dataSource === "real" && dest.price_estimate !== null;
-  const flightShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.4) : null;
-  const hotelShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.6) : null;
+  let flightShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.4) : null;
+  let hotelShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.6) : null;
+
+  if (!hasRealEstimate && matchingDest) {
+      flightShare = matchingDest.flightFrom || 150;
+      hotelShare = (matchingDest.hotelPerNight || 80) * 7; // Estimate for a week
+  } else if (!hasRealEstimate) {
+      flightShare = 200;
+      hotelShare = 600;
+  }
   const activitiesTotal = dest.activities.reduce((s, a) => s + (a.price || 0), 0);
   const totalPrice = hasRealEstimate ? dest.price_estimate! + activitiesTotal : null;
 

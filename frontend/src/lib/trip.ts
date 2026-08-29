@@ -19,8 +19,19 @@ export function calculateTripAnalysis(items: Booking[]): TripAnalysis {
     const activities = items.filter(b => b.type === 'activity');
     const totalCost = calculateTripBudget(items);
 
-    const hasOutbound = flights.length > 0;
-    const hasReturn = flights.length >= 2;
+    let hasOutbound = false;
+    let hasReturn = false;
+    for (const f of flights) {
+        const title = f.title.toLowerCase();
+        if (title.includes('aller-retour') || title.includes('aller retour') || title.includes('roundtrip')) {
+            hasOutbound = true;
+            hasReturn = true;
+        } else if (title.includes('retour')) {
+            hasReturn = true;
+        } else {
+            hasOutbound = true;
+        }
+    }
     const hasHotel = hotels.length > 0;
     const hasActivity = activities.length > 0;
 

@@ -348,7 +348,7 @@ function HotelsContent() {
                                             <p className="text-2xl font-serif text-white">{hotel.price_per_night} <span className="text-base text-gold">{hotel.currency}</span></p>
                                         </div>
                                         <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                            {userId && !tripIdFromUrl && (
+                                            {userId && (
                                                 <button onClick={() => handleBook(hotel)}
                                                     className="border border-gold/30 text-gold hover:bg-gold/10 transition-all px-5 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto">
                                                     <Plus className="w-3 h-3" /> Ajouter au voyage

@@ -498,7 +498,7 @@ function FlightsContent() {
                                             </p>
                                         </div>
                                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full lg:w-auto">
-                                            {userId && !tripIdFromUrl && (
+                                            {userId && (
                                                 <button
                                                     onClick={() => handleBook(flight)}
                                                     className="border border-gold/30 text-gold hover:bg-gold/10 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto"
