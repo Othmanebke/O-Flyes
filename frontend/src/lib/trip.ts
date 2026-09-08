@@ -23,7 +23,7 @@ export function calculateTripAnalysis(items: Booking[]): TripAnalysis {
     let hasReturn = false;
     for (const f of flights) {
         const title = f.title.toLowerCase();
-        if (title.includes('aller-retour') || title.includes('aller retour') || title.includes('roundtrip')) {
+        if (title.includes('aller-retour') || title.includes('aller retour') || title.includes('roundtrip') || title.includes('a/r')) {
             hasOutbound = true;
             hasReturn = true;
         } else if (title.includes('retour')) {
@@ -31,6 +31,12 @@ export function calculateTripAnalysis(items: Booking[]): TripAnalysis {
         } else {
             hasOutbound = true;
         }
+    }
+    // Si aucun titre n'indique explicitement un aller-retour (ex: "Vol Air France : CDG → JFK"
+    // pour chaque jambe réservée séparément depuis /explore/flights), on considère qu'un
+    // deuxième vol réservé sur le même voyage est le retour.
+    if (!hasReturn && flights.length >= 2) {
+        hasReturn = true;
     }
     const hasHotel = hotels.length > 0;
     const hasActivity = activities.length > 0;
