@@ -134,9 +134,9 @@ function ActivitiesContent() {
         <>
             <TripContextBanner />
             {/* -mt-20 compense le padding du <main> pour un hero plein cadre sous la navbar
-                flottante ; le bandeau voyage prend déjà cette place, donc on ne le fait pas
-                remonter dans ce cas, sinon ça crée un vide au-dessus du bandeau. */}
-            <div className={`theme-locked-dark min-h-screen ${tripIdFromUrl ? "" : "-mt-20"}`} style={{ backgroundColor: 'var(--bg-primary)' }}>
+                flottante. Le bandeau voyage flotte par-dessus (position fixed), il ne prend
+                pas de place dans le flux : la mise en page est donc identique avec ou sans. */}
+            <div className="theme-locked-dark min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ──────────────────────────────────────────────── */}
             <div className="relative h-[55vh] sm:h-[70vh] min-h-[360px] sm:min-h-[500px]">
