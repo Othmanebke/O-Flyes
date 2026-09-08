@@ -9,9 +9,10 @@ interface GroqRequestBody {
     temperature: number;
     max_tokens: number;
     response_format?: { type: string };
+    reasoning_format?: string;
 }
 
-export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "llama-3.3-70b-versatile", maxTokens: number = 2000, jsonMode: boolean = false) {
+export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "openai/gpt-oss-20b", maxTokens: number = 2000, jsonMode: boolean = false) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         throw new Error("GROQ_API_KEY is not set in the environment variables.");

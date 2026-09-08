@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass, Calendar, Users } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, Sparkles, Bed, Compass, Calendar, Users, Plus } from "lucide-react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 import { Suspense } from "react";
 import TripContextBanner from "@/components/trip/TripContextBanner";
 import { motion, AnimatePresence } from "framer-motion";
-import { withAivanaFallback } from "@/lib/placeholder";
+import { withAivanaFallback, AIVANA_PLACEHOLDER_IMG } from "@/lib/placeholder";
 
 interface Hotel {
     id: string; name: string; city: string; country: string;
@@ -322,7 +322,7 @@ function HotelsContent() {
                             >
                                 <div className="relative h-60 overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14] via-[#0A0D14]/20 to-transparent z-10" />
-                                    <img src={hotel.image_url} alt={hotel.name} onError={withAivanaFallback}
+                                    <img src={AIVANA_PLACEHOLDER_IMG} alt={hotel.name}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1500ms]" />
                                     <div className="absolute top-5 left-5 z-20 flex flex-col gap-1.5">
                                         <span className="bg-[#0A0D14]/80 backdrop-blur-md text-white/80 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-white/10">
@@ -351,17 +351,24 @@ function HotelsContent() {
                                             ))}
                                         </div>
                                     )}
-                                    <div className="flex items-center justify-between pt-5 border-t border-white/[0.06]">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-5 border-t border-white/[0.06] gap-3">
                                         <div>
                                             <p className="text-[8px] text-white/20 uppercase tracking-[0.15em] mb-1">Prix / nuit</p>
                                             <p className="text-2xl font-serif text-white">{hotel.price_per_night} <span className="text-base text-gold">{hotel.currency}</span></p>
                                             <p className="text-[10px] text-white/25 mt-0.5">≈ {hotel.price_per_night * nights} {hotel.currency} pour {nights} nuit{nights > 1 ? "s" : ""}</p>
                                         </div>
-                                        <div className="flex flex-col gap-2">
-                                            <button onClick={() => handleBook(hotel)}
-                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 active:scale-95">
-                                                {tripIdFromUrl ? "Ajouter au voyage" : "Booking.com"} <ArrowRight className="w-3 h-3" />
-                                            </button>
+                                        <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                            {userId && (
+                                                <button onClick={() => handleBook(hotel)}
+                                                    className="border border-gold/30 text-gold hover:bg-gold/10 transition-all px-5 py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto">
+                                                    <Plus className="w-3 h-3" /> Ajouter au voyage
+                                                </button>
+                                            )}
+                                            <a href={hotel.booking_url} target="_blank" rel="noopener noreferrer"
+                                                onClick={() => trackClick("hotel")}
+                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-1.5 active:scale-95 w-full sm:w-auto">
+                                                Booking.com <ArrowRight className="w-3 h-3" />
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -373,7 +380,7 @@ function HotelsContent() {
                 {/* CTA */}
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-24 relative">
                     <div className="absolute inset-0 bg-gold/8 rounded-[40px] blur-[80px]" />
-                    <div className="relative bg-white/[0.03] rounded-[40px] p-14 border border-white/[0.06] hover:border-gold/20 transition-colors overflow-hidden">
+                    <div className="relative bg-white/[0.03] rounded-[40px] p-8 sm:p-14 border border-white/[0.06] hover:border-gold/20 transition-colors overflow-hidden">
                         <div className="absolute top-0 right-0 w-72 h-72 bg-gold/[0.06] blur-[100px] rounded-full -mr-36 -mt-36" />
                         <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
                             <div className="flex-1">
@@ -396,7 +403,7 @@ function HotelsContent() {
             {/* ── Trip Selector Modal ──────────────────────────────── */}
             <AnimatePresence>
                 {showTripSelector && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setShowTripSelector(false)}
                             className="absolute inset-0 bg-[#06080C]/95 backdrop-blur-2xl" />
