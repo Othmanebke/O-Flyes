@@ -197,7 +197,10 @@ function FlightsContent() {
     return (
         <>
             <TripContextBanner />
-            <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+            {/* -mt-20 compense le padding du <main> pour un hero plein cadre sous la navbar
+                flottante ; le bandeau voyage prend déjà cette place, donc on ne le fait pas
+                remonter dans ce cas, sinon ça crée un vide au-dessus du bandeau. */}
+            <div className={`min-h-screen ${tripIdFromUrl ? "" : "-mt-20"}`} style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
             <div className="relative h-[55vh] sm:h-[70vh] min-h-[360px] sm:min-h-[500px]">
@@ -583,7 +586,7 @@ function FlightsContent() {
                             initial={{ opacity: 0, scale: 0.92, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.92, y: 20 }}
-                            className="relative bg-[#141822] border border-gold/15 rounded-[40px] w-full max-w-lg p-10 shadow-[0_0_80px_rgba(184,134,11,0.08)]"
+                            className="relative bg-[#141822] border border-gold/15 rounded-[28px] sm:rounded-[40px] w-full max-w-lg p-6 sm:p-10 shadow-[0_0_80px_rgba(184,134,11,0.08)]"
                         >
                             <h2 className="font-serif text-3xl text-white mb-2 text-center">Ajouter à votre <span className="text-gold italic">Odyssée</span></h2>
                             <p className="text-white/25 text-center text-sm mb-8">Synchronisez ce vol avec un itinéraire.</p>

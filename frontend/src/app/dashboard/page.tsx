@@ -269,21 +269,27 @@ function DashboardContent() {
     const downloadICS = () => {
         if (!selectedTrip || bookings.length === 0) return;
 
+        // Les réservations n'ont pas de date propre en base (seul le voyage a start_date/end_date) —
+        // sauf les hôtels ajoutés depuis /explore/hotels, qui stockent check_in/check_out dans metadata.
+        // À défaut de date précise sur l'item, on retombe sur les dates du voyage pour ne pas le
+        // faire disparaître silencieusement de l'export (l'ancien comportement ignorait tout élément
+        // sans start_datetime — un champ qui n'existe nulle part côté données, donc l'export était
+        // toujours vide).
+        const toICSDate = (d: string) => {
+            const parsed = new Date(d);
+            return isNaN(parsed.getTime()) ? null : parsed.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
+
+        let eventCount = 0;
         let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//O-Flyes//Timeline//FR\n";
         bookings.forEach(b => {
-            if (!b.start_datetime) return;
-            // Format to YYYYMMDDTHHMMSSZ
-            const startStr = new Date(b.start_datetime);
-            if (isNaN(startStr.getTime())) return;
-            const start = startStr.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const rawStart = b.start_datetime || b.metadata?.check_in || selectedTrip.start_date;
+            const rawEnd = b.end_datetime || b.metadata?.check_out || selectedTrip.end_date || rawStart;
+            if (!rawStart) return;
 
-            let end = start;
-            if (b.end_datetime) {
-                const endStr = new Date(b.end_datetime);
-                if (!isNaN(endStr.getTime())) {
-                    end = endStr.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                }
-            }
+            const start = toICSDate(rawStart);
+            const end = toICSDate(rawEnd) || start;
+            if (!start) return;
 
             icsContent += "BEGIN:VEVENT\n";
             icsContent += `SUMMARY:${b.title}\n`;
@@ -291,8 +297,14 @@ function DashboardContent() {
             icsContent += `DTEND:${end}\n`;
             if (b.location) icsContent += `LOCATION:${b.location}\n`;
             icsContent += "END:VEVENT\n";
+            eventCount++;
         });
         icsContent += "END:VCALENDAR";
+
+        if (eventCount === 0) {
+            alert("Aucune réservation de ce voyage n'a de date — ajoutez des dates au voyage (Paramètres du voyage) pour pouvoir exporter le calendrier.");
+            return;
+        }
 
         const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
         const url = window.URL.createObjectURL(blob);
@@ -302,6 +314,7 @@ function DashboardContent() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     };
 
     if (loading) {

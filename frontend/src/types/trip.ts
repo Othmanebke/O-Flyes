@@ -26,6 +26,7 @@ export interface Booking {
     external_url?: string;
     booking_url?: string;
     raw_data?: Record<string, any>;
+    metadata?: Record<string, any>;
 }
 
 export interface TripAnalysis {

@@ -54,20 +54,12 @@ export default function AIProposalModal({ dest, onClose }: Props) {
 
       const tripId = tripRes.data.id;
 
-      await axios.post(`/api/trips/${tripId}/items`, {
-        type: 'flight',
-        title: `Vol aller-retour vers ${dest.name}`,
-        price_estimate: flightShare ?? undefined,
-        external_url: dest.flights_url,
-      });
-
-      await axios.post(`/api/trips/${tripId}/items`, {
-        type: 'hotel',
-        title: `Hébergement à ${dest.name}`,
-        price_estimate: hotelShare ?? undefined,
-        external_url: dest.booking_url,
-      });
-
+      // On ne crée pas de réservation vol/hôtel ici : flightShare/hotelShare ne sont qu'une
+      // répartition indicative (voire une estimation par défaut quand aucun prix réel n'a pu
+      // être récupéré) — jamais un vol ou un hôtel que l'utilisateur a réellement choisi.
+      // Les créer comme "réservations IA Vérifiée" afficherait un prix non gagné, contraire à
+      // la règle du projet : pas de prix affiché tant qu'il ne vient pas d'une vraie recherche.
+      // L'utilisateur choisit son vol/hôtel via les pages Explorer, déjà reliées à ce voyage.
       for (const act of dest.activities.slice(0, 3)) {
         await axios.post(`/api/trips/${tripId}/items`, {
           type: 'activity',

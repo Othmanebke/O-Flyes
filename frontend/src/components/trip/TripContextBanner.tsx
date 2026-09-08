@@ -36,7 +36,7 @@ export default function TripContextBanner() {
             <p className="trip-ctx-sub">Vous enrichissez votre voyage</p>
             <p className="trip-ctx-name">
               {trip?.title ?? "Chargement…"}
-              {dest && <span className="trip-ctx-dest"> · {dest}</span>}
+              {dest && dest !== trip?.title && <span className="trip-ctx-dest"> · {dest}</span>}
             </p>
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function TripContextBanner() {
 
       <style>{`
         .trip-ctx-banner {
-          position: sticky; top: 72px; z-index: 40;
+          position: sticky; top: 80px; z-index: 40;
           background: rgba(197,160,89,0.08);
           border-bottom: 1px solid rgba(197,160,89,0.2);
           backdrop-filter: blur(16px);
