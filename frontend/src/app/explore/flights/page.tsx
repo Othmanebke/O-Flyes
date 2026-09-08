@@ -200,7 +200,7 @@ function FlightsContent() {
             {/* -mt-20 compense le padding du <main> pour un hero plein cadre sous la navbar
                 flottante ; le bandeau voyage prend déjà cette place, donc on ne le fait pas
                 remonter dans ce cas, sinon ça crée un vide au-dessus du bandeau. */}
-            <div className={`min-h-screen ${tripIdFromUrl ? "" : "-mt-20"}`} style={{ backgroundColor: 'var(--bg-primary)' }}>
+            <div className={`theme-locked-dark min-h-screen ${tripIdFromUrl ? "" : "-mt-20"}`} style={{ backgroundColor: 'var(--bg-primary)' }}>
 
             {/* ── HERO ─────────────────────────────────────────────────── */}
             <div className="relative h-[55vh] sm:h-[70vh] min-h-[360px] sm:min-h-[500px]">

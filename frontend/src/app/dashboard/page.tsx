@@ -322,7 +322,7 @@ function DashboardContent() {
     }
 
     return (
-        <div className="flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div className="theme-locked-dark flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Smart Replacement Prompt (Toast) */}
             <AnimatePresence>
                 {replacementPrompt && (

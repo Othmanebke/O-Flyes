@@ -1,4 +1,5 @@
 import { getGroqChatCompletion } from '../ai/groq';
+import { extractJsonFromText } from '../ai/recommendations';
 import type { TripContext } from './types';
 import type { RoadtripProposal } from '@/types/roadtrip';
 
@@ -44,10 +45,11 @@ Le JSON doit ABSOLUMENT respecter ce format exact :
 
     const response = await getGroqChatCompletion(messages, "openai/gpt-oss-20b", 3000, true);
     
-    // le mode JSON de Groq garantit pas toujours un JSON valide si le texte est tronqué
+    // le mode JSON de Groq garantit pas toujours un JSON valide si le texte est tronqué,
+    // et le modèle peut entourer son JSON de texte quand response_format est refusé
     let parsed: any;
     try {
-        parsed = JSON.parse(response.choices[0].message.content);
+        parsed = JSON.parse(extractJsonFromText(response.choices[0].message.content));
     } catch (e) {
         throw new Error("Failed to parse JSON from AI response");
     }

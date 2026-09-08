@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getGroqChatCompletion } from '@/lib/ai/groq';
+import { extractJsonFromText } from '@/lib/ai/recommendations';
 import { z } from 'zod';
 import { getIATA, bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
 import { searchFlights, searchHotelOffers } from '@/lib/travel/amadeus';
@@ -143,7 +144,9 @@ RÈGLES DE CONVERSATION (très important) :
         let travelDate: string | null = null;
 
         try {
-            const parsed = JSON.parse(responseText);
+            // extractJsonFromText : le modèle peut entourer son JSON de texte ou de balises
+            // markdown quand response_format n'est pas accepté (voir lib/ai/groq.ts).
+            const parsed = JSON.parse(extractJsonFromText(responseText));
             assistantMessage = parsed.content || "";
             draftDestinations = Array.isArray(parsed.enriched) ? parsed.enriched : [];
             if (typeof parsed.originCity === 'string' && parsed.originCity.trim()) {

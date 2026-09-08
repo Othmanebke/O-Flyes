@@ -361,7 +361,7 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className="theme-locked-dark min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
 
       {/* ═══ HERO ════════════════════════════════════════════════════════════ */}
       <div className="relative h-[70vh] min-h-[500px]">

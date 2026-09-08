@@ -59,6 +59,35 @@
   --scrollbar-thumb: #d4a96a;
 }
 
+/* Certaines pages (dashboard, explorer, destination, réservations) ont été conçues
+   pour un thème "midnight-gold" fixe : leur texte/bordures sont écrits en dur en blanc,
+   sans variante claire. Elles ne suivent donc pas le bouton clair/sombre — seul leur
+   fond le suivait, ce qui rendait le texte illisible en mode clair. Cette classe fige
+   ces pages sur les mêmes valeurs que .dark, quel que soit le thème choisi, pour que
+   fond et texte restent toujours cohérents. */
+.theme-locked-dark {
+  --bg-primary: #0A0D14;
+  --bg-secondary: #141822;
+  --bg-card: rgba(20, 24, 34, 0.5);
+  --bg-card-hover: rgba(30, 34, 48, 0.7);
+  --bg-elevated: #141822;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-muted: rgba(255, 255, 255, 0.40);
+  --text-inverse: #0A0D14;
+  --border-color: rgba(255, 255, 255, 0.10);
+  --border-light: rgba(255, 255, 255, 0.05);
+  --glass-bg: rgba(20, 24, 34, 0.80);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --shadow-color: rgba(0, 0, 0, 0.40);
+  --shadow-gold: rgba(201, 168, 76, 0.20);
+  --overlay-light: rgba(10, 13, 20, 0.9);
+  --scrollbar-track: #111318;
+  --scrollbar-thumb: #d4a96a;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 * {
   box-sizing: border-box;
 }

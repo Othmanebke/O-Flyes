@@ -151,7 +151,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                 />
             )}
 
-            <div className="dest-root">
+            <div className="dest-root theme-locked-dark">
 
                 {/* ── HERO ─────────────────────────────────────────────────────── */}
                 <div className="dest-hero">

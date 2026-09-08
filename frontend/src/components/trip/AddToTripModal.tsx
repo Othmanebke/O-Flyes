@@ -133,7 +133,7 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
       {/* Modal */}
       <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="modal-box pointer-events-auto w-full max-w-md"
+          className="modal-box theme-locked-dark pointer-events-auto w-full max-w-md"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
