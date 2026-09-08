@@ -1,9 +1,24 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Plane, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { withAivanaFallback } from "@/lib/placeholder";
+
+// Codes IATA réels (cf. lib/iata.ts) de la ville principale de chaque destination —
+// même dans une bande décorative, on n'invente pas un code d'aéroport.
+const DEPARTURES = [
+  { city: "Bali", code: "DPS" },
+  { city: "Islande", code: "KEF" },
+  { city: "Japon", code: "NRT" },
+  { city: "Maroc", code: "RAK" },
+  { city: "Thaïlande", code: "BKK" },
+  { city: "Pérou", code: "LIM" },
+  { city: "Norvège", code: "OSL" },
+  { city: "Mexique", code: "MEX" },
+  { city: "Vietnam", code: "SGN" },
+  { city: "Portugal", code: "LIS" },
+];
 
 const HERO_SLIDES = [
   {
@@ -258,19 +273,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── MARQUEE STRIP ─────────────────────────────────────────────────── */}
-      <div className="py-4 overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid var(--border-light)' }}>
-        <div className="marquee-inner">
-          {[...Array(2)].map((_, k) => (
-            <div key={k} className="flex items-center gap-10 px-10 whitespace-nowrap">
-              {["Bali", "Islande", "Japon", "Maroc", "Thaïlande", "Pérou", "Norvège", "Mexique", "Vietnam", "Portugal"].map((c) => (
-                <span key={c} className="text-sm tracking-wider uppercase flex items-center gap-4" style={{ color: 'var(--text-muted)' }}>
-                  {c}
-                  <span className="text-gold text-lg">❖</span>
-                </span>
-              ))}
-            </div>
-          ))}
+      {/* ── DEPARTURES BOARD ──────────────────────────────────────────────── */}
+      <div className="departures-strip">
+        <div className="departures-badge">
+          <span className="departures-dot" />
+          Tableau des départs
+        </div>
+        <div className="departures-track">
+          <div className="marquee-inner">
+            {[...Array(2)].map((_, k) => (
+              <div key={k} className="flex items-center">
+                {DEPARTURES.map((d) => (
+                  <div key={`${d.city}-${k}`} className="departure-tile">
+                    <span className="departure-city">{d.city}</span>
+                    <Plane className="departure-sep w-3 h-3 -rotate-45" />
+                    <span className="departure-code">{d.code}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

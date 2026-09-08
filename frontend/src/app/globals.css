@@ -343,6 +343,95 @@ body {
   animation-play-state: paused;
 }
 
+/* Departures board — un bandeau de destinations façon panneau d'aéroport plutôt
+   qu'un simple défilement de texte, cohérent avec le thème "vol" du site. */
+.departures-strip {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.departures-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-light);
+  white-space: nowrap;
+  position: relative;
+  z-index: 2;
+  background-color: var(--bg-primary);
+}
+
+.departures-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  flex-shrink: 0;
+  animation: departures-pulse 2s ease-out infinite;
+}
+
+@keyframes departures-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+.departures-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+}
+
+.departure-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 22px;
+  white-space: nowrap;
+  border-right: 1px solid var(--border-light);
+}
+
+.departure-city {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.departure-sep {
+  color: var(--gold, #C5A059);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.departure-code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold, #C5A059);
+  padding: 2px 7px;
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  border-radius: 5px;
+  background: rgba(197, 160, 89, 0.08);
+}
+
 /* Sand background */
 .bg-sand {
   background-color: var(--bg-primary);
