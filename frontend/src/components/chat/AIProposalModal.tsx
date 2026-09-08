@@ -67,7 +67,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
       setSaved(true);
       setTimeout(() => {
         onClose();
-        router.push("/dashboard");
+        router.push(`/dashboard?trip=${tripId}`);
       }, 1500);
 
     } catch (err: any) {

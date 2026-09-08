@@ -28,6 +28,7 @@ type ModalItem = {
     provider?: string;
     price_estimate?: number;
     external_url?: string;
+    metadata?: Record<string, any>;
 };
 
 // ── Sub-components ───────────────────────────────────────────────────────────
@@ -101,13 +102,17 @@ export default function DestinationDetailPage({ params }: { params: { id: string
         setModalOpen(true);
     };
 
+    // Recherche systématiquement un aller-retour (départ +30j, retour +37j = 1 semaine sur place).
+    // Ces mêmes dates servent à dater le séjour hôtel ajouté au voyage (voir plus bas),
+    // pour que le prix compté corresponde bien aux 7 nuits et pas à une seule.
+    const stayNights = 7;
+    const depart = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+    const ret = new Date(Date.now() + 37 * 86400000).toISOString().split('T')[0];
+
     useEffect(() => {
         if (!d) return;
         let cancelled = false;
         setLoadingTravel(true);
-        // Recherche systématiquement un aller-retour (départ +30j, retour +37j = 1 semaine sur place)
-        const depart = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-        const ret = new Date(Date.now() + 37 * 86400000).toISOString().split('T')[0];
         Promise.allSettled([
             axios.get<RealFlight[]>("/api/partner/flights/search", { params: { origin: "Paris", destination: d.name, depart, return: ret, adults: 2 } }),
             axios.get<RealHotel[]>("/api/partner/hotels/search", { params: { city: d.name, adults: 2 } }),
@@ -131,7 +136,7 @@ export default function DestinationDetailPage({ params }: { params: { id: string
     const cheapestHotel = sortedHotels?.[0] ?? null;
     // `cheapestFlight.price` est désormais le total ALLER-RETOUR pour 2 personnes (recherche round-trip)
     const estimatedTotal = cheapestFlight && cheapestHotel
-        ? cheapestFlight.price + cheapestHotel.price_per_night * 7
+        ? cheapestFlight.price + cheapestHotel.price_per_night * stayNights
         : null;
     const flightPricePerPerson = cheapestFlight ? Math.round(cheapestFlight.price / 2) : null;
 
@@ -375,8 +380,9 @@ export default function DestinationDetailPage({ params }: { params: { id: string
                                                         title: h.name,
                                                         type: "hotel",
                                                         provider: h.category,
-                                                        price_estimate: h.price_per_night,
+                                                        price_estimate: h.price_per_night * stayNights,
                                                         external_url: h.booking_url,
+                                                        metadata: { check_in: depart, check_out: ret, nights: stayNights, price_per_night: h.price_per_night },
                                                     })} />
                                                     <a href={h.booking_url} target="_blank" rel="noopener noreferrer" className="dest-book-btn">
                                                         Réserver <ExternalLink className="w-3 h-3" />

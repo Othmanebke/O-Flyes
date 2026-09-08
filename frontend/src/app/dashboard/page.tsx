@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
@@ -25,8 +25,10 @@ const getTripDestination = (trip: Trip | null): string => {
     return '';
 };
 
-export default function DashboardPage() {
+function DashboardContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const tripIdFromUrl = searchParams.get("trip");
     const [loading, setLoading] = useState(true);
     const [trips, setTrips] = useState<Trip[]>([]);
     const [userName, setUserName] = useState("Voyageur");
@@ -174,6 +176,17 @@ export default function DashboardPage() {
         }
     };
 
+    // Revenir sur le bon voyage après un aller-retour "réserver un vol/hôtel" depuis
+    // /explore/* (?trip=<id> dans l'URL), au lieu de retomber sur "Vue Générale".
+    useEffect(() => {
+        if (!tripIdFromUrl || selectedTrip?.id === tripIdFromUrl) return;
+        const match = trips.find(t => t.id === tripIdFromUrl);
+        if (match) {
+            setSelectedTrip(match);
+            fetchBookings(match.id);
+        }
+    }, [tripIdFromUrl, trips]);
+
     const handleSaveProfile = async () => {
         if (!userId || !editNameValue.trim()) return;
         setIsSavingProfile(true);
@@ -234,6 +247,7 @@ export default function DashboardPage() {
     const handleSelectTrip = (trip: Trip) => {
         setSelectedTrip(trip);
         fetchBookings(trip.id);
+        router.replace(`/dashboard?trip=${trip.id}`, { scroll: false });
     };
 
     const handleDeleteBooking = async (id: string) => {
@@ -1209,5 +1223,13 @@ export default function DashboardPage() {
             )}
 
         </div >
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

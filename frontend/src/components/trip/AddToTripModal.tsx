@@ -12,6 +12,7 @@ interface ItemPayload {
   provider?: string;
   price_estimate?: number;
   external_url?: string;
+  metadata?: Record<string, any>;
 }
 
 interface Props {
@@ -40,7 +41,10 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [successTripId, setSuccessTripId] = useState<string | null>(null);
   const [newTripName, setNewTripName] = useState("");
+  const [newTripStart, setNewTripStart] = useState("");
+  const [newTripEnd, setNewTripEnd] = useState("");
   const [creatingLoading, setCreatingLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -82,8 +86,10 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
         provider: item.provider,
         price_estimate: item.price_estimate,
         external_url: item.external_url,
+        metadata: item.metadata,
       });
       setSuccess(tripTitle);
+      setSuccessTripId(tripId);
       window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
       setTimeout(() => {
         onClose();
@@ -100,7 +106,11 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
     if (!newTripName.trim()) return;
     setCreatingLoading(true);
     try {
-      const res = await axios.post<Trip>("/api/trips", { title: newTripName.trim() });
+      const res = await axios.post<Trip>("/api/trips", {
+        title: newTripName.trim(),
+        start_date: newTripStart || undefined,
+        end_date: newTripEnd || undefined,
+      });
       const newTrip = res.data;
       await addToTrip(newTrip.id, newTrip.title);
     } catch {
@@ -138,8 +148,11 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
           </div>
 
           <div className="modal-item-title">{item.title}</div>
-          {item.price_estimate && (
-            <div className="modal-item-price">{item.price_estimate}€</div>
+          {item.price_estimate != null && (
+            <div className="modal-item-price">
+              {item.price_estimate}€
+              {item.metadata?.nights ? ` · ${item.metadata.nights} nuit${item.metadata.nights > 1 ? "s" : ""} (${item.metadata.price_per_night}€/nuit)` : ""}
+            </div>
           )}
 
           <div className="modal-divider" />
@@ -155,7 +168,7 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
                 Ajouté à <strong>{success}</strong>
               </p>
               <button
-                onClick={() => { onClose(); router.push("/dashboard"); }}
+                onClick={() => { onClose(); router.push(successTripId ? `/dashboard?trip=${successTripId}` : "/dashboard"); }}
                 className="modal-goto-dashboard"
               >
                 Voir dans le dashboard <ChevronRight className="w-4 h-4" />
@@ -228,6 +241,24 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
                     placeholder="Ex : Vacances Tokyo 2025"
                     className="modal-input"
                   />
+                  <p className="modal-create-label">Dates du séjour (optionnel)</p>
+                  <div className="modal-date-row">
+                    <input
+                      type="date"
+                      value={newTripStart}
+                      onChange={(e) => setNewTripStart(e.target.value)}
+                      className="modal-input"
+                      aria-label="Date de départ"
+                    />
+                    <input
+                      type="date"
+                      value={newTripEnd}
+                      min={newTripStart || undefined}
+                      onChange={(e) => setNewTripEnd(e.target.value)}
+                      className="modal-input"
+                      aria-label="Date de retour"
+                    />
+                  </div>
                   <button
                     onClick={createAndAdd}
                     disabled={!newTripName.trim() || creatingLoading}
@@ -331,6 +362,8 @@ export default function AddToTripModal({ isOpen, onClose, item }: Props) {
         }
         .modal-create-btn-outline:hover { background: rgba(197,160,89,0.06); border-style: solid; }
         .modal-create-form { display: flex; flex-direction: column; gap: 10px; }
+        .modal-date-row { display: flex; gap: 8px; }
+        .modal-date-row .modal-input { flex: 1; min-width: 0; color-scheme: dark; }
         .modal-back-btn {
           font-size: 12px; color: var(--text-muted); cursor: pointer;
           background: none; border: none; text-align: left; padding: 0;

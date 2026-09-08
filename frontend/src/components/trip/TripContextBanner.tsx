@@ -40,7 +40,7 @@ export default function TripContextBanner() {
             </p>
           </div>
         </div>
-        <Link href="/dashboard" className="trip-ctx-back">
+        <Link href={tripId ? `/dashboard?trip=${tripId}` : "/dashboard"} className="trip-ctx-back">
           <ArrowLeft className="w-3.5 h-3.5" />
           Retour au dashboard
         </Link>

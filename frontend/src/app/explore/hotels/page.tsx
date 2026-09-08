@@ -41,6 +41,13 @@ function HotelsContent() {
     });
     const [guests, setGuests] = useState(2);
 
+    // Le prix affiché/recherché est un prix "par nuit" : on le multiplie par la durée
+    // du séjour choisie (arrivée -> départ) pour obtenir le coût réel du séjour complet,
+    // au lieu de ne compter qu'une seule nuit.
+    const countNights = (ci: string, co: string) =>
+        Math.max(1, Math.round((new Date(co).getTime() - new Date(ci).getTime()) / 86400000));
+    const nights = countNights(checkin, checkout);
+
     useEffect(() => {
         const checkAuth = async () => {
             const supabase = createClient();
@@ -118,10 +125,11 @@ function HotelsContent() {
         try {
             await axios.post(`/api/trips/${tripId}/items`, {
                 type: "hotel", title: hotel.name, provider: hotel.category || "Hotel",
-                price_estimate: hotel.price_per_night, external_url: hotel.booking_url
+                price_estimate: hotel.price_per_night * nights, external_url: hotel.booking_url,
+                metadata: { check_in: checkin, check_out: checkout, nights, price_per_night: hotel.price_per_night },
             });
             window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
-            alert(`✓ Hôtel ajouté au voyage !`);
+            alert(`✓ Hôtel ajouté au voyage ! (${nights} nuit${nights > 1 ? "s" : ""})`);
             window.open(hotel.booking_url, "_blank");
         } catch { window.open(hotel.booking_url, "_blank"); }
     };
@@ -130,7 +138,8 @@ function HotelsContent() {
         try {
             await axios.post(`/api/trips/${tripId}/items`, {
                 type: "hotel", title: selectedHotel.name, provider: "Partner",
-                price_estimate: selectedHotel.price_per_night, external_url: selectedHotel.booking_url
+                price_estimate: selectedHotel.price_per_night * nights, external_url: selectedHotel.booking_url,
+                metadata: { check_in: checkin, check_out: checkout, nights, price_per_night: selectedHotel.price_per_night },
             });
             setShowTripSelector(false);
             window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
@@ -346,6 +355,7 @@ function HotelsContent() {
                                         <div>
                                             <p className="text-[8px] text-white/20 uppercase tracking-[0.15em] mb-1">Prix / nuit</p>
                                             <p className="text-2xl font-serif text-white">{hotel.price_per_night} <span className="text-base text-gold">{hotel.currency}</span></p>
+                                            <p className="text-[10px] text-white/25 mt-0.5">≈ {hotel.price_per_night * nights} {hotel.currency} pour {nights} nuit{nights > 1 ? "s" : ""}</p>
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <button onClick={() => handleBook(hotel)}
