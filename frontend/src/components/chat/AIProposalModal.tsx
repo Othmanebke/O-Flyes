@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Plane, Hotel, Compass, Calendar, Check, Loader2, Sparkles, MapPin, AlertCircle, ExternalLink } from "lucide-react";
 import axios from "axios";
@@ -14,6 +14,19 @@ interface Props {
   onClose: () => void;
 }
 
+/* Un élément proposé par AIVANA que l'utilisateur peut garder ou retirer avant
+   d'envoyer la sélection dans son dashboard. `amount` est toujours un montant réel
+   (issu d'Amadeus / OpenTripMap) : un élément sans prix connu vaut null et compte 0. */
+type ProposalItem = {
+  key: string;
+  type: "flight" | "hotel" | "activity";
+  title: string;
+  detail: string;
+  amount: number | null;
+  external_url?: string;
+  metadata?: Record<string, any>;
+};
+
 export default function AIProposalModal({ dest, onClose }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -23,23 +36,83 @@ export default function AIProposalModal({ dest, onClose }: Props) {
     d => d.name.toLowerCase() === dest.name.toLowerCase()
   )?.img || "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=80";
 
-  const matchingDest = DESTINATIONS.find(
-    d => d.name.toLowerCase() === dest.name.toLowerCase()
-  );
+  const nights = dest.nights || 7;
+  const adults = dest.adults || 2;
+  // Les dates viennent du serveur en AAAA-MM-JJ ; on les affiche en français et on
+  // reste tolérant si elles manquent (réponse plus ancienne encore en cache côté client).
+  const fmtDate = (d?: string) => {
+    if (!d) return null;
+    const parsed = new Date(d + "T00:00:00");
+    return isNaN(parsed.getTime()) ? null : parsed.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+  };
+  const departLabel = fmtDate(dest.depart_date);
+  const returnLabel = fmtDate(dest.return_date);
+  const hotelTotal = dest.hotel_price_per_night !== null ? dest.hotel_price_per_night * nights : null;
 
-  const hasRealEstimate = dest.dataSource === "real" && dest.price_estimate !== null;
-  let flightShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.4) : null;
-  let hotelShare = hasRealEstimate ? Math.round(dest.price_estimate! * 0.6) : null;
+  // La proposition ne contient que ce dont on connaît la réalité : s'il n'y a pas de
+  // prix réel pour le vol ou l'hôtel, l'élément n'est pas proposé du tout plutôt que
+  // d'être ajouté au voyage avec un montant inventé.
+  const items = useMemo<ProposalItem[]>(() => {
+    const list: ProposalItem[] = [];
 
-  if (!hasRealEstimate && matchingDest) {
-      flightShare = matchingDest.flightFrom || 150;
-      hotelShare = (matchingDest.hotelPerNight || 80) * 7; // Estimate for a week
-  } else if (!hasRealEstimate) {
-      flightShare = 200;
-      hotelShare = 600;
-  }
-  const activitiesTotal = dest.activities.reduce((s, a) => s + (a.price || 0), 0);
-  const totalPrice = hasRealEstimate ? dest.price_estimate! + activitiesTotal : null;
+    if (dest.flight_price !== null) {
+      list.push({
+        key: "flight",
+        type: "flight",
+        title: `Vol aller-retour vers ${dest.name}`,
+        detail: `${adults} personne${adults > 1 ? "s" : ""} · aller-retour`,
+        amount: dest.flight_price,
+        external_url: dest.flights_url,
+        metadata: { depart: dest.depart_date, retour: dest.return_date, adults, source: "amadeus" },
+      });
+    }
+
+    if (hotelTotal !== null) {
+      list.push({
+        key: "hotel",
+        type: "hotel",
+        title: `Hébergement à ${dest.name}`,
+        detail: `${dest.hotel_price_per_night} € / nuit × ${nights} nuits · ${adults} pers.`,
+        amount: hotelTotal,
+        external_url: dest.booking_url,
+        metadata: {
+          check_in: dest.depart_date,
+          check_out: dest.return_date,
+          nights,
+          price_per_night: dest.hotel_price_per_night,
+          source: "amadeus",
+        },
+      });
+    }
+
+    dest.activities.slice(0, 4).forEach((act, i) => {
+      list.push({
+        key: `activity-${i}`,
+        type: "activity",
+        title: `${act.emoji} ${act.name}`,
+        detail: act.price !== null ? "Activité sur place" : "Activité sur place · prix non communiqué",
+        amount: act.price,
+        metadata: { source: "opentripmap" },
+      });
+    });
+
+    return list;
+  }, [dest, hotelTotal, nights, adults]);
+
+  // Sélection AIVANA par défaut : tout ce qui a pu être vérifié est pré-coché. On ne
+  // mémorise que ce que l'utilisateur décoche, pour qu'un élément qui apparaît ensuite
+  // (autre destination, activités différentes) reste coché par défaut lui aussi.
+  const [deselected, setDeselected] = useState<Record<string, boolean>>({});
+  const selected = (key: string) => !deselected[key];
+
+  const toggle = (key: string) =>
+    setDeselected(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const resetToAivana = () => setDeselected({});
+
+  const selectedItems = items.filter(i => selected(i.key));
+  const selectedTotal = selectedItems.reduce((sum, i) => sum + (i.amount || 0), 0);
+  const isAivanaSelection = items.length > 0 && selectedItems.length === items.length;
 
   const handleSaveTrip = async () => {
     try {
@@ -48,23 +121,19 @@ export default function AIProposalModal({ dest, onClose }: Props) {
         title: `Voyage : ${dest.name}`,
         destination_name: dest.name,
         country: dest.country,
-        start_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        end_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        start_date: dest.depart_date,
+        end_date: dest.return_date,
       });
 
       const tripId = tripRes.data.id;
 
-      // On ne crée pas de réservation vol/hôtel ici : flightShare/hotelShare ne sont qu'une
-      // répartition indicative (voire une estimation par défaut quand aucun prix réel n'a pu
-      // être récupéré) — jamais un vol ou un hôtel que l'utilisateur a réellement choisi.
-      // Les créer comme "réservations IA Vérifiée" afficherait un prix non gagné, contraire à
-      // la règle du projet : pas de prix affiché tant qu'il ne vient pas d'une vraie recherche.
-      // L'utilisateur choisit son vol/hôtel via les pages Explorer, déjà reliées à ce voyage.
-      for (const act of dest.activities.slice(0, 3)) {
+      for (const item of selectedItems) {
         await axios.post(`/api/trips/${tripId}/items`, {
-          type: 'activity',
-          title: `${act.emoji} ${act.name}`,
-          price_estimate: act.price ?? undefined,
+          type: item.type,
+          title: item.title,
+          price_estimate: item.amount ?? undefined,
+          external_url: item.external_url,
+          metadata: item.metadata,
         });
       }
 
@@ -85,15 +154,36 @@ export default function AIProposalModal({ dest, onClose }: Props) {
     }
   };
 
+  const SelectToggle = ({ item }: { item: ProposalItem }) => {
+    const isOn = selected(item.key);
+    return (
+      <button
+        type="button"
+        onClick={() => toggle(item.key)}
+        aria-pressed={isOn}
+        className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-3 py-2.5 rounded-xl border transition-colors shrink-0 ${isOn
+          ? "bg-gold/15 border-gold/40 text-gold"
+          : "bg-white/5 border-white/10 text-white/40 hover:text-white/70"
+          }`}
+      >
+        <span className={`w-4 h-4 rounded-[5px] border flex items-center justify-center shrink-0 ${isOn ? "bg-gold border-gold" : "border-white/25"
+          }`}>
+          {isOn && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
+        </span>
+        {isOn ? "Ajouté" : "Ajouter"}
+      </button>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-12">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-[#06080C]/90 backdrop-blur-xl"
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -105,7 +195,7 @@ export default function AIProposalModal({ dest, onClose }: Props) {
         </button>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden scroolbar-hide relative">
-          
+
           <div className="relative h-[25vh] min-h-[180px] w-full shrink-0">
             <img
               src={heroImg}
@@ -123,20 +213,22 @@ export default function AIProposalModal({ dest, onClose }: Props) {
               <h1 className="text-3xl md:text-5xl font-serif text-white mb-2">
                 {dest.name} <span className="text-2xl md:text-4xl">{dest.emoji}</span>
               </h1>
-              <div className="flex items-center gap-4 text-white/70 text-xs md:text-sm font-medium">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-white/70 text-xs md:text-sm font-medium">
                 <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gold" /> {dest.country}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-gold" /> 7 jours suggérés</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-gold" /> {nights} nuits · {adults} pers.
+                </span>
               </div>
             </div>
           </div>
 
           <div className="p-6 md:p-8 space-y-8">
 
-            {!hasRealEstimate && (
-              <div className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-white/[0.02] border border-white/10 text-white/50 text-xs">
-                <AlertCircle className="w-4 h-4 text-gold shrink-0" />
-                Les prix réels n'ont pas pu être récupérés à l'instant pour cette destination — pas de chiffre inventé. Réessaie dans un instant pour une estimation chiffrée.
+            {dest.dataSource !== "real" && (
+              <div className="flex items-start gap-3 px-5 py-4 rounded-2xl bg-white/[0.02] border border-white/10 text-white/50 text-xs">
+                <AlertCircle className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                Les prix réels n&apos;ont pas pu être récupérés à l&apos;instant pour cette destination — aucun chiffre n&apos;est inventé, donc le vol et l&apos;hébergement ne sont pas proposés à l&apos;ajout. Réessaie dans un instant, ou compare directement via les liens ci-dessous.
               </div>
             )}
 
@@ -151,19 +243,25 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                     <h3 className="text-2xl font-serif text-white">Vol aller-retour</h3>
                   </div>
 
-                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">2 personnes · aller-retour</p>
-                      {flightShare !== null ? (
-                        <p className="text-blue-400 font-bold text-xl">~{flightShare.toLocaleString("fr-FR")} €</p>
+                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                        {adults} personne{adults > 1 ? "s" : ""} · aller-retour
+                        {departLabel && returnLabel && ` · ${departLabel} → ${returnLabel}`}
+                      </p>
+                      {dest.flight_price !== null ? (
+                        <p className="text-blue-400 font-bold text-xl">{dest.flight_price.toLocaleString("fr-FR")} €</p>
                       ) : (
-                        <p className="text-white/40 text-sm italic">Prix indisponible à l'instant</p>
+                        <p className="text-white/40 text-sm italic">Prix indisponible à l&apos;instant</p>
                       )}
                     </div>
-                    <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
-                      Comparer <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {dest.flight_price !== null && <SelectToggle item={items.find(i => i.key === "flight")!} />}
+                      <a href={dest.flights_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
+                        Comparer <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
                 </section>
 
@@ -175,22 +273,33 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                     <h3 className="text-2xl font-serif text-white">Hébergement</h3>
                   </div>
 
-                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">7 nuits · 2 personnes</p>
-                      {hotelShare !== null ? (
-                        <p className="text-gold font-bold text-xl">~{hotelShare.toLocaleString("fr-FR")} €</p>
+                  <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">
+                        {nights} nuits · {adults} pers.
+                        {departLabel && returnLabel && ` · ${departLabel} → ${returnLabel}`}
+                      </p>
+                      {hotelTotal !== null ? (
+                        <>
+                          <p className="text-gold font-bold text-xl">{hotelTotal.toLocaleString("fr-FR")} €</p>
+                          <p className="text-[10px] text-white/30 mt-1">
+                            {dest.hotel_price_per_night?.toLocaleString("fr-FR")} € / nuit × {nights} nuits
+                          </p>
+                        </>
                       ) : (
-                        <p className="text-white/40 text-sm italic">Prix indisponible à l'instant</p>
+                        <p className="text-white/40 text-sm italic">Prix indisponible à l&apos;instant</p>
                       )}
                     </div>
-                    <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
-                      Comparer <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {hotelTotal !== null && <SelectToggle item={items.find(i => i.key === "hotel")!} />}
+                      <a href={dest.booking_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shrink-0">
+                        Comparer <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
                   <p className="text-[10px] text-white/30 mt-2">
-                    Répartition indicative de l'estimation réelle vol + hôtel ({dest.price_estimate?.toLocaleString("fr-FR")} € au total) — montants exacts à confirmer sur les sites de réservation.
+                    Prix les moins chers trouvés en direct pour ces dates — montants exacts à confirmer sur les sites de réservation.
                   </p>
                 </section>
               </div>
@@ -205,48 +314,68 @@ export default function AIProposalModal({ dest, onClose }: Props) {
                   </div>
 
                   <div className="space-y-3">
-                    {dest.activities.length > 0 ? dest.activities.slice(0,4).map((act, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="text-2xl">{act.emoji}</div>
-                          <div>
-                            <h4 className="text-white text-sm font-medium">{act.name}</h4>
-                            <p className="text-[10px] text-white/30 mt-1">Via OpenTripMap</p>
-                          </div>
+                    {dest.activities.length > 0 ? items.filter(i => i.type === "activity").map((item) => (
+                      <div key={item.key} className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-white text-sm font-medium truncate">{item.title}</h4>
+                          <p className="text-[10px] text-white/30 mt-1">
+                            {item.amount !== null ? `${item.amount} €` : "Prix non communiqué"} · Via OpenTripMap
+                          </p>
                         </div>
-                        <div className="text-emerald-400 font-medium text-sm whitespace-nowrap">
-                          {act.price !== null ? `${act.price} €` : 'Prix non communiqué'}
-                        </div>
+                        <SelectToggle item={item} />
                       </div>
                     )) : (
-                      <p className="text-white/40 text-sm italic">Aucune activité réelle disponible pour cette destination à l'instant.</p>
+                      <p className="text-white/40 text-sm italic">Aucune activité réelle disponible pour cette destination à l&apos;instant.</p>
                     )}
                   </div>
                 </section>
 
                 <div className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 rounded-3xl p-6 relative overflow-hidden mt-auto">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-gold/10 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
-                  <p className="text-gold/80 text-[10px] font-bold uppercase tracking-widest mb-2">Estimation réelle (vol + hôtel + activités)</p>
-                  <div className="flex items-end gap-2 mb-6">
-                    {totalPrice !== null ? (
-                      <>
-                        <span className="text-4xl font-serif text-white leading-none">{totalPrice.toLocaleString("fr-FR")}</span>
-                        <span className="text-lg text-gold font-bold mb-1">€</span>
-                        <span className="text-white/40 text-[10px] mb-1.5">/ 2 pers.</span>
-                      </>
+
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-gold/80 text-[10px] font-bold uppercase tracking-widest">
+                      Total de votre sélection
+                    </p>
+                    {isAivanaSelection ? (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-gold/80 bg-gold/10 border border-gold/25 px-2 py-1 rounded-full shrink-0">
+                        <Sparkles className="w-2.5 h-2.5" /> Sélection AIVANA
+                      </span>
                     ) : (
-                      <span className="text-lg text-white/40 italic">Estimation indisponible à l'instant</span>
+                      <button onClick={resetToAivana}
+                        className="text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-gold transition-colors shrink-0">
+                        Rétablir la sélection AIVANA
+                      </button>
                     )}
                   </div>
+
+                  <div className="flex items-end gap-2 mb-2">
+                    {items.length > 0 ? (
+                      <>
+                        <span className="text-4xl font-serif text-white leading-none">{selectedTotal.toLocaleString("fr-FR")}</span>
+                        <span className="text-lg text-gold font-bold mb-1">€</span>
+                        <span className="text-white/40 text-[10px] mb-1.5">/ {adults} pers.</span>
+                      </>
+                    ) : (
+                      <span className="text-lg text-white/40 italic">Estimation indisponible à l&apos;instant</span>
+                    )}
+                  </div>
+
+                  <p className="text-white/35 text-[10px] mb-6">
+                    {selectedItems.length} élément{selectedItems.length > 1 ? "s" : ""} sélectionné{selectedItems.length > 1 ? "s" : ""} sur {items.length} proposé{items.length > 1 ? "s" : ""}
+                    {selectedItems.some(i => i.amount === null) && " · certains sans prix communiqué"}
+                  </p>
 
                   <button
                     onClick={handleSaveTrip}
                     disabled={saving || saved}
-                    className="w-full bg-gold hover:bg-yellow-400 text-black py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 transition-all"
+                    className="w-full bg-gold hover:bg-yellow-400 disabled:opacity-60 text-black py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 transition-all"
                   >
                     {saving ? <Loader2 className="w-5 h-5 animate-spin" /> :
-                     saved ? <><Check className="w-5 h-5" /> Voyage créé</> :
-                     <><Sparkles className="w-5 h-5" /> Ajouter ce voyage à mon dashboard</>}
+                      saved ? <><Check className="w-5 h-5" /> Voyage créé</> :
+                        <><Sparkles className="w-5 h-5" /> {selectedItems.length > 0
+                          ? `Ajouter la sélection (${selectedItems.length})`
+                          : "Créer le voyage seul"}</>}
                   </button>
                   <p className="text-center text-white/30 text-[10px] mt-4 uppercase tracking-wider">
                     Modifiable à tout moment dans le dashboard

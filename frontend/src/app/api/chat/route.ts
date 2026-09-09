@@ -73,6 +73,14 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
         emoji: draft.emoji || '✈️',
         dataSource,
         price_estimate: priceEstimate,
+        // On renvoie les composantes réelles en plus du total : sans elles, l'interface
+        // devait deviner une répartition vol/hôtel, ce qui revenait à inventer des prix.
+        flight_price: cheapestFlight !== null ? Math.round(cheapestFlight) : null,
+        hotel_price_per_night: cheapestHotel !== null ? Math.round(cheapestHotel) : null,
+        nights,
+        depart_date: departDate,
+        return_date: checkout,
+        adults,
         booking_url: bookingHotelUrl({ city: draft.name, checkin, checkout, adults }),
         flights_url: skyscannerFlightUrl({ origin: originCity, destination: draft.name, depart: departDate, return: checkout, adults }),
         activities: realActivities,
