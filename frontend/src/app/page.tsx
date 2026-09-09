@@ -4,21 +4,7 @@ import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, Plane, Sparkles }
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { withAivanaFallback } from "@/lib/placeholder";
-
-// Codes IATA réels (cf. lib/iata.ts) de la ville principale de chaque destination —
-// même dans une bande décorative, on n'invente pas un code d'aéroport.
-const DEPARTURES = [
-  { city: "Bali", code: "DPS" },
-  { city: "Islande", code: "KEF" },
-  { city: "Japon", code: "NRT" },
-  { city: "Maroc", code: "RAK" },
-  { city: "Thaïlande", code: "BKK" },
-  { city: "Pérou", code: "LIM" },
-  { city: "Norvège", code: "OSL" },
-  { city: "Mexique", code: "MEX" },
-  { city: "Vietnam", code: "SGN" },
-  { city: "Portugal", code: "LIS" },
-];
+import { DEPARTURES } from "@/lib/destinations";
 
 const HERO_SLIDES = [
   {

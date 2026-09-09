@@ -171,3 +171,19 @@ export const BUDGET_TIERS = [
 ];
 
 export const ALL_MONTHS = ["Jan", "Fév", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
+
+// Bandeau "tableau des départs" — codes IATA réels (cf. lib/iata.ts) de la ville
+// principale de chaque destination. Partagé entre l'accueil et l'écran de chargement
+// pour qu'ils affichent exactement la même liste.
+export const DEPARTURES = [
+    { city: "Bali", code: "DPS" },
+    { city: "Islande", code: "KEF" },
+    { city: "Japon", code: "NRT" },
+    { city: "Maroc", code: "RAK" },
+    { city: "Thaïlande", code: "BKK" },
+    { city: "Pérou", code: "LIM" },
+    { city: "Norvège", code: "OSL" },
+    { city: "Mexique", code: "MEX" },
+    { city: "Vietnam", code: "SGN" },
+    { city: "Portugal", code: "LIS" },
+];
