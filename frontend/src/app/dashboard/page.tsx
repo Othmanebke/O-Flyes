@@ -155,6 +155,15 @@ function DashboardContent() {
     }
   };
 
+  // Lien direct vers un voyage sauvegardé (menu « Mes voyages » de la navbar)
+  useEffect(() => {
+    const id = params.get("trip");
+    if (!id || !trips.length) return;
+    const t = trips.find(x => x.id === id);
+    router.replace("/dashboard");
+    if (t) void open(t);
+  }, [params, trips]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const remove = async () => {
     if (!plan || !confirm(`Supprimer le voyage « ${plan.destination} » ?`)) return;
     if (plan.tripId) {

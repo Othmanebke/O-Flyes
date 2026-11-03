@@ -1,13 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ArrowUpRight, Menu, Plane, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { ArrowUpRight, ChevronDown, Loader2, Menu, Plus, X } from "lucide-react";
 import { clsx } from "clsx";
 import Logo from "@/components/ui/Logo";
 import Photo from "@/components/ui/Photo";
 import { ask } from "@/lib/chat";
-import { usePlan } from "@/lib/plan";
+import { formatRange, usePlan } from "@/lib/plan";
+import { findDestination } from "@/lib/catalog";
+import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
+import type { Trip } from "@/types/trip";
 import { useSession } from "@/lib/session";
 
 const LINKS = [
@@ -21,28 +25,88 @@ const LINKS = [
   { label: "Tarifs", href: "/pricing", note: "Gratuit ou Pro" },
 ];
 
-/* Compteur du voyage en cours : « Lisbonne · 3 éléments », mène au carnet. */
-function PlanCounter({ overlay }: { overlay: boolean }) {
+/* Menu « Mes voyages » : accès au carnet, voyage en cours et voyages sauvegardés. */
+function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean }) {
   const plan = usePlan();
-  if (!plan) return null;
-  const n = plan.items.length;
+  const [open, setOpen] = useState(false);
+  const [trips, setTrips] = useState<Trip[] | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (loggedIn) axios.get<Trip[]>("/api/trips").then(r => setTrips(r.data || [])).catch(() => setTrips([]));
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); window.removeEventListener("keydown", onKey); };
+  }, [open, loggedIn]);
+
+  const photoOf = (name: string): PhotoKey => { const c = findDestination(name)?.code; return isPhotoKey(c) ? c : photoFor(name); };
+  const draft = plan && !plan.tripId ? plan : null;
+  const saved = (trips || []).map(t => ({ ...t, current: plan?.tripId === t.id }));
+  const close = () => setOpen(false);
+
   return (
-    <Link
-      href="/dashboard"
-      title="Mon voyage en cours : ce que vous ajoutez y est rangé. Cliquez pour ouvrir le carnet."
-      className={clsx(
-        "plain-link flex h-[46px] items-center gap-2 whitespace-nowrap rounded-full border pl-1.5 pr-3.5 text-sm font-semibold transition-colors sm:h-[52px]",
-        overlay ? "border-white/55 text-white hover:bg-white/10" : "border-line-2 bg-white text-ink hover:border-ink",
+    <div ref={ref} className="relative hidden min-[860px]:block">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className={clsx(
+          "flex items-center gap-2 whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors",
+          overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[52px] border-line-2 text-ink hover:bg-white",
+        )}
+      >
+        Mes voyages <ChevronDown className={clsx("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden />
+      </button>
+
+      {open && (
+        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
+          <Link href="/dashboard" onClick={close} className="plain-link flex items-center justify-between gap-3 rounded-[18px] bg-ink px-4 py-3 text-sm font-bold !text-white hover:bg-ink-2">
+            Voir mon carnet <ArrowUpRight className="h-4 w-4 text-gold" aria-hidden />
+          </Link>
+
+          {draft && (
+            <Link href="/dashboard" onClick={close} className="plain-link flex items-center gap-3 rounded-[18px] px-2 py-2 hover:bg-white">
+              <Photo k={photoOf(draft.destination)} sizes="40px" className="h-10 w-10 shrink-0 rounded-full" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-bold">{draft.destination}</span>
+                <span className="text-xs text-muted">{formatRange(draft.depart, draft.ret)} · {draft.items.length} élément{draft.items.length > 1 ? "s" : ""}</span>
+              </span>
+              <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-bold">Brouillon</span>
+            </Link>
+          )}
+
+          {loggedIn && trips === null && (
+            <span className="flex items-center gap-2 px-3 py-3 text-sm text-muted"><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Chargement…</span>
+          )}
+          {saved.map(t => (
+            <Link key={t.id} href={`/dashboard?trip=${t.id}`} onClick={close} className="plain-link flex items-center gap-3 rounded-[18px] px-2 py-2 hover:bg-white">
+              <Photo k={photoOf(t.title)} sizes="40px" className="h-10 w-10 shrink-0 rounded-full" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-bold">{t.title}</span>
+                <span className="text-xs text-muted">{formatRange(t.start_date, t.end_date)}</span>
+              </span>
+              {t.current && <span className="rounded-full bg-[#CFE6D6] px-2 py-0.5 text-[11px] font-bold">Ouvert</span>}
+            </Link>
+          ))}
+
+          {!draft && loggedIn && trips?.length === 0 && (
+            <span className="px-3 py-3 text-sm text-muted">Aucun voyage sauvegardé pour le moment.</span>
+          )}
+          {!loggedIn && (
+            <Link href="/auth/login?next=/dashboard" onClick={close} className="plain-link rounded-[18px] px-3 py-3 text-sm hover:bg-white">
+              <span className="font-bold">Se connecter</span> <span className="text-muted">pour retrouver vos voyages sauvegardés</span>
+            </Link>
+          )}
+
+          <Link href="/assistant" onClick={close} className="plain-link mt-1 flex items-center gap-2 rounded-[18px] border-[1.5px] border-dashed border-line-2 px-3 py-2.5 text-sm font-bold !text-muted-2 hover:border-ink hover:!text-ink">
+            <Plus className="h-4 w-4" aria-hidden /> Nouveau voyage
+          </Link>
+        </div>
       )}
-    >
-      <span className={clsx("flex h-8 w-8 items-center justify-center rounded-full sm:h-9 sm:w-9", overlay ? "bg-white/15" : "bg-gold-soft")}>
-        <Plane className="h-4 w-4 -rotate-45" aria-hidden />
-      </span>
-      <span className="max-w-[140px] truncate sm:max-w-[200px]"><span className="hidden font-normal opacity-70 lg:inline">Mon voyage · </span>{plan.destination}</span>
-      <span className={clsx("tabular rounded-full px-2 py-0.5 text-xs", overlay ? "bg-white text-ink" : "bg-ink text-white")}>
-        {n}<span className="hidden sm:inline"> élément{n > 1 ? "s" : ""}</span>
-      </span>
-    </Link>
+    </div>
   );
 }
 
@@ -61,9 +125,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
 
   const plan = () => { setOpen(false); ask(""); };
   const fg = overlay ? "text-white" : "text-ink";
-  const account = user
-    ? { label: "Mes voyages", href: "/dashboard" }
-    : { label: "Connexion", href: "/auth/login" };
+  const draft = usePlan();
 
   return (
     <>
@@ -92,16 +154,20 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
           </Link>
 
           <div className="flex items-center gap-2.5 justify-self-end">
-            <span className="hidden md:flex"><PlanCounter overlay={overlay} /></span>
-            <Link
-              href={account.href}
-              className={clsx(
-                "plain-link hidden items-center whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors min-[860px]:flex",
-                overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[52px] border-line-2 text-ink hover:bg-white",
-              )}
-            >
-              {account.label}
-            </Link>
+            {/* Avec un compte ou un voyage en cours : menu « Mes voyages » ; sinon lien Connexion */}
+            {user || draft ? (
+              <TripsMenu overlay={overlay} loggedIn={!!user} />
+            ) : (
+              <Link
+                href="/auth/login"
+                className={clsx(
+                  "plain-link hidden items-center whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors min-[860px]:flex",
+                  overlay ? "h-[60px] border-white/55 !text-white hover:bg-white/10" : "h-[52px] border-line-2 !text-ink hover:bg-white",
+                )}
+              >
+                Connexion
+              </Link>
+            )}
             <button
               onClick={plan}
               className={clsx(
@@ -120,8 +186,6 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
             </button>
           </div>
         </div>
-        {/* Compteur du voyage en dessous sur mobile */}
-        <div className="mt-2 flex justify-center md:hidden empty:hidden"><PlanCounter overlay={overlay} /></div>
       </nav>
 
       {open && (
