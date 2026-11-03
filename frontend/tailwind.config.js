@@ -1,81 +1,46 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
-      colors: {
-        sand: {
-          50: "#fdfcf8",  // Clean, elegant cream (doesn't hurt eyes)
-          100: "#f5f3ec",
-          200: "#e6e0d1",
-          300: "#d4a96a",
-          400: "#c27d3a",
-          500: "#a0611e",
-          600: "#7d4a14",
-        },
-        gold: {
-          DEFAULT: "#C5A059", // Refined Champagne/Luxury Gold
-          50: "#fbf8f1",
-          100: "#f3eada",
-          200: "#e3d0ad",
-          300: "#d0b17b",
-          400: "#c5a059",
-          500: "#a68241",
-          600: "#80622e",
-        },
-        dark: {
-          DEFAULT: "#0a1128", // Deep luxury midnight blue (inspires trust)
-          50: "#eef1f6",
-          100: "#d5dce8",
-          200: "#aab8cd",
-          300: "#7990ae",
-          400: "#50698a",
-          500: "#364e6e",
-          600: "#273a55",
-          700: "#1e2c41",
-          800: "#152030",
-          900: "#0a1128",
-          950: "#050916",
-        },
-        // keep brand for legacy
-        brand: {
-          50: "#f0f9ff",
-          100: "#e0f2fe",
-          200: "#bae6fd",
-          300: "#7dd3fc",
-          400: "#38bdf8",
-          500: "#0ea5e9",
-          600: "#0284c7",
-          700: "#0369a1",
-          800: "#075985",
-          900: "#0c4a6e",
-        },
-      },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        serif: ["Playfair Display", "serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "serif"],
+        logo: ["var(--font-logo)", "cursive"],
       },
-      animation: {
-        'fade-up': 'fadeUp 0.7s ease forwards',
-        'fly': 'fly 8s ease-in-out infinite',
-        'marquee': 'marquee 30s linear infinite',
+      colors: {
+        ink: "#0F1B2D", // bleu nuit : texte principal, boutons primaires
+        "ink-2": "#1E2E47", // hover des boutons primaires
+        gold: "#C9A24B", // accents, logo, flèches
+        "gold-deep": "#9A7A34", // liens / texte accent sur fond clair
+        "gold-soft": "#F1E3C2", // pastilles, fonds de flèches
+        paper: "#F9F8F6", // fond de page
+        cream: "#FFFDF9", // champs et cartes claires
+        sand: "#E9E1D3", // section saison
+        mist: "#EAEFF4", // section chiffres
+        sky: "#DCE6EF", // carte CTA
+        line: "#E4DFD5",
+        "line-2": "#D3CCBF",
+        muted: "#736E66",
+        "muted-2": "#4D4943",
+        bubble: "#EFEBE4", // bulles de l'assistant
+        placeholder: "#D9D2C4", // fond des photos en chargement
+        ok: "#2E7650",
+        danger: "#A33A3A",
+      },
+      boxShadow: {
+        card: "0 30px 60px rgba(15,27,45,0.14)",
+        float: "0 10px 24px rgba(15,27,45,0.12)",
+        panel: "0 30px 80px rgba(15,27,45,0.22)",
       },
       keyframes: {
         fadeUp: {
-          from: { opacity: '0', transform: 'translateY(24px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "none" },
         },
-        fly: {
-          '0%': { transform: 'translateX(-120px) translateY(30px) rotate(-5deg)', opacity: '0' },
-          '20%': { opacity: '1' },
-          '80%': { opacity: '1' },
-          '100%': { transform: 'translateX(calc(100vw + 120px)) translateY(-60px) rotate(5deg)', opacity: '0' },
-        },
-        marquee: {
-          from: { transform: 'translateX(0)' },
-          to: { transform: 'translateX(-50%)' },
-        },
+      },
+      animation: {
+        "fade-up": "fadeUp 0.35s ease both",
       },
     },
   },
