@@ -1,630 +1,197 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Search, MapPin, ArrowRight, Sparkles, Plane, Clock, Compass, Globe, Luggage, Calendar, Users, ArrowLeftRight, ChevronRight, Plus } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/browser";
-import { Suspense } from "react";
-import TripContextBanner from "@/components/trip/TripContextBanner";
-import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink, Loader2 } from "lucide-react";
+import PageBanner from "@/components/layout/PageBanner";
+import TripBar from "@/components/trip/TripBar";
+import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
+import { planInputFrom, syncPlanWithSearch, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
+import { eur, findDestination } from "@/lib/catalog";
+import { addItem, removeItem, toast, usePlan } from "@/lib/plan";
 
 interface Flight {
-    id: string;
-    airline: string;
-    origin: string;
-    originCode: string;
-    destination: string;
-    destinationCode: string;
-    departure: string;
-    arrival: string;
-    duration: string;
-    returnDeparture?: string | null;
-    returnArrival?: string | null;
-    returnDuration?: string | null;
-    price: number;
-    currency: string;
-    type: string;
-    class: string;
-    booking_url: string;
+  id: string;
+  airline: string;
+  originCode: string;
+  destinationCode: string;
+  departure: string;
+  arrival: string;
+  duration: string;
+  returnDeparture: string | null;
+  returnArrival: string | null;
+  price: number; // total A/R tous voyageurs
+  type: string;
+  baggage: string;
+  booking_url: string;
+  source?: "amadeus" | "estimate";
 }
 
+const time = (iso?: string | null) => (iso ? iso.slice(11, 16) : "—");
+const day = (iso?: string | null) => (iso ? new Date(iso.slice(0, 10) + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) : "");
+const minutes = (d: string) => { const m = d.match(/(\d+)\s*h\s*(\d+)?/i); return m ? Number(m[1]) * 60 + Number(m[2] || 0) : 9999; };
+
 function FlightsContent() {
-    const searchParams = useSearchParams();
-    const tripIdFromUrl = searchParams.get("tripId");
-    const router = useRouter();
-    const [flights, setFlights] = useState<Flight[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [originSearch, setOriginSearch] = useState("Paris");
-    const [destSearch, setDestSearch] = useState("New York");
-    const [suggestions, setSuggestions] = useState<any[]>([]);
-    const [activeSearch, setActiveSearch] = useState<"origin" | "dest" | null>(null);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [trips, setTrips] = useState<any[]>([]);
-    const [showTripSelector, setShowTripSelector] = useState(false);
-    const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
-    const [debouncedOrigin, setDebouncedOrigin] = useState("");
-    const [debouncedDest, setDebouncedDest] = useState("");
-    const [departDate, setDepartDate] = useState(() => {
-        const d = new Date(); d.setDate(d.getDate() + 30);
-        return d.toISOString().split('T')[0];
-    });
-    const [returnDate, setReturnDate] = useState(() => {
-        const d = new Date(); d.setDate(d.getDate() + 37);
-        return d.toISOString().split('T')[0];
-    });
-    const [passengers, setPassengers] = useState(1);
+  const { ctx, setCtx, ready } = useTripContext();
+  const plan = usePlan();
+  const [flights, setFlights] = useState<Flight[]>([]);
+  const [searched, setSearched] = useState<SearchContext | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [stops, setStops] = useState<"all" | "direct" | "one">("all");
+  const [off, setOff] = useState<Record<string, boolean>>({});
+  const [sort, setSort] = useState<"best" | "cheap" | "fast">("best");
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUserId(session.user.id);
-                fetchTrips();
-            }
-        };
-        checkAuth();
-        const currentDest = searchParams.get("dest");
-        const defaultDest = currentDest || "New York";
-        if (currentDest) setDestSearch(currentDest);
-        fetchFlights("Paris", defaultDest, departDate, returnDate, passengers);
-    }, [searchParams]);
+  const search = useCallback(async (c: SearchContext) => {
+    if (!c.dest.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get<Flight[]>("/api/partner/flights/search", { params: { origin: c.origin, destination: c.dest, depart: c.depart, return: c.ret, adults: c.pax } });
+      setFlights(res.data || []);
+      setSearched(c);
+      setOff({});
+      syncPlanWithSearch(c);
+    } catch {
+      setError("La recherche de vols n'a pas abouti. Réessayez dans un instant.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        const timer = setTimeout(() => setDebouncedOrigin(originSearch), 300);
-        return () => clearTimeout(timer);
-    }, [originSearch]);
+  useEffect(() => { if (ready) void search(ctx); }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => {
-        const timer = setTimeout(() => setDebouncedDest(destSearch), 300);
-        return () => clearTimeout(timer);
-    }, [destSearch]);
+  const airlines = useMemo(() => Array.from(new Set(flights.map(f => f.airline))), [flights]);
+  const rows = useMemo(() => {
+    const r = flights
+      .filter(f => !off[f.airline])
+      .filter(f => stops === "all" || (stops === "direct" ? f.type === "Direct" : f.type !== "Direct"));
+    const score = (f: Flight) => f.price + minutes(f.duration) * 0.4;
+    return [...r].sort((a, b) => sort === "cheap" ? a.price - b.price : sort === "fast" ? minutes(a.duration) - minutes(b.duration) : score(a) - score(b));
+  }, [flights, off, stops, sort]);
 
-    useEffect(() => {
-        const term = activeSearch === "origin" ? debouncedOrigin : debouncedDest;
-        if (activeSearch && term.length >= 2) {
-            axios.get(`/api/partner/locations/suggest?q=${term}`)
-                .then(res => setSuggestions(res.data))
-                .catch(err => console.error("Failed to fetch suggestions", err));
-        } else {
-            setSuggestions([]);
-        }
-    }, [debouncedOrigin, debouncedDest, activeSearch]);
+  const estimated = flights.some(f => f.source !== "amadeus");
+  const tripName = plan?.destination || findDestination(searched?.dest)?.name || searched?.dest || ctx.dest;
+  const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: k === "pax" ? Number(v) : v }));
 
-    const fetchTrips = async () => {
-        try {
-            const res = await axios.get(`/api/trips`);
-            setTrips(res.data || []);
-        } catch (err) {
-            console.error("Failed to fetch trips", err);
-        }
-    };
+  const toggle = async (f: Flight) => {
+    if (!searched) return;
+    const key = `flight:${f.id}:${searched.depart}`;
+    if (plan?.items.some(i => i.key === key)) { await removeItem(key); return; }
+    const p = await addItem({
+      key, type: "flight",
+      title: `Vol ${f.airline} · ${f.originCode} → ${f.destinationCode}`,
+      subtitle: `Aller-retour · ${day(f.departure)} ${time(f.departure)} – retour ${day(f.returnDeparture)} · ${searched.pax} pers. · ${f.type}`,
+      price: f.price, estimated: f.source !== "amadeus", provider: f.airline, url: f.booking_url, date: searched.depart,
+    }, planInputFrom(searched));
+    toast(`Vol ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
+  };
 
-    const fetchFlights = async (org: string, dst: string, dep?: string, ret?: string, adults?: number) => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams({
-                origin: org,
-                destination: dst,
-                ...(dep ? { depart: dep } : {}),
-                ...(ret ? { return: ret } : {}),
-                adults: String(adults || 1),
-            });
-            const res = await axios.get(`/api/partner/flights/search?${params}`);
-            setFlights(res.data);
-        } catch (err) {
-            console.error("Failed to fetch flights", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-12">
+      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">Trouver <em className="accent">votre vol</em></h1>
+      <TripBar />
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        setActiveSearch(null);
-        fetchFlights(originSearch, destSearch, departDate, returnDate, passengers);
-    };
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+        <CityInput id="origin" label="Départ" value={ctx.origin} onChange={set("origin")} />
+        <CityInput id="dest" label="Destination" value={ctx.dest} onChange={set("dest")} />
+        <Field id="out" label="Aller"><input id="out" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
+        <Field id="back" label="Retour"><input id="back" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
+        <Field id="pax" label="Voyageurs">
+          <select id="pax" value={ctx.pax} onChange={e => set("pax")(e.target.value)} className={fieldInput}>
+            {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} adulte{n > 1 ? "s" : ""}</option>)}
+          </select>
+        </Field>
+        <button type="submit" disabled={loading} className="col-span-full flex min-h-[52px] items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
+        </button>
+      </form>
 
-    const handleSwap = () => {
-        setOriginSearch(destSearch);
-        setDestSearch(originSearch);
-    };
+      <div className="flex flex-wrap items-start gap-10">
+        <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
+          <fieldset className="flex flex-col gap-2.5">
+            <legend className="mb-2.5 text-sm font-semibold">Escales</legend>
+            {([["all", "Toutes"], ["direct", "Direct uniquement"], ["one", "Avec escale"]] as const).map(([v, label]) => (
+              <label key={v} className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-2">
+                <input type="radio" name="stops" checked={stops === v} onChange={() => setStops(v)} />{label}
+              </label>
+            ))}
+          </fieldset>
+          {airlines.length > 0 && (
+            <fieldset className="flex flex-col gap-2.5">
+              <legend className="mb-2.5 text-sm font-semibold">Compagnies</legend>
+              {airlines.map(a => (
+                <label key={a} className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-2">
+                  <input type="checkbox" checked={!off[a]} onChange={() => setOff(o => ({ ...o, [a]: !o[a] }))} />{a}
+                </label>
+              ))}
+            </fieldset>
+          )}
+        </aside>
 
-    const handleSelectSuggestion = (suggestion: any) => {
-        const label = suggestion.city || suggestion.label;
-        if (activeSearch === "origin") setOriginSearch(label);
-        else setDestSearch(label);
-        setActiveSearch(null);
-    };
-
-    const formatTime = (dateStr: string) => {
-        return new Date(dateStr).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-    };
-
-    const formatDateShort = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
-    };
-
-    const handleBook = async (flight: Flight) => {
-        if (!userId) { router.push("/auth/login"); return; }
-        setSelectedFlight(flight);
-        if (tripIdFromUrl) {
-            await confirmBookingDirect(flight, tripIdFromUrl);
-        } else if (trips.length > 0) {
-            setShowTripSelector(true);
-        } else {
-            window.open(flight.booking_url, "_blank");
-        }
-    };
-
-    const confirmBookingDirect = async (flight: Flight, tripId: string) => {
-        try {
-            await axios.post(`/api/trips/${tripId}/items`, {
-                type: 'flight',
-                title: `Vol ${flight.airline} : ${flight.originCode} → ${flight.destinationCode}`,
-                provider: flight.airline,
-                price_estimate: flight.price,
-                external_url: flight.booking_url
-            });
-            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
-            alert(`✓ Vol ajouté au voyage ! Ouverture de la réservation...`);
-            window.open(flight.booking_url, "_blank");
-        } catch (err) {
-            console.error("Failed direct booking", err);
-            window.open(flight.booking_url, "_blank");
-        }
-    };
-
-    const confirmBooking = async (tripId: string) => {
-        if (!selectedFlight || !userId) return;
-        try {
-            await axios.post(`/api/trips/${tripId}/items`, {
-                type: 'flight',
-                title: `Vol ${selectedFlight.airline} : ${selectedFlight.originCode} → ${selectedFlight.destinationCode}`,
-                provider: selectedFlight.airline,
-                price_estimate: selectedFlight.price,
-                external_url: selectedFlight.booking_url
-            });
-            setShowTripSelector(false);
-            window.dispatchEvent(new CustomEvent("bookings-updated", { detail: { tripId } }));
-            window.open(selectedFlight.booking_url, "_blank");
-        } catch (err) {
-            console.error("Failed to create pending flight booking", err);
-            window.open(selectedFlight.booking_url, "_blank");
-        }
-    };
-
-    return (
-        <>
-            <TripContextBanner />
-            {/* -mt-20 compense le padding du <main> pour un hero plein cadre sous la navbar
-                flottante. Le bandeau voyage flotte par-dessus (position fixed), il ne prend
-                pas de place dans le flux : la mise en page est donc identique avec ou sans. */}
-            <div className="theme-locked-dark min-h-screen -mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
-
-            {/* ── HERO ─────────────────────────────────────────────────── */}
-            <div className="relative h-[55vh] sm:h-[70vh] min-h-[360px] sm:min-h-[500px]">
-                <div className="absolute inset-0 overflow-hidden">
-                    <img
-                        src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1800&q=85"
-                        alt="Vols"
-                        className="absolute inset-0 w-full h-full object-cover scale-105"
-                    />
-                    {/* Gradient overlays */}
-                    <div className="absolute inset-0 bg-[#0A0D14]/50" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0D14]" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D14]/60 via-transparent to-transparent" />
-
-                    {/* Ambient glow */}
-                    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/10 blur-[120px] rounded-full pointer-events-none" />
-                </div>
-
-                {/* Hero content */}
-                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 pt-8 sm:pt-16">
-                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
-                            <Plane className="w-3 h-3" /> Navigation Aérienne Privée
-                        </div>
-                        <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white mb-4 sm:mb-5 leading-[1.05]">
-                            Envolez-vous<br />avec <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold italic">distinction</span>
-                        </h1>
-                        <p className="text-white/50 text-lg max-w-xl mx-auto">
-                            Les meilleures routes aériennes mondiales dans le confort et l'élégance absolue.
-                        </p>
-                    </motion.div>
-                </div>
-
-                {/* Search bar floats at bottom of hero */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-[38%] sm:translate-y-1/2 px-6">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="max-w-5xl mx-auto">
-                        <form onSubmit={handleSearch} className="relative flex flex-col bg-[#0A0D14] border border-white/10 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden backdrop-blur-2xl">
-                            <div className="flex flex-col md:flex-row">
-                            {/* Origin */}
-                            <div className="flex-1 flex items-center gap-4 px-6 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] relative">
-                                <MapPin className="w-4 h-4 text-gold/60 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Départ</p>
-                                    <input
-                                        type="text"
-                                        placeholder="Ville d'origine"
-                                        className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/15 text-base font-light"
-                                        value={originSearch}
-                                        onFocus={() => setActiveSearch("origin")}
-                                        onChange={(e) => setOriginSearch(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Swap icon */}
-                            <div className="hidden md:flex items-center justify-center px-3">
-                                <button type="button" onClick={handleSwap} className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-gold/40 hover:text-gold hover:border-gold/40 transition-colors">
-                                    <ArrowLeftRight className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-
-                            {/* Destination */}
-                            <div className="flex-1 flex items-center gap-4 px-6 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06]">
-                                <MapPin className="w-4 h-4 text-gold shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Destination</p>
-                                    <input
-                                        type="text"
-                                        placeholder="Où allez-vous ?"
-                                        className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/15 text-base font-light"
-                                        value={destSearch}
-                                        onFocus={() => setActiveSearch("dest")}
-                                        onChange={(e) => setDestSearch(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Départ date */}
-                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
-                                <Calendar className="w-4 h-4 text-gold/60 shrink-0" />
-                                <div>
-                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Aller</p>
-                                    <input
-                                        type="date"
-                                        value={departDate}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        onChange={(e) => setDepartDate(e.target.value)}
-                                        className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Retour date */}
-                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
-                                <Calendar className="w-4 h-4 text-white/20 shrink-0" />
-                                <div>
-                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Retour</p>
-                                    <input
-                                        type="date"
-                                        value={returnDate}
-                                        min={departDate}
-                                        onChange={(e) => setReturnDate(e.target.value)}
-                                        className="bg-transparent border-none outline-none text-white text-sm font-light [color-scheme:dark] cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Passengers */}
-                            <div className="flex items-center gap-3 px-5 py-3 sm:py-5 border-b md:border-b-0 md:border-r border-white/[0.06] shrink-0">
-                                <Users className="w-4 h-4 text-gold/60 shrink-0" />
-                                <div>
-                                    <p className="text-[9px] text-white/25 uppercase font-black tracking-[0.2em] mb-0.5">Passagers</p>
-                                    <select
-                                        value={passengers}
-                                        onChange={(e) => setPassengers(parseInt(e.target.value))}
-                                        className="bg-transparent border-none outline-none text-white text-sm font-light cursor-pointer"
-                                    >
-                                        {[1,2,3,4,5,6,7,8].map(n => (
-                                            <option key={n} value={n} className="bg-[#141822]">{n} {n === 1 ? 'passager' : 'passagers'}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            </div>
-
-                            <button type="submit" className="w-full bg-gold text-[#0A0D14] font-black py-4 sm:py-5 hover:bg-yellow-400 transition-all flex items-center justify-center gap-2.5 text-xs uppercase tracking-[0.2em] border-t border-white/[0.06]">
-                                <Search className="w-4 h-4" /> Rechercher les vols
-                            </button>
-
-                            {/* Suggestions */}
-                            <AnimatePresence>
-                                {activeSearch && suggestions.length > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 8 }}
-                                        className="absolute left-0 right-0 top-full mt-3 bg-[#141822]/98 backdrop-blur-3xl border border-white/10 rounded-[24px] overflow-hidden z-[100] shadow-2xl p-2"
-                                    >
-                                        {suggestions.map((s, idx) => (
-                                            <button key={idx} type="button" onClick={() => handleSelectSuggestion(s)}
-                                                className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-white/5 transition-all rounded-[16px] group/item text-left">
-                                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover/item:bg-gold/20 transition-colors shrink-0">
-                                                    <Compass className="w-3.5 h-3.5 text-gold" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white text-sm group-hover/item:text-gold transition-colors truncate">{s.label}</p>
-                                                    <p className="text-[9px] text-white/25 uppercase tracking-widest">{s.city ? 'Ville' : 'Pays'}</p>
-                                                </div>
-                                                <ArrowRight className="w-3 h-3 text-white/10 group-hover/item:text-gold shrink-0" />
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </form>
-                    </motion.div>
-                </div>
+        <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm text-muted-2">
+              {searched ? `${rows.length} vol${rows.length > 1 ? "s" : ""} · ${searched.origin} → ${searched.dest} · ${day(searched.depart)} – ${day(searched.ret)}` : "Recherche en cours…"}
+            </span>
+            <div className="flex gap-1 rounded-full border border-line bg-cream p-[3px]">
+              {([["best", "Recommandé"], ["cheap", "Moins cher"], ["fast", "Plus rapide"]] as const).map(([v, label]) => (
+                <button key={v} onClick={() => setSort(v)} aria-pressed={sort === v} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium ${sort === v ? "bg-ink text-paper" : "text-muted-2"}`}>{label}</button>
+              ))}
             </div>
+          </div>
 
-            {/* ── RESULTS ───────────────────────────────────────────────── */}
-            <div className="max-w-6xl mx-auto px-6 pt-28 sm:pt-40 pb-24 relative z-10">
+          {error && <p className="rounded-2xl border border-danger/40 bg-danger/[0.08] px-4 py-3 text-sm text-danger">{error}</p>}
 
-                {/* Section header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 pb-8 border-b border-white/[0.06] gap-4">
-                    <h2 className="text-xl sm:text-2xl font-serif text-white">
-                        <span className="text-white/30">Itinéraire</span> <span className="text-gold italic">{originSearch} → {destSearch}</span>
-                    </h2>
-                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08]">
-                        <Plane className="w-3.5 h-3.5 text-gold" />
-                        <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">{flights.length} Vols</span>
-                    </div>
+          <div className="flex flex-col border-t border-line">
+            {loading && !flights.length && <p className="py-6 text-sm text-muted">Comparaison des vols…</p>}
+            {rows.map(f => {
+              const added = !!plan?.items.some(i => i.key === `flight:${f.id}:${searched?.depart}`);
+              return (
+                <div key={f.id} className="grid items-center gap-x-5 gap-y-3 border-b border-line py-[18px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+                  <div className="flex flex-col gap-[3px]">
+                    <span className="text-[15px] font-semibold">{f.airline}</span>
+                    <span className="text-[13px] text-muted">{f.baggage}</span>
+                  </div>
+                  <div className="tabular flex items-center gap-2.5 whitespace-nowrap text-[15px] font-semibold">
+                    <span className="flex flex-col"><span>{time(f.departure)}</span><span className="text-xs font-normal text-muted">{f.originCode}</span></span>
+                    <span className="h-px min-w-6 flex-1 bg-line-2" />
+                    <span className="flex flex-col"><span>{time(f.arrival)}</span><span className="text-xs font-normal text-muted">{f.destinationCode}</span></span>
+                  </div>
+                  <div className="flex flex-col gap-[3px]">
+                    <span className="text-sm">{f.duration.replace("h", " h ").replace("m", "")}</span>
+                    <span className={`text-[13px] ${f.type === "Direct" ? "text-ok" : "text-muted-2"}`}>{f.type}</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-3.5">
+                    <span className="flex flex-col items-end">
+                      <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price / (searched?.pax || 1))}</span>
+                      <span className="whitespace-nowrap text-xs text-muted">A/R par pers.{f.source !== "amadeus" ? " · estimé" : ""}</span>
+                    </span>
+                    <button onClick={() => toggle(f)} className={`whitespace-nowrap rounded-full border border-ink px-3 py-[9px] text-[13px] font-semibold ${added ? "bg-transparent text-ink" : "bg-ink text-paper hover:bg-ink-2"}`}>
+                      {added ? "Ajouté ✓" : `Ajouter à ${tripName}`}
+                    </button>
+                    <a href={f.booking_url} target="_blank" rel="noopener noreferrer" aria-label={`Voir ce vol ${f.airline} chez le partenaire`} title="Vérifier et réserver chez le partenaire" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
+                  </div>
                 </div>
-
-                {loading ? (
-                    <div className="space-y-5">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="animate-pulse bg-white/[0.03] rounded-3xl h-36 border border-white/[0.06]" />
-                        ))}
-                    </div>
-                ) : flights.length === 0 ? (
-                    <div className="bg-white/[0.03] rounded-[40px] p-24 text-center border border-white/[0.06]">
-                        <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-gold/20">
-                            <Globe className="w-9 h-9 text-gold/50" />
-                        </div>
-                        <h3 className="text-xl font-serif text-white mb-3">Aucune liaison directe</h3>
-                        <p className="text-white/30 text-sm max-w-sm mx-auto">Essayez une autre combinaison de villes.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-5">
-                        {flights.map((flight, idx) => (
-                            <motion.div
-                                key={flight.id}
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.08 }}
-                                className="group relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-gold/25 rounded-3xl p-8 transition-all duration-400 overflow-hidden"
-                            >
-                                <div className="absolute top-0 right-0 w-48 h-48 bg-gold/[0.04] blur-[60px] rounded-full -mr-24 -mt-24 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
-
-                                    {/* Airline */}
-                                    <div className="flex items-center gap-5 w-full lg:w-52 shrink-0">
-                                        <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/[0.08] group-hover:border-gold/30 flex items-center justify-center transition-colors shrink-0">
-                                            <Plane className="w-6 h-6 text-gold/70" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="text-lg font-serif text-white truncate">{flight.airline}</h3>
-                                            <div className="flex gap-1.5 mt-1 flex-wrap">
-                                                <span className="bg-gold/10 text-gold text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">Aller-Retour</span>
-                                                <span className="bg-gold/10 text-gold text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{flight.class}</span>
-                                                <span className="bg-white/[0.05] text-white/30 text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{flight.type}</span>
-                                                {(flight as any).baggage && (
-                                                    <span className={`text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${(flight as any).baggage.includes('Sans') ? 'bg-zinc-800 text-zinc-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                                        {(flight as any).baggage}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Timeline aller + retour */}
-                                    <div className="flex-1 w-full flex flex-col gap-4">
-                                        {/* Aller */}
-                                        <div className="flex items-center justify-between gap-6">
-                                            <span className="hidden sm:flex items-center gap-1.5 text-emerald-400/70 text-[8px] font-black uppercase tracking-[0.2em] w-14 shrink-0">
-                                                <ArrowRight className="w-3 h-3" /> Aller
-                                            </span>
-                                            <div className="text-center shrink-0">
-                                                <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.departure)}</p>
-                                                <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.originCode}</p>
-                                                <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.departure)}</p>
-                                            </div>
-
-                                            <div className="flex-1 relative flex flex-col items-center">
-                                                <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent relative">
-                                                    <motion.div
-                                                        initial={{ left: "0%" }}
-                                                        animate={{ left: "100%" }}
-                                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                                        className="absolute -top-[3px] w-1.5 h-1.5 bg-gold rounded-full shadow-[0_0_8px_rgba(184,134,11,0.8)]"
-                                                    />
-                                                </div>
-                                                <div className="mt-2 flex items-center gap-1.5 text-white/25 text-[9px] uppercase font-black tracking-widest">
-                                                    <Clock className="w-2.5 h-2.5" /> {flight.duration}
-                                                </div>
-                                            </div>
-
-                                            <div className="text-center shrink-0">
-                                                <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.arrival)}</p>
-                                                <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.destinationCode}</p>
-                                                <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.arrival)}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Retour */}
-                                        {flight.returnDeparture && flight.returnArrival && (
-                                            <div className="flex items-center justify-between gap-6 pt-4 border-t border-white/[0.05]">
-                                                <span className="hidden sm:flex items-center gap-1.5 text-blue-400/70 text-[8px] font-black uppercase tracking-[0.2em] w-14 shrink-0">
-                                                    <ArrowRight className="w-3 h-3 rotate-180" /> Retour
-                                                </span>
-                                                <div className="text-center shrink-0">
-                                                    <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.returnDeparture)}</p>
-                                                    <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.destinationCode}</p>
-                                                    <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.returnDeparture)}</p>
-                                                </div>
-
-                                                <div className="flex-1 relative flex flex-col items-center">
-                                                    <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent relative">
-                                                        <motion.div
-                                                            initial={{ left: "100%" }}
-                                                            animate={{ left: "0%" }}
-                                                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                                            className="absolute -top-[3px] w-1.5 h-1.5 bg-gold rounded-full shadow-[0_0_8px_rgba(184,134,11,0.8)]"
-                                                        />
-                                                    </div>
-                                                    <div className="mt-2 flex items-center gap-1.5 text-white/25 text-[9px] uppercase font-black tracking-widest">
-                                                        <Clock className="w-2.5 h-2.5" /> {flight.returnDuration || flight.duration}
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-center shrink-0">
-                                                    <p className="text-2xl font-serif text-white leading-none mb-1">{formatTime(flight.returnArrival)}</p>
-                                                    <p className="text-gold font-black text-sm tracking-tighter uppercase">{flight.originCode}</p>
-                                                    <p className="text-white/20 text-[9px] mt-0.5 uppercase tracking-wider truncate max-w-[80px]">{formatDateShort(flight.returnArrival)}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Price & CTA */}
-                                    <div className="flex flex-col items-start lg:items-end gap-4 shrink-0 w-full lg:w-auto border-t lg:border-t-0 lg:border-l border-white/[0.06] pt-6 lg:pt-0 lg:pl-8 mt-4 lg:mt-0">
-                                        <div className="text-left lg:text-right">
-                                            <p className="text-[9px] text-white/20 uppercase tracking-[0.15em] mb-1">Tarif aller-retour</p>
-                                            <p className="text-3xl font-serif text-white">
-                                                {flight.price} <span className="text-gold text-xl">{flight.currency}</span>
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full lg:w-auto">
-                                            {userId && (
-                                                <button
-                                                    onClick={() => handleBook(flight)}
-                                                    className="border border-gold/30 text-gold hover:bg-gold/10 transition-all px-6 py-3 rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto"
-                                                >
-                                                    <Plus className="w-3 h-3" /> Ajouter au voyage
-                                                </button>
-                                            )}
-                                            <a
-                                                href={flight.booking_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="bg-gold text-[#0A0D14] hover:bg-yellow-400 transition-all px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto"
-                                            >
-                                                Skyscanner <ArrowRight className="w-3.5 h-3.5" />
-                                            </a>
-                                        </div>
-                                        {(flight as any).google_flights_url && (
-                                            <a
-                                                href={(flight as any).google_flights_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="border border-white/10 text-white/50 hover:border-white/30 hover:text-white/80 transition-all px-5 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2"
-                                            >
-                                                <Globe className="w-3 h-3" /> Google
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
-
-                {/* VIP CTA */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="mt-24 relative"
-                >
-                    <div className="absolute inset-0 bg-gold/8 rounded-[40px] blur-[80px]" />
-                    <div className="relative bg-white/[0.03] rounded-[40px] p-8 sm:p-14 border border-white/[0.06] hover:border-gold/20 transition-colors overflow-hidden">
-                        <div className="absolute top-0 right-0 w-72 h-72 bg-gold/[0.06] blur-[100px] rounded-full -mr-36 -mt-36" />
-                        <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
-                            <div className="flex-1">
-                                <p className="text-[9px] text-gold/60 uppercase tracking-[0.3em] font-black mb-4">Service Premium</p>
-                                <h2 className="text-3xl md:text-4xl font-serif text-white mb-5">Jet Privé & <span className="text-gold italic">First Class</span></h2>
-                                <p className="text-white/35 mb-8 max-w-md leading-relaxed">Logistique d'exception pour vos déplacements les plus critiques. Lounges exclusifs et conciergerie VIP inclus.</p>
-                                <button
-                                    onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
-                                    className="bg-gold text-[#0A0D14] px-8 py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-yellow-400 transition-all flex items-center gap-2.5"
-                                >
-                                    <Sparkles className="w-4 h-4" /> Configurer mon vol
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-8 shrink-0">
-                                <div className="text-center">
-                                    <p className="text-4xl font-serif text-white mb-1">180+</p>
-                                    <p className="text-[9px] text-white/25 uppercase tracking-widest">Destinations</p>
-                                </div>
-                                <div className="w-px h-16 bg-white/[0.06]" />
-                                <div className="text-center">
-                                    <Luggage className="w-10 h-10 text-gold/40 mx-auto mb-2" />
-                                    <p className="text-[9px] text-white/25 uppercase tracking-widest">Bagages inclus</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-
-            {/* ── Trip Selector Modal ────────────────────────────────── */}
-            <AnimatePresence>
-                {showTripSelector && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setShowTripSelector(false)}
-                            className="absolute inset-0 bg-[#06080C]/95 backdrop-blur-2xl"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-                            className="relative bg-[#141822] border border-gold/15 rounded-[28px] sm:rounded-[40px] w-full max-w-lg p-6 sm:p-10 shadow-[0_0_80px_rgba(184,134,11,0.08)]"
-                        >
-                            <h2 className="font-serif text-3xl text-white mb-2 text-center">Ajouter à votre <span className="text-gold italic">Odyssée</span></h2>
-                            <p className="text-white/25 text-center text-sm mb-8">Synchronisez ce vol avec un itinéraire.</p>
-                            <div className="space-y-3 max-h-72 overflow-y-auto mb-8">
-                                {trips.map(trip => (
-                                    <button key={trip.id} onClick={() => confirmBooking(trip.id)}
-                                        className="w-full text-left p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-gold/40 transition-all flex items-center justify-between group">
-                                        <div>
-                                            <p className="text-white font-serif text-lg group-hover:text-gold transition-colors">{trip.title}</p>
-                                            <p className="text-[9px] text-white/20 uppercase tracking-widest mt-1">{trip.destination_name || 'Multi-destinations'}</p>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-gold/25 group-hover:text-gold transition-colors" />
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <button onClick={() => { if (selectedFlight) window.open(selectedFlight.booking_url, "_blank"); setShowTripSelector(false); }}
-                                    className="text-[9px] text-white/25 hover:text-gold uppercase tracking-[0.2em] transition-colors py-1 text-center">
-                                    Ou réserver directement
-                                </button>
-                                <button onClick={() => setShowTripSelector(false)}
-                                    className="bg-white/[0.05] text-white/50 font-bold py-4 rounded-2xl hover:bg-white/[0.08] transition-all border border-white/[0.08] text-sm">
-                                    Annuler
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+              );
+            })}
+            {!loading && searched && rows.length === 0 && <p className="py-6 text-sm text-muted-2">Aucun vol ne correspond à ces filtres.</p>}
+          </div>
+          <span className="text-[13px] text-muted">
+            {estimated
+              ? "Prix estimés à partir des tarifs habituels sur cette ligne : le service de prix en direct (Amadeus) n'est pas disponible. Vérifiez le tarif chez la compagnie avant de réserver."
+              : "Prix Amadeus en euros, taxes incluses, pour tous les voyageurs. La réservation se fait chez la compagnie."}
+          </span>
         </div>
-        </>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default function FlightsPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
-            <FlightsContent />
-        </Suspense>
-    );
+  return (
+    <div className="bg-paper">
+      <PageBanner k="clouds" />
+      <Suspense><FlightsContent /></Suspense>
+    </div>
+  );
 }

@@ -1,1248 +1,439 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Calendar, Mail, Settings, LogOut, ChevronRight, MapPin, Clock, Trash2, Edit2, Shield, Check, Sparkles, Folder, FileText, AlertCircle, Plane, X, Plus, Compass, Home } from "lucide-react";
 import Link from "next/link";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
+import { ArrowRight, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import Logo from "@/components/ui/Logo";
 import TripProposal from "@/components/trip/TripProposal";
-import { motion, AnimatePresence } from "framer-motion";
+import { eur, findDestination, searchCity } from "@/lib/catalog";
+import { ask } from "@/lib/chat";
+import {
+  clearPlan, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
+  type Plan, type PlanItem,
+} from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
-import TripBudgetPanel from "@/components/trip/TripBudgetPanel";
-import GlobalLoader from "@/components/ui/GlobalLoader";
-import { calculateTripAnalysis } from "@/lib/trip";
-import { withAivanaFallback } from "@/lib/placeholder";
-import type { Trip, Booking, TripAnalysis } from "@/types/trip";
+import { useSession } from "@/lib/session";
+import type { Booking, Trip } from "@/types/trip";
 
-const getTripDestination = (trip: Trip | null): string => {
-    if (!trip) return '';
-    if (trip.destination_name) return trip.destination_name;
-    if (trip.title) {
-        let t = trip.title;
-        if (t.startsWith("Aventure à ")) return t.replace("Aventure à ", "").trim();
-        if (t.startsWith("Voyage à ")) return t.replace("Voyage à ", "").trim();
-        return t;
-    }
-    return '';
-};
+type Tab = "overview" | "itinerary" | "proposal" | "docs";
+const KIND: Record<string, string> = { flight: "Vol", hotel: "Hôtel", activity: "Activité" };
+
+const toPlanItem = (b: Booking): PlanItem => ({
+  key: (b.metadata?.key as string) || `srv:${b.id}`,
+  type: (["flight", "hotel", "activity"].includes(b.type) ? b.type : "activity") as PlanItem["type"],
+  title: b.title,
+  subtitle: b.metadata?.subtitle as string | undefined,
+  price: b.price_estimate ?? null,
+  estimated: !!b.metadata?.estimated,
+  provider: b.provider,
+  url: b.external_url,
+  date: b.metadata?.date as string | undefined,
+  serverId: b.id,
+});
+
+function countdown(depart: string) {
+  const days = Math.round((new Date(depart + "T12:00:00Z").getTime() - Date.now()) / 86400000);
+  if (days > 60) return `départ dans ${Math.round(days / 30)} mois`;
+  if (days > 1) return `départ dans ${days} jours`;
+  if (days >= 0) return "départ imminent";
+  return "voyage passé";
+}
+
+function downloadICS(plan: Plan) {
+  const d = (iso: string) => iso.replace(/-/g, "");
+  const esc = (s: string) => s.replace(/[,;]/g, " ");
+  let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//AIVANA//Carnet//FR\r\n";
+  ics += `BEGIN:VEVENT\r\nUID:trip-${plan.createdAt}@aivana\r\nSUMMARY:${esc(`Voyage ${plan.destination}`)}\r\nDTSTART;VALUE=DATE:${d(plan.depart)}\r\nDTEND;VALUE=DATE:${d(plan.ret)}\r\nEND:VEVENT\r\n`;
+  plan.items.forEach((i, n) => {
+    const day = i.date || plan.depart;
+    ics += `BEGIN:VEVENT\r\nUID:item-${plan.createdAt}-${n}@aivana\r\nSUMMARY:${esc(i.title)}\r\nDESCRIPTION:${esc(i.subtitle || "")}\r\nDTSTART;VALUE=DATE:${d(day)}\r\nEND:VEVENT\r\n`;
+  });
+  ics += "END:VCALENDAR";
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `voyage-${plan.destination.toLowerCase().replace(/\W+/g, "-")}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function Empty({ loggedIn }: { loggedIn: boolean }) {
+  return (
+    <div className="flex max-w-[640px] flex-col items-start gap-4 rounded-[22px] border border-dashed border-line-2 p-9">
+      <span className="text-xl font-bold tracking-[-0.03em]">Votre carnet est vide</span>
+      <p className="m-0 text-[15px] leading-relaxed text-muted-2">
+        Décrivez votre voyage au copilote ou choisissez une destination : vos vols, hôtels et activités se rangeront ici, avec le budget à jour.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => ask("")} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2">Planifier avec le copilote</button>
+        <Link href="/explore" className="plain-link rounded-full border border-line-2 px-4 py-2.5 text-sm font-semibold hover:border-ink">Explorer les destinations</Link>
+      </div>
+      {!loggedIn && <p className="m-0 text-[13px] text-muted">Vous avez déjà un compte ? <Link href="/auth/login?next=/dashboard">Connectez-vous</Link> pour retrouver vos voyages.</p>}
+    </div>
+  );
+}
 
 function DashboardContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const tripIdFromUrl = searchParams.get("trip");
-    const [loading, setLoading] = useState(true);
-    const [trips, setTrips] = useState<Trip[]>([]);
-    const [userName, setUserName] = useState("Voyageur");
-    const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
+  const params = useSearchParams();
+  const plan = usePlan();
+  const { user, ready } = useSession();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [settings, setSettings] = useState(false);
+  const [loadingTrip, setLoadingTrip] = useState<string | null>(null);
 
-    const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'proposal' | 'documents'>('overview');
-    const [replacementPrompt, setReplacementPrompt] = useState<{type: string, title: string} | null>(null);
+  const fetchTrips = useCallback(async () => {
+    try { setTrips((await axios.get<Trip[]>("/api/trips")).data || []); } catch { setTrips([]); }
+  }, []);
 
-    const [emailConnected, setEmailConnected] = useState(false);
-    const [provider, setProvider] = useState<string>("local");
+  useEffect(() => { if (user) void fetchTrips(); }, [user, fetchTrips]);
 
-    const [showSettings, setShowSettings] = useState(false);
-    const [userEmail, setUserEmail] = useState("");
-    const [userRole, setUserRole] = useState("explorer");
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [editNameValue, setEditNameValue] = useState("");
-    const [isSavingProfile, setIsSavingProfile] = useState(false);
-    const [isUpgrading, setIsUpgrading] = useState(false);
+  // Premier passage après la création du compte : on propose l'onboarding
+  useEffect(() => {
+    if (!ready || !user || user.onboarded || params.get("save")) return;
+    if (localStorage.getItem("aivana-onboarded")) return;
+    router.push("/onboarding");
+  }, [ready, user, params, router]);
 
-    const [phoneValue, setPhoneValue] = useState("");
-    const [isEditingPhone, setIsEditingPhone] = useState(false);
-    const [isSavingPhone, setIsSavingPhone] = useState(false);
-    const [notification, setNotification] = useState<string | null>(null);
-    const [showAddTripHint, setShowAddTripHint] = useState(false);
-
-    useEffect(() => {
-        const checkUser = async () => {
-            const supabase = createClient();
-            const { data: { session }, error } = await supabase.auth.getSession();
-
-            if (error || !session) {
-                console.error("No active session", error);
-                router.push("/auth/login");
-                return;
-            }
-
-            const user = session.user;
-            setUserId(user.id);
-            setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
-            setUserEmail(user.email || "");
-            setEditNameValue(user.user_metadata?.full_name || user.email?.split('@')[0] || "Voyageur");
-            setPhoneValue(user.user_metadata?.phone || "");
-
-            // App metadata sometimes contains provider
-            const providerStr = user.app_metadata?.provider || 'local';
-            setProvider(providerStr);
-
-            fetchTrips(true);
-            checkEmailSync(user.id);
-        };
-        checkUser();
-    }, [router]);
-
-    const checkEmailSync = async (uid: string) => {
-        try {
-            const supabase = createClient();
-            const { data, error } = await supabase.from('email_connections').select('id').eq('user_id', uid);
-            if (!error && data) {
-                setEmailConnected(data.length > 0);
-            }
-        } catch (err) {
-            console.error("Failed to check email sync", err);
-        }
-    };
-
-
-    const fetchTrips = async (isInitial = false) => {
-        try {
-            const start = Date.now();
-            const res = await axios.get(`/api/trips`);
-            setTrips(res.data || []);
-            
-            if (isInitial) {
-                const elapsed = Date.now() - start;
-                if (elapsed < 3000) {
-                    await new Promise(r => setTimeout(r, 3000 - elapsed));
-                }
-            }
-        } catch (err) {
-            console.error("Failed to fetch trips", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Show a 5s hint pointing at the "+" button so users know it adds a trip
-    useEffect(() => {
-        if (loading) return;
-        setShowAddTripHint(true);
-        const timer = setTimeout(() => setShowAddTripHint(false), 5000);
-        return () => clearTimeout(timer);
-    }, [loading]);
-
-    // Refresh trips when chatbot saves a new destination
-    useEffect(() => {
-        const handleTripSaved = () => {
-            fetchTrips();
-            showNotification("Voyage enregistré dans votre dashboard !");
-        };
-        window.addEventListener("trip-saved", handleTripSaved);
-        return () => window.removeEventListener("trip-saved", handleTripSaved);
-    }, []);
-
-    // Supabase Realtime — sync trips instantly from any source
-    useEffect(() => {
-        if (!userId) return;
-        const supabase = createClient();
-        const channel = supabase
-            .channel(`trips-realtime-${userId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'trips',
-                filter: `user_id=eq.${userId}`,
-            }, () => {
-                fetchTrips();
-            })
-            .subscribe();
-        return () => { supabase.removeChannel(channel); };
-    }, [userId]);
-
-    // Refresh bookings when explore pages add a booking
-    useEffect(() => {
-        const handleBookingsUpdated = (e: Event) => {
-            const { tripId } = (e as CustomEvent).detail || {};
-            if (selectedTrip && tripId === selectedTrip.id) {
-                fetchBookings(selectedTrip.id);
-            }
-        };
-        window.addEventListener("bookings-updated", handleBookingsUpdated);
-        return () => window.removeEventListener("bookings-updated", handleBookingsUpdated);
-    }, [selectedTrip]);
-
-    const fetchBookings = async (tripId: string) => {
-        try {
-            const res = await axios.get(`/api/trips/${tripId}/items`);
-            const items: Booking[] = res.data || [];
-            setBookings(items);
-            setAnalysis(calculateTripAnalysis(items));
-        } catch (err) {
-            console.error("Failed to fetch bookings", err);
-        }
-    };
-
-    // Revenir sur le bon voyage après un aller-retour "réserver un vol/hôtel" depuis
-    // /explore/* (?trip=<id> dans l'URL), au lieu de retomber sur "Vue Générale".
-    useEffect(() => {
-        if (!tripIdFromUrl || selectedTrip?.id === tripIdFromUrl) return;
-        const match = trips.find(t => t.id === tripIdFromUrl);
-        if (match) {
-            setSelectedTrip(match);
-            fetchBookings(match.id);
-        }
-    }, [tripIdFromUrl, trips]);
-
-    const handleSaveProfile = async () => {
-        if (!userId || !editNameValue.trim()) return;
-        setIsSavingProfile(true);
-        try {
-            const supabase = createClient();
-            await supabase.auth.updateUser({ data: { full_name: editNameValue } });
-            setUserName(editNameValue);
-            setIsEditingName(false);
-            showNotification("Profil mis à jour !");
-        } catch (err) {
-            console.error("Failed to save profile", err);
-        } finally {
-            setIsSavingProfile(false);
-        }
-    };
-
-    const showNotification = (msg: string) => {
-        setNotification(msg);
-        setTimeout(() => setNotification(null), 5000);
-    };
-
-    const handleSavePhone = async () => {
-        if (!userId || !phoneValue.trim()) return;
-        setIsSavingPhone(true);
-        try {
-            const supabase = createClient();
-            await supabase.auth.updateUser({ data: { phone: phoneValue.trim() } });
-            setIsEditingPhone(false);
-        } catch (err) {
-            console.error("Failed to save phone", err);
-        } finally {
-            setIsSavingPhone(false);
-        }
-    };
-
-    const handleUpgradePremium = async () => {
-        if (!userId) return;
-        setIsUpgrading(true);
-        // Mock premium upgrade locally
-        setTimeout(() => {
-            setUserRole('premium');
-            setIsUpgrading(false);
-        }, 1500);
-    };
-
-    const handleDeleteTrip = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!confirm("Supprimer ce voyage ?")) return;
-        try {
-            await axios.delete(`/api/trips/${id}`);
-            fetchTrips();
-            if (selectedTrip?.id === id) setSelectedTrip(null);
-        } catch (err) {
-            console.error("Failed to delete trip", err);
-        }
-    };
-
-    const handleSelectTrip = (trip: Trip) => {
-        setSelectedTrip(trip);
-        fetchBookings(trip.id);
-        router.replace(`/dashboard?trip=${trip.id}`, { scroll: false });
-    };
-
-    const handleDeleteBooking = async (id: string) => {
-        if (!confirm("Supprimer cette réservation ?")) return;
-        try {
-            if (!selectedTrip) return;
-            const bookingToDelete = bookings.find(b => b.id === id);
-            await axios.delete(`/api/trips/${selectedTrip.id}/items/${id}`);
-            fetchBookings(selectedTrip.id);
-            if (bookingToDelete && (bookingToDelete.type === 'flight' || bookingToDelete.type === 'hotel' || bookingToDelete.type === 'activity')) {
-                setReplacementPrompt({ type: bookingToDelete.type, title: bookingToDelete.title });
-                setTimeout(() => setReplacementPrompt(null), 10000); // clear after 10s
-            }
-        } catch (err) {
-            console.error("Failed to delete booking", err);
-        }
-    };
-
-    const downloadICS = () => {
-        if (!selectedTrip || bookings.length === 0) return;
-
-        // Les réservations n'ont pas de date propre en base (seul le voyage a start_date/end_date) —
-        // sauf les hôtels ajoutés depuis /explore/hotels, qui stockent check_in/check_out dans metadata.
-        // À défaut de date précise sur l'item, on retombe sur les dates du voyage pour ne pas le
-        // faire disparaître silencieusement de l'export (l'ancien comportement ignorait tout élément
-        // sans start_datetime — un champ qui n'existe nulle part côté données, donc l'export était
-        // toujours vide).
-        const toICSDate = (d: string) => {
-            const parsed = new Date(d);
-            return isNaN(parsed.getTime()) ? null : parsed.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-        };
-
-        let eventCount = 0;
-        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//O-Flyes//Timeline//FR\n";
-        bookings.forEach(b => {
-            const rawStart = b.start_datetime || b.metadata?.check_in || selectedTrip.start_date;
-            const rawEnd = b.end_datetime || b.metadata?.check_out || selectedTrip.end_date || rawStart;
-            if (!rawStart) return;
-
-            const start = toICSDate(rawStart);
-            const end = toICSDate(rawEnd) || start;
-            if (!start) return;
-
-            icsContent += "BEGIN:VEVENT\n";
-            icsContent += `SUMMARY:${b.title}\n`;
-            icsContent += `DTSTART:${start}\n`;
-            icsContent += `DTEND:${end}\n`;
-            if (b.location) icsContent += `LOCATION:${b.location}\n`;
-            icsContent += "END:VEVENT\n";
-            eventCount++;
-        });
-        icsContent += "END:VCALENDAR";
-
-        if (eventCount === 0) {
-            alert("Aucune réservation de ce voyage n'a de date — ajoutez des dates au voyage (Paramètres du voyage) pour pouvoir exporter le calendrier.");
-            return;
-        }
-
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `voyage_${selectedTrip.title.replace(/\s+/g, '_')}.ics`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    };
-
-    if (loading) {
-        return <GlobalLoader />;
+  const save = useCallback(async () => {
+    if (!user) { router.push("/auth/login?next=" + encodeURIComponent("/dashboard?save=1")); return; }
+    setSaving(true);
+    try {
+      await savePlan();
+      toast("Voyage sauvegardé dans votre compte");
+      void fetchTrips();
+    } catch {
+      toast("La sauvegarde a échoué. Réessayez dans un instant.");
+    } finally {
+      setSaving(false);
     }
+  }, [user, router, fetchTrips]);
 
-    return (
-        <div className="theme-locked-dark flex font-sans min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-            {/* Smart Replacement Prompt (Toast) */}
-            <AnimatePresence>
-                {replacementPrompt && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[150] bg-[#141822] border border-gold/30 rounded-2xl p-4 shadow-2xl flex flex-wrap items-center gap-4 backdrop-blur-xl max-w-[calc(100vw-2rem)]"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 shrink-0">
-                            <Sparkles className="w-5 h-5 text-gold" />
-                        </div>
-                        <div>
-                            <p className="text-white font-medium text-sm">Vous avez supprimé : {replacementPrompt.title}</p>
-                            <p className="text-zinc-400 text-xs mt-0.5">L'IA peut vous trouver une meilleure alternative.</p>
-                        </div>
-                        <div className="flex items-center gap-2 ml-4">
-                            <button 
-                                onClick={() => setReplacementPrompt(null)} 
-                                className="px-3 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
-                            >
-                                Ignorer
-                            </button>
-                            <Link 
-                                href={`/explore/${replacementPrompt.type}s?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`}
-                                className="px-4 py-2 bg-gold text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(255,215,0,0.3)]"
-                            >
-                                Trouver
-                            </Link>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            
-            {/* Sidebar */}
-            <aside className="w-64 hidden md:flex flex-col sticky top-0 h-screen border-r border-white/[0.05]" style={{ background: 'linear-gradient(180deg, #0E1119 0%, #0A0D14 100%)' }}>
+  // Retour de la connexion avec ?save=1 : on sauvegarde le voyage en cours
+  useEffect(() => {
+    if (!ready || !user || params.get("save") !== "1") return;
+    router.replace("/dashboard");
+    if (plan && !plan.tripId) void save();
+  }, [ready, user, params]); // eslint-disable-line react-hooks/exhaustive-deps
 
-                {/* Logo */}
-                <div className="px-5 py-6 border-b border-white/[0.05]">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-9 h-9 bg-gold/10 border border-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(184,134,11,0.12)]">
-                            <Plane className="w-4 h-4 text-gold" />
-                        </div>
-                        <div>
-                            <span className="font-bold text-sm text-white leading-none">AI<span className="text-gold">VANA</span></span>
-                            <p className="text-[9px] text-white/25 uppercase tracking-widest mt-0.5">Dashboard</p>
-                        </div>
-                    </Link>
-                </div>
+  const open = async (t: Trip) => {
+    if (plan?.tripId === t.id) return;
+    if (plan && !plan.tripId && plan.items.length && !confirm(`Le voyage « ${plan.destination} » n'est pas sauvegardé. L'abandonner pour ouvrir « ${t.title} » ?`)) return;
+    setLoadingTrip(t.id);
+    try {
+      const items = (await axios.get<Booking[]>(`/api/trips/${t.id}/items`)).data || [];
+      resumeTrip(t, items.map(toPlanItem));
+      setTab("overview");
+      setSettings(false);
+    } finally {
+      setLoadingTrip(null);
+    }
+  };
 
-                <nav className="flex-1 px-3 py-4 space-y-1">
-                    {[
-                        {
-                            icon: Calendar,
-                            label: "Mes Voyages",
-                            active: !showSettings,
-                            onClick: () => { setSelectedTrip(null); setShowSettings(false); }
-                        },
-                        {
-                            icon: Settings,
-                            label: "Paramètres",
-                            active: showSettings,
-                            onClick: () => { setSelectedTrip(null); setShowSettings(true); }
-                        },
-                    ].map((item) => (
-                        <button
-                            key={item.label}
-                            onClick={item.onClick}
-                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-sm group/nav border ${
-                                item.active
-                                    ? "bg-gold/10 border-gold/20 text-gold font-medium shadow-[0_0_20px_rgba(184,134,11,0.08)]"
-                                    : "border-transparent text-white/40 hover:text-white hover:bg-white/[0.05]"
-                            }`}
-                        >
-                            <item.icon className={`w-4 h-4 transition-transform ${item.active ? "" : "group-hover/nav:scale-110"}`} />
-                            <span>{item.label}</span>
-                            {item.active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />}
-                        </button>
-                    ))}
+  const remove = async () => {
+    if (!plan) return;
+    if (!confirm(`Supprimer le voyage « ${plan.destination} » ?`)) return;
+    if (plan.tripId) {
+      try { await axios.delete(`/api/trips/${plan.tripId}`); } catch { /* ignoré */ }
+      void fetchTrips();
+    }
+    clearPlan();
+  };
 
-                    <Link
-                        href="/"
-                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-sm border border-transparent text-white/40 hover:text-white hover:bg-white/[0.05] group/nav"
-                    >
-                        <Home className="w-4 h-4 group-hover/nav:scale-110 transition-transform" />
-                        <span>Accueil</span>
-                    </Link>
+  const logout = async () => {
+    await createClient().auth.signOut();
+    clearPlan();
+    router.push("/");
+  };
 
-                    {emailConnected && (
-                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm bg-emerald-500/[0.06] border border-emerald-500/20 mt-2">
-                            <Mail className="w-4 h-4 text-emerald-400" />
-                            <span className="text-emerald-400 text-xs font-medium">Email synchronisé</span>
-                        </div>
-                    )}
-                </nav>
+  const draft = plan && !plan.tripId;
+  const sideTrips = [
+    ...(draft ? [{ id: "draft", name: plan.destination, dates: formatRange(plan.depart, plan.ret), status: "Brouillon", active: true, onClick: () => setSettings(false) }] : []),
+    ...trips.map(t => ({
+      id: t.id, name: t.title, dates: formatRange(t.start_date, t.end_date), status: "Sauvegardé",
+      active: plan?.tripId === t.id, onClick: () => { setSettings(false); void open(t); },
+    })),
+  ];
 
-                <div className="p-3 border-t border-white/[0.05]">
-                    <button
-                        onClick={async () => {
-                            const supabase = createClient();
-                            await supabase.auth.signOut();
-                            router.push("/");
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-sm border border-transparent text-white/30 hover:text-red-400 hover:bg-red-400/[0.08] hover:border-red-400/20 group/nav"
-                    >
-                        <LogOut className="w-4 h-4 group-hover/nav:scale-110 transition-transform" />
-                        <span>Déconnexion</span>
-                    </button>
-                </div>
-            </aside>
+  return (
+    <div className="flex min-h-screen flex-col bg-paper min-[900px]:flex-row">
+      <aside className="flex shrink-0 flex-col gap-5 border-b border-line bg-[#F2EFE9] px-4 py-5 min-[900px]:w-[260px] min-[900px]:border-b-0 min-[900px]:border-r">
+        <div className="flex items-center justify-between gap-3 px-2">
+          <Link href="/" className="plain-link text-ink" aria-label="Accueil"><Logo size={28} /></Link>
+          <Link href="/assistant" className="plain-link whitespace-nowrap rounded-full bg-ink px-[11px] py-[7px] text-[13px] font-semibold !text-paper hover:bg-ink-2">Nouveau voyage</Link>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="px-2 pb-1.5 text-xs text-muted">Mes voyages</span>
+          <div className="flex gap-1 overflow-x-auto min-[900px]:flex-col">
+            {sideTrips.length === 0 && <span className="px-2 text-[13px] text-muted">Aucun voyage pour l&apos;instant</span>}
+            {sideTrips.map(t => (
+              <button key={t.id} onClick={t.onClick} className={`flex shrink-0 flex-col gap-0.5 rounded-[18px] px-3 py-2.5 text-left ${t.active && !settings ? "bg-[#ECE7DE]" : "hover:bg-[#F3F0EA]"}`}>
+                <span className="flex items-center gap-2 text-sm font-semibold">{t.name}{loadingTrip === t.id && <Loader2 className="h-3 w-3 animate-spin" aria-hidden />}</span>
+                <span className="text-xs text-muted">{t.dates} · {t.status}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3.5">
+          <Link href="/explore" className="plain-link p-2 text-sm !text-muted-2 hover:!text-ink">Explorer les destinations</Link>
+          <Link href="/pricing" className="plain-link p-2 text-sm !text-muted-2 hover:!text-ink">Formules</Link>
+          {user ? (
+            <>
+              <button onClick={() => setSettings(true)} className="p-2 text-left text-sm text-muted-2 hover:text-ink">Paramètres</button>
+              <div className="flex items-center gap-2.5 px-2 pt-2.5">
+                <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-ink text-[13px] font-semibold text-paper">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="flex min-w-0 flex-col"><span className="truncate text-sm">{user.name}</span><span className="text-xs text-muted">Compte gratuit</span></span>
+              </div>
+            </>
+          ) : (
+            <Link href="/auth/login?next=/dashboard" className="plain-link p-2 text-sm font-semibold">Se connecter</Link>
+          )}
+        </div>
+      </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col relative min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                {/* Subtle top gradient */}
-                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-gold/[0.02] to-transparent pointer-events-none z-0" />
+      <main className="flex min-w-0 max-w-[1040px] flex-1 flex-col gap-7 p-[clamp(20px,4vw,40px)]">
+        {settings && user ? (
+          <Settings name={user.name} email={user.email} phone={user.phone} onLogout={logout} onClose={() => setSettings(false)} />
+        ) : !plan ? (
+          <Empty loggedIn={!!user} />
+        ) : (
+          <TripView plan={plan} tab={tab} setTab={setTab} editing={editing} setEditing={setEditing} saving={saving} onSave={save} onRemove={remove} loggedIn={!!user} />
+        )}
+      </main>
+    </div>
+  );
+}
 
-                {/* Header */}
-                <header className="h-16 px-4 sm:px-8 flex items-center justify-between z-10 backdrop-blur-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                            {showSettings ? "Paramètres du compte" : (selectedTrip ? selectedTrip.title : "Vue Générale")}
-                        </h1>
-                        {/* Breadcrumb style path for trips */}
-                        {selectedTrip && (
-                            <>
-                                <ChevronRight className="w-4 h-4 text-zinc-700" />
-                                <span className="text-sm capitalize" style={{ color: 'var(--text-muted)' }}>{activeTab === 'overview' ? 'Aperçu' : activeTab === 'itinerary' ? 'Itinéraire' : activeTab === 'proposal' ? 'Proposition IA' : 'Documents'}</span>
-                            </>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-4">
-                        {emailConnected && (
-                            <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                <span className="text-[10px] font-medium text-emerald-400">Email Sync</span>
-                            </div>
-                        )}
-                        <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
-                        <div className="text-right hidden sm:block">
-                            <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{userName}</p>
-                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                                {userRole === 'premium' ?
-                                    <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-white" /> Pro</span>
-                                    : "Basic"}
-                            </p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                            {userName[0]?.toUpperCase()}
-                        </div>
-                    </div>
-                </header>
+function TripView({ plan, tab, setTab, editing, setEditing, saving, onSave, onRemove, loggedIn }: {
+  plan: Plan; tab: Tab; setTab: (t: Tab) => void; editing: boolean; setEditing: (b: boolean) => void;
+  saving: boolean; onSave: () => void; onRemove: () => void; loggedIn: boolean;
+}) {
+  const [form, setForm] = useState({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" });
+  useEffect(() => setForm({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" }), [plan.depart, plan.ret, plan.travelers, plan.budget]);
 
-                {/* Scrollable Area */}
-                <div className="flex-1 p-4 pb-28 md:p-8 md:pb-8 z-10">
-                    <div className="max-w-6xl mx-auto">
-                        {showSettings ? (
-                            /* Settings View */
-                            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Left Content - Profil */}
-                                    <div className="lg:col-span-2 space-y-6">
-                                        <div className="rounded-2xl p-8 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
-                                            <div className="flex items-center gap-6 mb-8 relative z-10">
-                                                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 text-white flex items-center justify-center text-3xl font-medium">
-                                                    {userName[0]?.toUpperCase() || "U"}
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <h2 className="text-xl font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>Profil Public</h2>
-                                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Gérez vos informations personnelles et préférences.</p>
-                                                </div>
-                                            </div>
+  const spent = planTotal(plan);
+  const sum = (t: string) => plan.items.filter(i => i.type === t).reduce((s, i) => s + (i.price || 0), 0);
+  const has = (t: string) => plan.items.some(i => i.type === t);
+  const nights = nightsBetween(plan.depart, plan.ret);
+  const cat = findDestination(plan.destination);
+  const city = cat ? searchCity(cat) : plan.destination;
+  const ctx = `dest=${encodeURIComponent(city)}&depart=${plan.depart}&return=${plan.ret}&pax=${plan.travelers}`;
+  const alert = !has("flight") ? { t: "Aucun vol n'est encore ajouté à ce voyage.", cta: "Chercher un vol", href: `/explore/flights?${ctx}` }
+    : !has("hotel") ? { t: "L'hébergement n'est pas encore choisi.", cta: "Trouver un hôtel", href: `/explore/hotels?${ctx}` }
+    : !has("activity") ? { t: "Aucune activité prévue sur place.", cta: "Ajouter des activités", href: `/explore/activities?${ctx}` }
+    : null;
 
-                                            <div className="space-y-8 relative z-10">
-                                                <div className="space-y-3">
-                                                    <label className="block text-xs font-medium text-zinc-400">Nom Complet</label>
-                                                    {isEditingName ? (
-                                                        <div className="flex items-center gap-3">
-                                                            <input
-                                                                type="text"
-                                                                value={editNameValue}
-                                                                onChange={(e) => setEditNameValue(e.target.value)}
-                                                                className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-                                                            />
-                                                            <button
-                                                                onClick={handleSaveProfile}
-                                                                disabled={isSavingProfile}
-                                                                className="px-4 py-2.5 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors"
-                                                            >
-                                                                Sauvegarder
-                                                            </button>
-                                                            <button
-                                                                onClick={() => { setIsEditingName(false); setEditNameValue(userName); }}
-                                                                className="px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-                                                            >
-                                                                Annuler
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] rounded-lg px-4 py-3 group/item hover:bg-white/[0.04] transition-colors">
-                                                            <span className="text-white text-sm">{userName}</span>
-                                                            <button onClick={() => setIsEditingName(true)} className="w-8 h-8 rounded-md bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all">
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
+  const applyEdit = async () => {
+    const patch = { depart: form.depart, ret: form.ret < form.depart ? form.depart : form.ret, travelers: form.travelers, budget: form.budget ? Number(form.budget) : null };
+    updatePlan(patch);
+    if (plan.tripId) {
+      try { await axios.patch(`/api/trips/${plan.tripId}`, { start_date: patch.depart, end_date: patch.ret }); } catch { /* ignoré */ }
+    }
+    setEditing(false);
+  };
 
-                                                <div className="space-y-3">
-                                                    <label className="block text-xs font-medium text-zinc-400">Adresse Email</label>
-                                                    <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] rounded-lg px-4 py-3 opacity-70">
-                                                        <span className="text-zinc-300 text-sm">{userEmail || "Non renseigné"}</span>
-                                                        <Shield className="w-4 h-4 text-emerald-500" />
-                                                    </div>
-                                                </div>
+  // Itinéraire : un jour par date du séjour, les éléments datés à leur place
+  const days = useMemo(() => {
+    const out: { date: string; items: PlanItem[] }[] = [];
+    for (let n = 0; n <= Math.min(nights, 30); n++) {
+      const date = new Date(new Date(plan.depart + "T12:00:00Z").getTime() + n * 86400000).toISOString().slice(0, 10);
+      out.push({ date, items: plan.items.filter(i => (i.date || "") === date) });
+    }
+    return out;
+  }, [plan, nights]);
+  const unplaced = plan.items.filter(i => !i.date || !days.some(d => d.date === i.date));
 
-                                                <div className="space-y-3">
-                                                    <label className="block text-xs font-medium text-zinc-400">
-                                                        Téléphone <span className="text-zinc-600 font-normal">(notifications SMS)</span>
-                                                    </label>
-                                                    {isEditingPhone ? (
-                                                        <div className="flex items-center gap-3">
-                                                            <input
-                                                                type="tel"
-                                                                value={phoneValue}
-                                                                onChange={(e) => setPhoneValue(e.target.value)}
-                                                                placeholder="+33612345678"
-                                                                className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-                                                            />
-                                                            <button
-                                                                onClick={handleSavePhone}
-                                                                disabled={isSavingPhone}
-                                                                className="px-4 py-2.5 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-50"
-                                                            >
-                                                                {isSavingPhone ? "..." : "Sauvegarder"}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setIsEditingPhone(false)}
-                                                                className="px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-                                                            >
-                                                                Annuler
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] rounded-lg px-4 py-3 group/item hover:bg-white/[0.04] transition-colors">
-                                                            <span className="text-sm">
-                                                                {phoneValue
-                                                                    ? <span className="text-white">{phoneValue}</span>
-                                                                    : <span className="text-zinc-600">Non renseigné — ajoutez un numéro pour recevoir les SMS</span>
-                                                                }
-                                                            </span>
-                                                            <button onClick={() => setIsEditingPhone(true)} className="w-8 h-8 rounded-md bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all">
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
+  return (
+    <>
+      {!plan.tripId && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3.5">
+          <span className="text-sm">
+            Ce voyage est enregistré dans ce navigateur seulement. {loggedIn ? "Sauvegardez-le pour le retrouver partout." : "Créez un compte gratuit pour le garder et le retrouver sur tous vos appareils."}
+          </span>
+          <button onClick={onSave} disabled={saving} className="flex items-center gap-2 whitespace-nowrap rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">
+            {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+            {loggedIn ? "Sauvegarder" : "Sauvegarder avec un compte"}
+          </button>
+        </div>
+      )}
 
-                                                <div className="space-y-3">
-                                                    <label className="block text-xs font-medium text-zinc-400">Authentification</label>
-                                                    <div className="inline-flex items-center gap-3 bg-white/[0.02] border border-white/[0.04] rounded-lg px-4 py-2.5">
-                                                        {provider === 'google' ? (
-                                                            <><svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="currentColor" opacity="0.6" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /></svg> <span className="text-xs font-medium text-zinc-400">Google Cloud</span></>
-                                                        ) : provider === 'microsoft' ? (
-                                                            <><svg className="w-4 h-4" viewBox="0 0 21 21"><path fill="currentColor" d="M0 0h10v10H0z" /><path fill="currentColor" opacity="0.6" d="M11 0h10v10H11z" /></svg> <span className="text-xs font-medium text-zinc-400">Microsoft Cloud</span></>
-                                                        ) : (
-                                                            <><Mail className="w-4 h-4 text-zinc-500" /> <span className="text-xs font-medium text-zinc-400">Email & Mot de passe</span></>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-muted">{plan.tripId ? "Sauvegardé" : "Brouillon"} · {countdown(plan.depart)}</span>
+          <h1 className="m-0 text-[clamp(32px,4vw,48px)] leading-[1.05]">{plan.destination}</h1>
+          <span className="text-[15px] text-muted-2">{formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setEditing(!editing)} className="whitespace-nowrap rounded-full border border-line-2 px-3.5 py-[9px] text-sm font-medium hover:border-ink">Modifier</button>
+          <button onClick={() => downloadICS(plan)} className="whitespace-nowrap rounded-full border border-line-2 px-3.5 py-[9px] text-sm font-medium hover:border-ink">Exporter dans l&apos;agenda</button>
+          <button onClick={onRemove} aria-label="Supprimer ce voyage" title="Supprimer ce voyage" className="flex items-center rounded-full border border-line-2 px-3 py-[9px] text-muted-2 hover:border-danger hover:text-danger"><Trash2 className="h-4 w-4" aria-hidden /></button>
+        </div>
+      </div>
 
-                                    {/* Right Content - Abo */}
-                                    <div className="lg:col-span-1">
-                                        <div className="p-8 rounded-2xl bg-zinc-900/50 border border-white/[0.04]">
-                                            <h3 className="font-medium text-lg mb-6 text-white">Privilèges</h3>
+      {editing && (
+        <div className="grid gap-3 rounded-[20px] border border-line bg-cream p-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+          <label className="flex flex-col gap-1 text-xs text-muted">Départ<input type="date" value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">Retour<input type="date" value={form.ret} min={form.depart} onChange={e => setForm(f => ({ ...f, ret: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">Voyageurs<input type="number" min={1} max={9} value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: Math.max(1, Number(e.target.value) || 1) }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">Budget total (€)<input type="number" min={0} step={50} value={form.budget} placeholder="Facultatif" onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
+          <div className="col-span-full flex gap-2">
+            <button onClick={applyEdit} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink-2">Enregistrer</button>
+            <button onClick={() => setEditing(false)} className="rounded-full border border-line-2 px-4 py-2 text-sm hover:border-ink">Annuler</button>
+          </div>
+        </div>
+      )}
 
-                                            {userRole === 'premium' ? (
-                                                <div>
-                                                    <div className="flex items-center gap-3 mb-6 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
-                                                        <Sparkles className="w-4 h-4 text-emerald-400" />
-                                                        <span className="text-emerald-400 font-medium text-sm">AIVANA Pro Actif</span>
-                                                    </div>
-                                                    <p className="text-sm text-zinc-400 leading-relaxed mb-6">Assistance experte 24/7 avec accès en temps réel aux données mondiales.</p>
-                                                    <ul className="space-y-4 mb-8">
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-300"><Check className="w-4 h-4 text-emerald-400" /> Flux de prix Live</li>
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-300"><Check className="w-4 h-4 text-emerald-400" /> Multi-destinations</li>
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-300"><Check className="w-4 h-4 text-emerald-400" /> Conciergerie</li>
-                                                    </ul>
-                                                    <button className="w-full py-2.5 rounded-lg bg-white/5 text-zinc-300 font-medium text-sm hover:bg-white/10 transition-colors">
-                                                        Gérer l'abonnement
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div>
-                                                    <div className="flex items-center gap-3 mb-6 bg-white/5 p-3 rounded-lg border border-white/10">
-                                                        <span className="text-zinc-400 font-medium text-sm">Plan Basic</span>
-                                                    </div>
-                                                    <p className="text-sm text-zinc-400 leading-relaxed mb-6">Débloquez l'IA prédictive et les comparateurs de prix en direct.</p>
-                                                    <ul className="space-y-4 mb-8">
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-400"><span className="w-1.5 h-1.5 bg-zinc-600 rounded-full shrink-0" /> Voyages illimités</li>
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-400"><span className="w-1.5 h-1.5 bg-zinc-600 rounded-full shrink-0" /> IA experte active</li>
-                                                        <li className="flex items-center gap-3 text-sm text-zinc-400"><span className="w-1.5 h-1.5 bg-zinc-600 rounded-full shrink-0" /> Alertes prix flash</li>
-                                                    </ul>
-                                                    <button
-                                                        onClick={handleUpgradePremium}
-                                                        disabled={isUpgrading}
-                                                        className="w-full py-2.5 rounded-lg bg-white text-zinc-950 font-medium text-sm hover:bg-zinc-200 transition-colors flex justify-center items-center"
-                                                    >
-                                                        {isUpgrading ? <div className="w-4 h-4 rounded-full border-2 border-zinc-900/20 border-t-zinc-900 animate-spin" /> : "Passer à AIVANA Pro"}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : !selectedTrip ? (
-                            <>
-                                {/* Welcome */}
-                                <div className="mb-6 sm:mb-12 flex items-end justify-between">
-                                    <div className="space-y-1">
-                                        <h2 className="text-2xl sm:text-4xl font-serif" style={{ color: 'var(--text-primary)' }}>Bonjour, {userName} 👋</h2>
-                                        <p className="uppercase text-[10px] font-black tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Prêt pour votre prochaine aventure ?</p>
-                                    </div>
-                                    <div className="relative shrink-0">
-                                        <button
-                                            onClick={() => { setShowAddTripHint(false); window.dispatchEvent(new CustomEvent("open-chatbot")); }}
-                                            title="Ajouter un nouveau voyage"
-                                            className="w-11 h-11 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold hover:text-[#0A0D14] hover:scale-105 transition-all"
-                                        >
-                                            <Plus className="w-5 h-5" />
-                                        </button>
-                                        <AnimatePresence>
-                                            {showAddTripHint && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                                                    className="absolute top-full right-0 mt-3 z-50 w-max max-w-[220px]"
-                                                >
-                                                    <div className="relative bg-[#141822] border border-gold/30 rounded-xl px-4 py-3 shadow-2xl">
-                                                        <div className="absolute -top-1.5 right-3 w-3 h-3 bg-[#141822] border-t border-l border-gold/30 rotate-45" />
-                                                        <p className="text-xs text-white font-medium leading-snug">Ajoutez un nouveau voyage</p>
-                                                        <p className="text-[10px] text-white/40 mt-0.5 leading-snug">Cliquez ici pour lancer l'assistant IA</p>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                </div>
+      <div className="flex gap-6 overflow-x-auto border-b border-line" role="tablist">
+        {([["overview", "Aperçu"], ["itinerary", "Itinéraire"], ["proposal", "Proposition IA"], ["docs", "Documents"]] as const).map(([id, label]) => (
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`shrink-0 border-b-2 pb-3 text-sm font-medium ${tab === id ? "border-gold-deep text-ink" : "border-transparent text-muted"}`}>{label}</button>
+        ))}
+      </div>
 
-                                {trips.length === 0 ? (
-                                    <div className="rounded-2xl p-12 text-center mb-10 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
-                                        <div className="w-20 h-20 bg-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-gold/20">
-                                            ✈️
-                                        </div>
-                                        <h3 className="text-xl font-medium mb-3" style={{ color: 'var(--text-primary)' }}>Aucun voyage enregistré</h3>
-                                        <p className="text-sm max-w-md mx-auto leading-relaxed font-normal" style={{ color: 'var(--text-secondary)' }}>
-                                            Ouvrez l&apos;assistant AIVANA (la bulle dorée en bas à droite), décrivez votre prochaine envie de voyage, et enregistrez l&apos;itinéraire généré ici en un clic.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                                        {trips.map((trip, i) => {
-                                            const gradients = [
-                                                "from-indigo-900/80 via-purple-900/60 to-zinc-900",
-                                                "from-emerald-900/80 via-teal-900/60 to-zinc-900",
-                                                "from-amber-900/80 via-orange-900/60 to-zinc-900",
-                                                "from-rose-900/80 via-pink-900/60 to-zinc-900",
-                                                "from-sky-900/80 via-blue-900/60 to-zinc-900",
-                                                "from-violet-900/80 via-fuchsia-900/60 to-zinc-900",
-                                            ];
-                                            const grad = gradients[i % gradients.length];
-                                            return (
-                                            <motion.div
-                                                key={trip.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.08 }}
-                                                onClick={() => handleSelectTrip(trip)}
-                                                className="group cursor-pointer rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-black/40 transition-all duration-300"
-                                                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
-                                            >
-                                                <div className="h-40 relative overflow-hidden">
-                                                    {trip.img ? (
-                                                        <img src={trip.img} alt={trip.title} onError={withAivanaFallback} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
-                                                    ) : (
-                                                        <div className={`absolute inset-0 bg-gradient-to-br ${grad} group-hover:opacity-90 transition-opacity`}>
-                                                            <div className="absolute inset-0 flex items-center justify-center opacity-10 text-[80px] font-black select-none">
-                                                                {trip.title[0]?.toUpperCase()}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Gradient overlay for text readability */}
-                                                    <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-zinc-900 to-transparent z-10" />
-
-                                                    <div className="absolute top-3 right-3 flex gap-2 z-20">
-                                                        <button
-                                                            onClick={(e) => handleDeleteTrip(trip.id, e)}
-                                                            className="w-8 h-8 rounded-lg bg-black/40 hover:bg-red-500/90 text-zinc-300 hover:text-white backdrop-blur-md flex items-center justify-center transition-all border border-white/10"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="absolute bottom-4 left-5 z-20 transition-transform duration-300 group-hover:-translate-y-1">
-                                                        <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-1 block">
-                                                            Planifié
-                                                        </span>
-                                                        <h3 className="text-lg font-medium text-white leading-tight drop-shadow-md">{trip.title}</h3>
-                                                    </div>
-                                                </div>
-                                                <div className="p-5 flex flex-col gap-4">
-                                                    <div className="flex items-center justify-between text-zinc-400 text-xs font-medium border-b border-white/[0.04] pb-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <MapPin className="w-3.5 h-3.5 text-zinc-500" />
-                                                            <span>{trip.destination_name || "À définir"}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                                                            <span>{trip.start_date ? new Date(trip.start_date).toLocaleDateString() : "Bientôt"}</span>
-                                                        </div>
-                                                    </div>
-                                                    <button className="w-full py-2.5 rounded-lg bg-zinc-800 text-sm font-medium text-zinc-300 group-hover:bg-white group-hover:text-zinc-950 transition-colors flex items-center justify-center gap-2">
-                                                        Détails du voyage <ChevronRight className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-                                        ); })}
-
-
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            /* Trip Details View */
-                            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-                                {/* Tab Switcher */}
-                                <div className="flex items-center gap-2 sm:gap-6 border-b border-white/[0.04] mb-8 overflow-x-auto scrollbar-hide pb-px">
-                                    <button
-                                        onClick={() => setSelectedTrip(null)}
-                                        className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors pb-4 mr-4 flex-shrink-0"
-                                    >
-                                        <ChevronRight className="w-4 h-4 rotate-180" />
-                                        Retour
-                                    </button>
-                                    {[
-                                        { id: 'overview', label: 'Aperçu', icon: LayoutDashboard },
-                                        { id: 'itinerary', label: 'Itinéraire', icon: Calendar },
-                                        { id: 'proposal', label: 'Proposition IA', icon: Plane },
-                                        { id: 'documents', label: 'Documents', icon: Folder },
-                                    ].map(tab => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id as any)}
-                                            className={`flex items-center gap-2 pb-4 text-sm font-medium border-b-2 transition-colors relative top-[1px] flex-shrink-0 ${activeTab === tab.id ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-white/20'}`}
-                                        >
-                                            <tab.icon className="w-4 h-4 shrink-0" />
-                                            {tab.label}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {activeTab === 'overview' && (
-                                    <div className="space-y-6">
-                                        {/* Dashboard Intelligent : En-tête Global */}
-                                        {analysis && (
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.98 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                className="rounded-2xl p-4 sm:p-8 flex flex-col md:flex-row gap-4 sm:gap-8 items-stretch relative overflow-hidden"
-                                                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
-                                            >
-                                                {/* Score Scoreboard */}
-                                                <div className="flex-shrink-0 flex flex-col items-center justify-center p-4 sm:p-8 rounded-xl sm:min-w-[220px] relative z-10" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-                                                    <span className="text-xs font-medium text-zinc-400 mb-6">Indice de complétion</span>
-                                                    <div className="relative w-28 h-28 flex items-center justify-center mb-4">
-                                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                                            <circle cx="18" cy="18" r="16" fill="none" className="stroke-white/5" strokeWidth="3"></circle>
-                                                            <circle cx="18" cy="18" r="16" fill="none" className={analysis.score >= 80 ? 'stroke-emerald-500' : analysis.score >= 50 ? 'stroke-blue-500' : 'stroke-orange-500'} strokeWidth="3" strokeDasharray="100" strokeDashoffset={100 - analysis.score} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}></circle>
-                                                        </svg>
-                                                        <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                                            <span className="text-3xl font-medium text-white leading-none">{analysis.score}</span>
-                                                            <span className="text-[10px] text-zinc-500 font-medium tracking-wide mt-1">/ 100</span>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center px-4 py-1.5 rounded-full border ${analysis.score >= 80 ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/10' : analysis.score >= 50 ? 'border-blue-500/20 text-blue-400 bg-blue-500/10' : 'border-orange-500/20 text-orange-400 bg-orange-500/10'}`}>
-                                                        {analysis.score >= 80 ? "Optimisé" : analysis.score >= 50 ? "En progrès" : "Aiguillage requis"}
-                                                    </span>
-                                                </div>
-
-                                                {/* Budget Tracking */}
-                                                <div className="flex-1 flex flex-col justify-center relative z-10">
-                                                    <div className="flex justify-between items-end mb-6">
-                                                        <div>
-                                                            <span className="text-xs font-medium text-zinc-400 block mb-2">Budget Estimé</span>
-                                                            <div className="flex items-baseline gap-3">
-                                                                <span className="text-3xl sm:text-4xl font-medium text-white">{analysis.budget.used}€</span>
-                                                                <span className="text-sm text-zinc-500 font-medium">/ {analysis.budget.total > 0 ? `${analysis.budget.total}€` : 'Non défini'}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <span className={`text-lg font-bold tracking-tight ${analysis.budget.percentage > 100 ? 'text-red-400' : 'text-zinc-300'}`}>
-                                                                {analysis.budget.percentage}%
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-10">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${Math.min(analysis.budget.percentage, 100)}%` }}
-                                                            transition={{ duration: 1.5, ease: "easeOut" }}
-                                                            className={`h-full ${analysis.budget.percentage > 100 ? 'bg-red-500' : 'bg-white'}`}
-                                                        />
-                                                    </div>
-
-                                                    {/* Quick metrics row */}
-                                                    <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-4 sm:pt-8 border-t border-white/5">
-                                                        <div className="space-y-1">
-                                                            <p className="text-xs text-zinc-500 font-medium">Réservations</p>
-                                                            <p className="text-xl font-medium text-white">{bookings.length}</p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-xs text-zinc-500 font-medium">Hébergement</p>
-                                                            <div className="text-sm font-medium flex items-center gap-2">
-                                                                {analysis.coverage.missingHotelNights === 0 ? <span className="text-emerald-400 flex items-center gap-1"><Check className="w-4 h-4" /> Complet</span> :
-                                                                    analysis.coverage.missingHotelNights > 0 ? <span className="text-orange-400">{analysis.coverage.missingHotelNights} nuits</span> :
-                                                                        <span className="text-zinc-600">—</span>}
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-xs text-zinc-500 font-medium">Activités</p>
-                                                            <div className="text-sm font-medium">{analysis.coverage.hasActivity ? <span className="text-emerald-400">Prévues</span> : <span className="text-orange-400">À prévoir</span>}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                        
-                                        {bookings.length > 0 && (
-                                            <TripBudgetPanel bookings={bookings} />
-                                        )}
-                                    </div>
-                                )}
-                                {activeTab === 'overview' && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                                        <div className="lg:col-span-2 space-y-8">
-                                            {/* Actions Requises IA */}
-                                            {analysis && analysis.warnings.length > 0 && (
-                                                <div className="bg-gold/[0.03] border border-gold/20 rounded-2xl p-6 relative overflow-hidden">
-                                                    <div className="absolute top-0 right-0 w-64 h-64 bg-gold/[0.05] blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none" />
-                                                    <div className="flex items-center gap-3 mb-5 relative z-10">
-                                                        <Sparkles className="w-5 h-5 text-gold" />
-                                                        <h4 className="text-sm font-medium text-gold">Actions recommandées par l'IA</h4>
-                                                    </div>
-                                                    <div className="space-y-3 relative z-10">
-                                                        {analysis.coverage.missingOutboundFlight && (
-                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-                                                                        <Plane className="w-4 h-4 text-orange-400" />
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-sm text-white font-medium">Vol aller manquant</p>
-                                                                        <p className="text-[10px] text-zinc-400">Aucun vol pour vous rendre à {getTripDestination(selectedTrip)}</p>
-                                                                    </div>
-                                                                </div>
-                                                                <Link href={`/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Trouver</Link>
-                                                            </div>
-                                                        )}
-                                                        {analysis.coverage.missingHotelNights > 0 && (
-                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                                                                        <MapPin className="w-4 h-4 text-blue-400" />
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-sm text-white font-medium">Hébergement incomplet</p>
-                                                                        <p className="text-[10px] text-zinc-400">Il vous manque {analysis.coverage.missingHotelNights} nuits à réserver</p>
-                                                                    </div>
-                                                                </div>
-                                                                <Link href={`/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Réserver</Link>
-                                                            </div>
-                                                        )}
-                                                        {!analysis.coverage.hasActivity && (
-                                                            <div className="flex flex-wrap items-center justify-between gap-y-3 bg-black/40 rounded-xl p-4 border border-white/[0.04]">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                                                        <Compass className="w-4 h-4 text-emerald-400" />
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-sm text-white font-medium">Aucune activité prévue</p>
-                                                                        <p className="text-[10px] text-zinc-400">Enrichissez votre séjour avec des expériences locales</p>
-                                                                    </div>
-                                                                </div>
-                                                                <Link href={`/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}&auto=true`} className="text-xs bg-gold text-black font-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors uppercase tracking-wider">Explorer</Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-6">
-                                                <div className="flex items-center justify-between mb-5">
-                                                    <h4 className="text-sm font-medium text-zinc-300">Compléter votre voyage</h4>
-                                                    {bookings.length > 0 && (
-                                                        <button 
-                                                            onClick={() => setActiveTab('itinerary')} 
-                                                            className="text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-white/70 transition-colors"
-                                                        >
-                                                            Gérer mes éléments ({bookings.length})
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="space-y-3">
-                                                    {[
-                                                        { href: `/explore/flights`, emoji: "✈️", label: "Rechercher des vols", sub: "Comparez les meilleures offres · ajout direct au voyage" },
-                                                        { href: `/explore/hotels`, emoji: "🏨", label: "Trouver un hébergement", sub: "Hôtels et résidences triés sur le volet · ajout direct" },
-                                                        { href: `/explore/activities`, emoji: "🎒", label: "Découvrir des activités", sub: "Expériences uniques · ajout direct au voyage" },
-                                                    ].map(item => {
-                                                        const dest = getTripDestination(selectedTrip);
-                                                    
-                                                    return (
-                                                        <Link key={item.href} href={`${item.href}?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(dest)}`} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/10 transition-all group">
-                                                            <span className="text-2xl flex-shrink-0">{item.emoji}</span>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{item.label}</p>
-                                                                <p className="text-xs text-zinc-500 mt-0.5">{item.sub}</p>
-                                                            </div>
-                                                            <ChevronRight className="w-4 h-4 text-zinc-600 flex-shrink-0 group-hover:text-zinc-300 group-hover:translate-x-1 transition-all" />
-                                                        </Link>
-                                                    );
-                                                })}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="lg:col-span-1">
-                                            <div className="bg-zinc-900/50 rounded-2xl p-4 sm:p-8 border border-white/[0.04] lg:sticky lg:top-8">
-                                                <div className="flex items-center gap-3 mb-8">
-                                                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
-                                                        <Sparkles className="w-4 h-4 text-zinc-300" />
-                                                    </div>
-                                                    <h4 className="font-medium text-lg text-white">IA AIVANA</h4>
-                                                </div>
-
-                                                <div className="space-y-6">
-                                                    {analysis && analysis.warnings.length > 0 ? (
-                                                        <div className="space-y-4">
-                                                            {analysis.warnings.map((warn, i) => (
-                                                                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
-                                                                    <div className="mt-0.5 shrink-0">
-                                                                        <AlertCircle className="w-4 h-4 text-orange-400" />
-                                                                    </div>
-                                                                    <p className="text-sm text-zinc-400 leading-relaxed font-medium">{warn}</p>
-                                                                </div>
-                                                            ))}
-                                                            <button
-                                                                onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
-                                                                className="w-full flex items-center justify-center gap-2 py-3 mt-6 bg-white text-zinc-950 text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors"
-                                                            >
-                                                                Optimiser mon voyage avec l&apos;IA
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex flex-col items-center justify-center py-6 text-center">
-                                                            <div className="w-14 h-14 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
-                                                                <Check className="w-6 h-6 text-emerald-400" />
-                                                            </div>
-                                                            <p className="text-zinc-300 text-sm font-medium leading-relaxed mb-6">Itinéraire parfait. Aucune anomalie détectée par l'IA.</p>
-                                                            <button
-                                                                onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
-                                                                className="w-full py-3 rounded-lg border border-white/10 text-sm font-medium text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
-                                                            >
-                                                                Parler avec AIVANA
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeTab === 'itinerary' && (
-                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-4 sm:p-8">
-                                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-10">
-                                            <h3 className="text-xl font-medium text-white">Itinéraire détaillé</h3>
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    onClick={downloadICS}
-                                                    disabled={bookings.length === 0}
-                                                    className="flex items-center gap-2 bg-zinc-800 text-zinc-300 text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-700 hover:text-white transition-all disabled:opacity-50"
-                                                >
-                                                    <Calendar className="w-4 h-4" /> Export iCal
-                                                </button>
-                                                <div className="relative group/add z-50">
-                                                    <button
-                                                        className="flex items-center gap-2 bg-white text-zinc-950 text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
-                                                    >
-                                                        <Plus className="w-4 h-4" /> Ajouter
-                                                    </button>
-                                                    <div className="absolute right-0 top-full mt-2 w-48 bg-[#141822] border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover/add:opacity-100 group-hover/add:visible transition-all overflow-hidden flex flex-col">
-                                                        <Link href={`/explore/flights?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors">
-                                                            <span className="text-lg">✈️</span> Vol
-                                                        </Link>
-                                                        <Link href={`/explore/hotels?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors border-t border-white/[0.02]">
-                                                            <span className="text-lg">🏨</span> Hôtel
-                                                        </Link>
-                                                        <Link href={`/explore/activities?tripId=${selectedTrip?.id}&dest=${encodeURIComponent(getTripDestination(selectedTrip))}`} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-white transition-colors border-t border-white/[0.02]">
-                                                            <span className="text-lg">🎒</span> Activité
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {bookings.length === 0 ? (
-                                            <div className="py-20 text-center">
-                                                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 text-3xl">🗓️</div>
-                                                <p className="text-zinc-500 text-sm font-medium">Aucune réservation pour ce voyage</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-8 relative">
-                                                {bookings.map((b, index) => (
-                                                    <motion.div
-                                                        key={b.id}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: index * 0.1, duration: 0.5 }}
-                                                        className="flex gap-6 relative group"
-                                                    >
-                                                        {/* Vertical Timeline Line */}
-                                                        {index !== bookings.length - 1 && (
-                                                            <div className="absolute left-[20px] top-14 bottom-[-2rem] w-[1px] bg-white/10 z-0 group-hover:bg-white/30 transition-colors"></div>
-                                                        )}
-
-                                                        <div className="w-10 h-10 bg-zinc-950 rounded-xl flex items-center justify-center flex-shrink-0 relative z-10 text-lg border border-white/10 transition-transform">
-                                                            {b.type === 'flight' ? '✈️' : b.type === 'hotel' ? '🏨' : b.type === 'transport' ? '🚆' : '🎒'}
-                                                        </div>
-                                                        <div className="flex-1 pb-8 border-b border-white/[0.04] group-last:border-0">
-                                                            <div className="flex justify-between items-start mb-2">
-                                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-wrap">
-                                                                    <h4 className="font-medium text-lg text-white leading-none">{b.title}</h4>
-                                                                    <div className="flex gap-2">
-                                                                        {(b.external_url || b.booking_url || (b.external_reference && b.external_reference.startsWith('WIKI')) || (b.raw_data && Object.keys(b.raw_data).length > 2)) && (
-                                                                            <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1.5">
-                                                                                <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> IA Vérifiée
-                                                                            </span>
-                                                                        )}
-                                                                        {b.status === 'pending' && <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-xs px-2 py-0.5 rounded-full font-medium">En attente</span>}
-                                                                        {b.status === 'confirmed' && <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2 py-0.5 rounded-full font-medium">Confirmé</span>}
-                                                                    </div>
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => handleDeleteBooking(b.id)}
-                                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-3 mb-4 mt-1">
-                                                                <span className="text-xs font-medium text-zinc-400">{b.provider || "Prestataire"}</span>
-                                                                <span className="text-xs text-zinc-600">•</span>
-                                                                <span className="text-xs text-white font-medium">{b.price_estimate ? `${b.price_estimate} €` : 'Prix inconnu'}</span>
-                                                            </div>
-
-                                                            {/* Displaying Extracted Intelligence from raw_data */}
-                                                            {(b.raw_data || b.location) && (
-                                                                <div className="bg-white/[0.02] rounded-xl p-4 mb-5 max-w-2xl">
-                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6">
-                                                                        {b.location && <p className="text-xs text-zinc-400 flex flex-col gap-1"><span className="text-zinc-500 font-medium">Localisation</span> {b.location}</p>}
-                                                                        {b.raw_data && b.raw_data.flight_number && <p className="text-xs text-zinc-400 flex flex-col gap-1"><span className="text-zinc-500 font-medium">Numéro de Vol</span> {b.raw_data.flight_number} {b.raw_data.cabin_class && `(${b.raw_data.cabin_class})`}</p>}
-                                                                        {b.raw_data && b.raw_data.address && <p className="text-xs text-zinc-400 flex flex-col gap-1"><span className="text-zinc-500 font-medium">Adresse physique</span> {b.raw_data.address}</p>}
-                                                                        {b.raw_data && b.raw_data.meeting_point && <p className="text-xs text-zinc-400 flex flex-col gap-1"><span className="text-zinc-500 font-medium">Point de rendez-vous</span> {b.raw_data.meeting_point}</p>}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-500">
-                                                                <span className="flex items-center gap-1.5 bg-white/[0.03] px-2.5 py-1 rounded-md border border-white/[0.04]">
-                                                                    <Clock className="w-3.5 h-3.5" /> {b.start_datetime ? new Date(b.start_datetime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Date à définir'}
-                                                                </span>
-                                                                {b.end_datetime && (
-                                                                    <>
-                                                                        <ChevronRight className="w-3 h-3 text-zinc-700" />
-                                                                        <span className="flex items-center gap-1.5 bg-white/[0.03] px-2.5 py-1 rounded-md border border-white/[0.04]">
-                                                                            {new Date(b.end_datetime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                                                                        </span>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {activeTab === 'proposal' && selectedTrip && (
-                                    <TripProposal tripId={selectedTrip.id} destinationName={getTripDestination(selectedTrip)} />
-                                )}
-
-                                {activeTab === 'documents' && (
-                                    <div className="bg-zinc-900/50 rounded-2xl border border-white/[0.04] p-4 sm:p-8">
-                                        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-10">
-                                            <div>
-                                                <h3 className="text-xl font-medium text-white mb-1">Coffre-fort Documents</h3>
-                                                <p className="text-xs text-zinc-500 font-medium">Billets, passeports et confirmations sécurisés</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                                            {/* Ajouter un document */}
-                                            <button className="aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 hover:border-white/20 hover:bg-white/[0.02] transition-all group">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                                                    <Plus className="w-5 h-5 text-zinc-400 group-hover:text-white" />
-                                                </div>
-                                                <span className="text-xs font-medium text-zinc-500 group-hover:text-zinc-300">Nouveau fichier</span>
-                                            </button>
-
-                                            {/* Exemple de passeport */}
-                                            <div className="aspect-square flex flex-col justify-between p-4 rounded-2xl bg-zinc-950 border border-white/[0.04] relative group overflow-hidden">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="flex justify-between items-start">
-                                                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                                                        <Folder className="w-4 h-4 text-blue-400" />
-                                                    </div>
-                                                    <button className="text-zinc-500 hover:text-zinc-300"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-white mb-0.5 truncate">Passeport</h4>
-                                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Valide</p>
-                                                </div>
-                                            </div>
-
-                                            {/* Exemple de billet */}
-                                            <div className="aspect-square flex flex-col justify-between p-4 rounded-2xl bg-zinc-950 border border-white/[0.04] relative group overflow-hidden">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="flex justify-between items-start">
-                                                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                                                        <FileText className="w-4 h-4 text-purple-400" />
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-white mb-0.5 truncate">Billet AirFrance</h4>
-                                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Départ 14h</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </main>
-
-            {/* Mobile Bottom Navigation */}
-            < nav className="fixed bottom-0 left-0 right-0 h-20 bg-[#0A0D14]/80 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-6 md:hidden z-40" >
-                <button onClick={() => { setSelectedTrip(null); setShowSettings(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${!selectedTrip && !showSettings ? "text-gold translate-y-[-4px]" : "text-white/30 hover:text-white/60"}`}>
-                    <div className={`p-2 rounded-xl transition-all ${!selectedTrip && !showSettings ? "bg-gold/10" : ""}`}>
-                        <LayoutDashboard className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Home</span>
-                </button>
-                <button onClick={() => { setShowSettings(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${selectedTrip && !showSettings ? "text-gold translate-y-[-4px]" : "text-white/30 hover:text-white/60"}`}>
-                    <div className={`p-2 rounded-xl transition-all ${selectedTrip && !showSettings ? "bg-gold/10" : ""}`}>
-                        <Calendar className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Trips</span>
-                </button>
-                <button onClick={() => { setSelectedTrip(null); setShowSettings(true); }} className={`flex flex-col items-center gap-1.5 transition-all ${showSettings ? "text-gold translate-y-[-4px]" : "text-white/30 hover:text-white/60"}`}>
-                    <div className={`p-2 rounded-xl transition-all ${showSettings ? "bg-gold/10" : ""}`}>
-                        <Settings className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Settings</span>
-                </button>
-                <button onClick={async () => { const supabase = createClient(); await supabase.auth.signOut(); router.push("/"); }} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-red-500 transition-colors">
-                    <div className="p-2">
-                        <LogOut className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Exit</span>
-                </button>
-            </nav >
-
-
-
-
-            {/* Toast notification */}
-            {notification && (
-                <div className="fixed top-24 right-6 z-[200] flex items-center gap-3 bg-[#141822] border border-gold/30 rounded-2xl px-5 py-4 shadow-2xl shadow-black/50 animate-in slide-in-from-right-4 duration-500 max-w-sm">
-                    <div className="w-10 h-10 bg-gold/10 border border-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Plane className="w-5 h-5 text-gold -rotate-45" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white">{notification}</p>
-                        <p className="text-xs text-white/40 mt-0.5">
-                            {phoneValue ? "SMS envoyé au " + phoneValue : "Ajoutez un numéro dans Paramètres pour les SMS"}
-                        </p>
-                    </div>
-                    <button onClick={() => setNotification(null)} className="text-white/30 hover:text-white transition-colors flex-shrink-0">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
+      {tab === "overview" && (
+        <div className="flex flex-col gap-8">
+          {alert && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3.5">
+              <span className="text-sm">{alert.t}</span>
+              <Link href={alert.href} className="text-sm font-semibold">{alert.cta} <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
+            </div>
+          )}
+          <div className="grid gap-8 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[15px] font-semibold">Budget</span>
+                <span className="tabular whitespace-nowrap text-sm font-semibold">{eur(spent)}{plan.budget ? ` / ${eur(plan.budget)}` : ""}</span>
+              </div>
+              {plan.budget ? (
+                <div className="h-1.5 overflow-hidden rounded-sm bg-line"><div className={`h-full ${spent > plan.budget ? "bg-danger" : "bg-gold-deep"}`} style={{ width: `${Math.min(100, Math.round((spent / plan.budget) * 100))}%` }} /></div>
+              ) : (
+                <button onClick={() => setEditing(true)} className="self-start text-[13px] text-gold-deep hover:text-[#6E5323]">Fixer un budget</button>
+              )}
+              <div className="mt-1 flex flex-col border-t border-line">
+                {[["Vols", sum("flight")], ["Hébergement", sum("hotel")], ["Activités", sum("activity")]].map(([k, v]) => (
+                  <div key={k as string} className="flex justify-between border-b border-line py-[11px] text-sm"><span className="text-muted-2">{k}</span><span className="tabular whitespace-nowrap font-semibold">{eur(v as number)}</span></div>
+                ))}
+                {plan.budget ? (
+                  <div className="flex justify-between py-[11px] text-sm">
+                    <span className="text-muted-2">{spent > plan.budget ? "Dépassement" : "Reste disponible"}</span>
+                    <span className={`tabular whitespace-nowrap font-semibold ${spent > plan.budget ? "text-danger" : "text-ok"}`}>{eur(Math.abs(plan.budget - spent))}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-[15px] font-semibold">Compléter le voyage</span>
+              <div className="flex flex-col border-t border-line">
+                {[["Rechercher un vol", `/explore/flights?${ctx}`], ["Trouver un hébergement", `/explore/hotels?${ctx}`], ["Ajouter des activités", `/explore/activities?${ctx}`]].map(([label, href]) => (
+                  <Link key={label} href={href} className="plain-link flex justify-between border-b border-line py-[13px] text-sm hover:!text-gold-deep"><span>{label}</span><ArrowRight className="h-4 w-4 text-muted" aria-hidden /></Link>
+                ))}
+                <button onClick={() => ask(`Je prépare ${plan.destination} du ${formatRange(plan.depart, plan.ret)} pour ${plan.travelers} personnes. Que me conseilles-tu ?`)} className="flex justify-between py-[13px] text-left text-sm hover:text-gold-deep"><span>Demander au copilote</span><ArrowRight className="h-4 w-4 text-muted" aria-hidden /></button>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <span className="text-[15px] font-semibold">Éléments du voyage</span>
+            {plan.items.length === 0 ? (
+              <p className="m-0 text-sm text-muted">Rien pour l&apos;instant. Les vols, hôtels et activités que vous ajoutez apparaissent ici.</p>
+            ) : (
+              <div className="flex flex-col border-t border-line">
+                {plan.items.map(i => (
+                  <div key={i.key} className="grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-4 border-b border-line py-3.5">
+                    <span className="text-[13px] text-muted">{KIND[i.type]}</span>
+                    <span className="flex min-w-0 flex-col gap-0.5"><span className="text-[15px] font-medium">{i.title}</span>{i.subtitle && <span className="text-[13px] text-muted">{i.subtitle}</span>}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="flex flex-col items-end gap-0.5">
+                        <span className="tabular whitespace-nowrap text-sm font-semibold">{i.price != null ? eur(i.price) : "—"}</span>
+                        <span className="text-xs text-gold-deep">{i.estimated ? "Estimé · à réserver" : "À réserver"}</span>
+                      </span>
+                      {i.url && <a href={i.url} target="_blank" rel="noopener noreferrer" aria-label="Réserver chez le partenaire" title="Réserver chez le partenaire" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>}
+                      <button onClick={() => removeItem(i.key)} aria-label={`Retirer ${i.title}`} title="Retirer" className="text-muted hover:text-danger"><Trash2 className="h-4 w-4" aria-hidden /></button>
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
+            <p className="m-0 text-[13px] text-muted">AIVANA ne réserve pas à votre place : chaque élément renvoie vers le partenaire (compagnie, Booking.com, GetYourGuide).</p>
+          </div>
+        </div>
+      )}
 
-        </div >
-    );
+      {tab === "itinerary" && (
+        <div className="flex flex-col">
+          {days.map((d, n) => (
+            <div key={d.date} className="grid gap-5 border-b border-line py-[18px] [grid-template-columns:minmax(90px,140px)_minmax(0,1fr)]">
+              <div className="flex flex-col gap-0.5"><span className="text-[15px] font-semibold">Jour {n + 1}</span><span className="text-[13px] text-muted">{new Date(d.date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span></div>
+              <div className="flex flex-col gap-2.5 text-sm">
+                {n === 0 && <span className="text-muted-2">Départ de {plan.origin}</span>}
+                {d.items.map(i => <span key={i.key}><span className="text-muted">{KIND[i.type]} · </span>{i.title}</span>)}
+                {n === days.length - 1 && n > 0 && <span className="text-muted-2">Retour vers {plan.origin}</span>}
+                {n > 0 && n < days.length - 1 && !d.items.length && <span className="text-muted">Journée libre</span>}
+              </div>
+            </div>
+          ))}
+          {unplaced.length > 0 && (
+            <div className="flex flex-col gap-2 py-5 text-sm">
+              <span className="font-semibold">À placer dans le séjour</span>
+              {unplaced.map(i => <span key={i.key}><span className="text-muted">{KIND[i.type]} · </span>{i.title}</span>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "proposal" && (plan.tripId
+        ? <TripProposal tripId={plan.tripId} destinationName={plan.destination} />
+        : (
+          <div className="flex max-w-[640px] flex-col items-start gap-3 rounded-[22px] border border-dashed border-line-2 p-9">
+            <span className="text-base font-semibold">Sauvegardez d&apos;abord le voyage</span>
+            <p className="m-0 text-sm leading-relaxed text-muted-2">L&apos;itinéraire jour par jour est généré à partir de votre voyage enregistré.</p>
+            <button onClick={onSave} disabled={saving} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">{loggedIn ? "Sauvegarder" : "Sauvegarder avec un compte"}</button>
+          </div>
+        ))}
+
+      {tab === "docs" && (
+        <div className="flex max-w-[640px] flex-col items-start gap-3 rounded-[22px] border border-dashed border-line-2 p-9">
+          <span className="text-base font-semibold">Documents : bientôt</span>
+          <p className="m-0 text-sm leading-relaxed text-muted-2">Le rangement des billets et confirmations en PDF, et l&apos;import depuis Gmail ou Outlook, arrivent dans une prochaine version. Pour l&apos;instant, gardez vos confirmations dans votre boîte mail.</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Settings({ name, email, phone, onLogout, onClose }: { name: string; email: string; phone?: string; onLogout: () => void; onClose: () => void }) {
+  const [n, setN] = useState(name);
+  const [p, setP] = useState(phone || "");
+  const [status, setStatus] = useState<string | null>(null);
+  const save = async () => {
+    setStatus("Enregistrement…");
+    const { error } = await createClient().auth.updateUser({ data: { full_name: n.trim() || name, phone: p.trim() } });
+    setStatus(error ? "L'enregistrement a échoué." : "Profil mis à jour.");
+  };
+  return (
+    <div className="flex max-w-[520px] flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="m-0 text-[32px]">Paramètres</h1>
+        <button onClick={onClose} className="text-sm text-muted-2 hover:text-ink">Retour au voyage</button>
+      </div>
+      <label className="flex flex-col gap-1.5 text-sm font-semibold">Nom<input value={n} onChange={e => setN(e.target.value)} className="h-[46px] rounded-full border border-line-2 bg-cream px-4 text-[15px] font-normal" /></label>
+      <label className="flex flex-col gap-1.5 text-sm font-semibold">Adresse email<input value={email} disabled className="h-[46px] rounded-full border border-line bg-paper px-4 text-[15px] font-normal text-muted" /></label>
+      <label className="flex flex-col gap-1.5 text-sm font-semibold">
+        Téléphone <span className="font-normal text-muted">Pour recevoir un SMS quand un voyage est sauvegardé (facultatif)</span>
+        <input value={p} onChange={e => setP(e.target.value)} placeholder="+33 6 12 34 56 78" className="h-[46px] rounded-full border border-line-2 bg-cream px-4 text-[15px] font-normal" />
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={save} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2">Enregistrer</button>
+        <Link href="/onboarding" className="text-sm">Modifier mes préférences de voyage</Link>
+        {status && <span className="text-sm text-muted">{status}</span>}
+      </div>
+      <button onClick={onLogout} className="self-start rounded-full border border-line-2 px-4 py-2.5 text-sm hover:border-danger hover:text-danger">Se déconnecter</button>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0D14]"></div>}>
-            <DashboardContent />
-        </Suspense>
-    );
+  return <Suspense><DashboardContent /></Suspense>;
 }
