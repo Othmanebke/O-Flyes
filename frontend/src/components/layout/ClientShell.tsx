@@ -6,13 +6,15 @@ import ChatDock from "@/components/chat/ChatDock";
 import Toaster from "@/components/trip/Toaster";
 
 // Pages plein écran, sans navbar ni footer du site (elles ont leur propre en-tête)
-const STANDALONE = ["/dashboard", "/auth", "/onboarding"];
+const STANDALONE = ["/auth", "/onboarding"];
 
 export default function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/";
   const home = pathname === "/";
   const standalone = STANDALONE.some(r => pathname.startsWith(r));
   const assistant = pathname.startsWith("/assistant");
+  // Le carnet garde la navbar mais pas le grand footer : c'est un espace de travail
+  const noFooter = assistant || pathname.startsWith("/dashboard");
 
   return (
     <>
@@ -22,7 +24,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
           : <div className="sticky top-0 z-50"><Navbar /></div>
       )}
       <main className="flex-1">{children}</main>
-      {!standalone && !assistant && <Footer />}
+      {!standalone && !noFooter && <Footer />}
       {/* /assistant est déjà la conversation en plein écran */}
       {!assistant && <ChatDock />}
       <Toaster />

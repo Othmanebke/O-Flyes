@@ -35,7 +35,7 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
 
   if (!proposal) {
     return (
-      <div className="flex max-w-[640px] flex-col items-start gap-3 rounded-[22px] border border-dashed border-line-2 p-9">
+      <div className="flex flex-col items-start gap-3">
         <span className="text-base font-semibold">Itinéraire jour par jour</span>
         <p className="m-0 text-sm leading-relaxed text-muted-2">
           Le copilote propose un parcours en étapes pour {destinationName || "ce voyage"} : où aller, combien de jours rester, quoi ne pas manquer et comment se déplacer.

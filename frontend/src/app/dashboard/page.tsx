@@ -3,13 +3,18 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
-import { ArrowRight, ExternalLink, Loader2, Trash2 } from "lucide-react";
-import Logo from "@/components/ui/Logo";
+import {
+  AlertCircle, ArrowUpRight, BedDouble, CalendarPlus, Check, ExternalLink, Loader2, MessageSquare,
+  Pencil, Plane, Plus, Share2, Ticket, Trash2, Upload, Wallet, X,
+} from "lucide-react";
+import Photo from "@/components/ui/Photo";
+import { CopilotMark } from "@/components/ui/Logo";
 import TripProposal from "@/components/trip/TripProposal";
 import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
+import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
 import {
-  clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
+  addDays, clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
   type Plan, type PlanItem,
 } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
@@ -17,6 +22,7 @@ import { useSession } from "@/lib/session";
 import type { Booking, Trip } from "@/types/trip";
 
 type Tab = "overview" | "itinerary" | "proposal" | "docs";
+const ICON = { flight: Plane, hotel: BedDouble, activity: Ticket };
 const KIND: Record<string, string> = { flight: "Vol", hotel: "Hôtel", activity: "Activité" };
 
 const toPlanItem = (b: Booking): PlanItem => ({
@@ -33,12 +39,25 @@ const toPlanItem = (b: Booking): PlanItem => ({
   serverId: b.id,
 });
 
-function countdown(depart: string) {
+const photoOf = (name: string): PhotoKey => {
+  const code = findDestination(name)?.code;
+  return isPhotoKey(code) ? code : photoFor(name);
+};
+
+function countdown(depart: string): [string, string] {
   const days = Math.round((new Date(depart + "T12:00:00Z").getTime() - Date.now()) / 86400000);
-  if (days > 60) return `départ dans ${Math.round(days / 30)} mois`;
-  if (days > 1) return `départ dans ${days} jours`;
-  if (days >= 0) return "départ imminent";
-  return "voyage passé";
+  if (days > 60) return [`${Math.round(days / 30)} mois`, "avant le départ"];
+  if (days > 1) return [`${days} jours`, "avant le départ"];
+  if (days >= 0) return ["Bientôt", "départ imminent"];
+  return ["Passé", "voyage terminé"];
+}
+
+// Titre court pour les cartes : « Vol aller · CDG → LIS » plutôt que le nom de la compagnie
+function shortTitle(i: PlanItem) {
+  if (i.type !== "flight") return i.title;
+  const route = i.title.split(" · ")[1] || "";
+  const leg = i.leg === "return" ? "Vol retour" : i.leg === "outbound" ? "Vol aller" : "Vol aller-retour";
+  return route ? `${leg} · ${route}` : leg;
 }
 
 function downloadICS(plan: Plan) {
@@ -47,8 +66,7 @@ function downloadICS(plan: Plan) {
   let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//AIVANA//Carnet//FR\r\n";
   ics += `BEGIN:VEVENT\r\nUID:trip-${plan.createdAt}@aivana\r\nSUMMARY:${esc(`Voyage ${plan.destination}`)}\r\nDTSTART;VALUE=DATE:${d(plan.depart)}\r\nDTEND;VALUE=DATE:${d(plan.ret)}\r\nEND:VEVENT\r\n`;
   plan.items.forEach((i, n) => {
-    const day = i.date || plan.depart;
-    ics += `BEGIN:VEVENT\r\nUID:item-${plan.createdAt}-${n}@aivana\r\nSUMMARY:${esc(i.title)}\r\nDESCRIPTION:${esc(i.subtitle || "")}\r\nDTSTART;VALUE=DATE:${d(day)}\r\nEND:VEVENT\r\n`;
+    ics += `BEGIN:VEVENT\r\nUID:item-${plan.createdAt}-${n}@aivana\r\nSUMMARY:${esc(shortTitle(i))}\r\nDESCRIPTION:${esc(i.subtitle || "")}\r\nDTSTART;VALUE=DATE:${d(i.date || plan.depart)}\r\nEND:VEVENT\r\n`;
   });
   ics += "END:VCALENDAR";
   const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
@@ -59,22 +77,24 @@ function downloadICS(plan: Plan) {
   URL.revokeObjectURL(url);
 }
 
-function Empty({ loggedIn }: { loggedIn: boolean }) {
-  return (
-    <div className="flex max-w-[640px] flex-col items-start gap-4 rounded-[22px] border border-dashed border-line-2 p-9">
-      <span className="text-xl font-bold tracking-[-0.03em]">Votre carnet est vide</span>
-      <p className="m-0 text-[15px] leading-relaxed text-muted-2">
-        Décrivez votre voyage au copilote ou choisissez une destination : vos vols, hôtels et activités se rangeront ici, avec le budget à jour.
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <button onClick={() => ask("")} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2">Planifier avec le copilote</button>
-        <Link href="/explore" className="plain-link rounded-full border border-line-2 px-4 py-2.5 text-sm font-semibold hover:border-ink">Explorer les destinations</Link>
-      </div>
-      {!loggedIn && <p className="m-0 text-[13px] text-muted">Vous avez déjà un compte ? <Link href="/auth/login?next=/dashboard">Connectez-vous</Link> pour retrouver vos voyages.</p>}
-    </div>
-  );
+async function share(plan: Plan) {
+  const lines = [
+    `Mon voyage : ${plan.destination}`,
+    `${formatRange(plan.depart, plan.ret)} · ${plan.travelers} voyageur${plan.travelers > 1 ? "s" : ""}`,
+    ...plan.items.map(i => `- ${shortTitle(i)}${i.price != null ? ` (${eur(i.price)})` : ""}`),
+    `Total estimé : ${eur(planTotal(plan))}`,
+  ];
+  const text = lines.join("\n");
+  try {
+    if (navigator.share) { await navigator.share({ title: `Voyage ${plan.destination}`, text }); return; }
+    await navigator.clipboard.writeText(text);
+    toast("Résumé du voyage copié");
+  } catch { /* partage annulé */ }
 }
 
+const glassBtn = "flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white backdrop-blur-[10px] hover:bg-white/25";
+
+/* ── page ──────────────────────────────────────────────────────────── */
 function DashboardContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -136,8 +156,7 @@ function DashboardContent() {
   };
 
   const remove = async () => {
-    if (!plan) return;
-    if (!confirm(`Supprimer le voyage « ${plan.destination} » ?`)) return;
+    if (!plan || !confirm(`Supprimer le voyage « ${plan.destination} » ?`)) return;
     if (plan.tripId) {
       try { await axios.delete(`/api/trips/${plan.tripId}`); } catch { /* ignoré */ }
       void fetchTrips();
@@ -151,60 +170,78 @@ function DashboardContent() {
     router.push("/");
   };
 
-  const draft = plan && !plan.tripId;
-  const sideTrips = [
-    ...(draft ? [{ id: "draft", name: plan.destination, dates: formatRange(plan.depart, plan.ret), status: "Brouillon", active: true, onClick: () => setSettings(false) }] : []),
-    ...trips.map(t => ({
-      id: t.id, name: t.title, dates: formatRange(t.start_date, t.end_date), status: "Sauvegardé",
-      active: plan?.tripId === t.id, onClick: () => { setSettings(false); void open(t); },
-    })),
+  const pills = [
+    ...(plan && !plan.tripId ? [{ id: "draft", name: plan.destination, active: true, onClick: () => setSettings(false) }] : []),
+    ...trips.map(t => ({ id: t.id, name: t.title, active: plan?.tripId === t.id, onClick: () => { setSettings(false); void open(t); } })),
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper min-[900px]:flex-row">
-      <aside className="flex shrink-0 flex-col gap-5 border-b border-line bg-[#F2EFE9] px-4 py-5 min-[900px]:w-[260px] min-[900px]:border-b-0 min-[900px]:border-r">
-        <div className="flex items-center justify-between gap-3 px-2">
-          <Link href="/" className="plain-link text-ink" aria-label="Accueil"><Logo size={28} /></Link>
-          <Link href="/assistant" className="plain-link whitespace-nowrap rounded-full bg-ink px-[11px] py-[7px] text-[13px] font-semibold !text-paper hover:bg-ink-2">Nouveau voyage</Link>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="px-2 pb-1.5 text-xs text-muted">Mes voyages</span>
-          <div className="flex gap-1 overflow-x-auto min-[900px]:flex-col">
-            {sideTrips.length === 0 && <span className="px-2 text-[13px] text-muted">Aucun voyage pour l&apos;instant</span>}
-            {sideTrips.map(t => (
-              <button key={t.id} onClick={t.onClick} className={`flex shrink-0 flex-col gap-0.5 rounded-[18px] px-3 py-2.5 text-left ${t.active && !settings ? "bg-[#ECE7DE]" : "hover:bg-[#F3F0EA]"}`}>
-                <span className="flex items-center gap-2 text-sm font-semibold">{t.name}{loadingTrip === t.id && <Loader2 className="h-3 w-3 animate-spin" aria-hidden />}</span>
-                <span className="text-xs text-muted">{t.dates} · {t.status}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3.5">
-          <Link href="/explore" className="plain-link p-2 text-sm !text-muted-2 hover:!text-ink">Explorer les destinations</Link>
-          <Link href="/pricing" className="plain-link p-2 text-sm !text-muted-2 hover:!text-ink">Formules</Link>
-          {user ? (
-            <>
-              <button onClick={() => setSettings(true)} className="p-2 text-left text-sm text-muted-2 hover:text-ink">Paramètres</button>
-              <div className="flex items-center gap-2.5 px-2 pt-2.5">
-                <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-ink text-[13px] font-semibold text-paper">{user.name.charAt(0).toUpperCase()}</span>
-                <span className="flex min-w-0 flex-col"><span className="truncate text-sm">{user.name}</span><span className="text-xs text-muted">Compte gratuit</span></span>
-              </div>
-            </>
-          ) : (
-            <Link href="/auth/login?next=/dashboard" className="plain-link p-2 text-sm font-semibold">Se connecter</Link>
-          )}
-        </div>
-      </aside>
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-6 px-6 pb-[120px] pt-6">
+      {/* Sélecteur de voyages */}
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+        {pills.map(t => (
+          <button key={t.id} onClick={t.onClick} className={`flex shrink-0 items-center gap-2.5 rounded-full border py-[5px] pl-[5px] pr-4 text-sm font-bold ${t.active && !settings ? "border-ink bg-ink text-white" : "border-line bg-white text-ink hover:border-ink"}`}>
+            <Photo k={photoOf(t.name)} sizes="34px" className="h-[34px] w-[34px] rounded-full" />
+            {t.name}
+            {loadingTrip === t.id && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+          </button>
+        ))}
+        <Link href="/assistant" className="plain-link flex h-[46px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full border-[1.5px] border-dashed border-line-2 px-4 text-sm font-bold !text-muted-2 hover:border-ink hover:!text-ink">
+          <Plus className="h-4 w-4" aria-hidden /> Nouveau voyage
+        </Link>
+      </div>
 
-      <main className="flex min-w-0 max-w-[1040px] flex-1 flex-col gap-7 p-[clamp(20px,4vw,40px)]">
-        {settings && user ? (
-          <Settings name={user.name} email={user.email} onLogout={logout} onClose={() => setSettings(false)} />
-        ) : !plan ? (
-          <Empty loggedIn={!!user} />
+      {settings && user ? (
+        <Settings name={user.name} email={user.email} onLogout={logout} onClose={() => setSettings(false)} />
+      ) : !plan ? (
+        <Empty loggedIn={!!user} />
+      ) : (
+        <TripView plan={plan} tab={tab} setTab={setTab} editing={editing} setEditing={setEditing} saving={saving} onSave={save} onRemove={remove} loggedIn={!!user} />
+      )}
+
+      {/* Compte */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-5 text-sm text-muted-2">
+        {user ? (
+          <>
+            <span className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs font-semibold text-paper">{user.name.charAt(0).toUpperCase()}</span>
+              {user.name} · compte gratuit
+            </span>
+            <button onClick={() => setSettings(true)} className="hover:text-ink">Paramètres</button>
+            <button onClick={logout} className="hover:text-danger">Se déconnecter</button>
+          </>
         ) : (
-          <TripView plan={plan} tab={tab} setTab={setTab} editing={editing} setEditing={setEditing} saving={saving} onSave={save} onRemove={remove} loggedIn={!!user} />
+          <span>Vos voyages restent dans ce navigateur tant que vous n&apos;êtes pas connecté. <Link href="/auth/login?next=/dashboard">Se connecter</Link></span>
         )}
-      </main>
+      </div>
+    </div>
+  );
+}
+
+function Empty({ loggedIn }: { loggedIn: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-[28px] border-[1.5px] border-dashed border-line-2 px-6 py-14 text-center">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gold-soft"><Plane className="h-7 w-7 -rotate-45" aria-hidden /></span>
+      <span className="text-xl font-extrabold tracking-[-0.02em]">Votre carnet est vide</span>
+      <p className="m-0 max-w-[460px] text-[15px] text-muted-2">Décrivez votre voyage au copilote ou choisissez une destination : vols, hôtels et activités se rangeront ici.</p>
+      <div className="flex flex-wrap justify-center gap-2">
+        <button onClick={() => ask("")} className="rounded-full bg-ink px-5 py-3 text-sm font-bold text-paper hover:bg-ink-2">Planifier avec le copilote</button>
+        <Link href="/explore" className="plain-link rounded-full border border-line-2 px-5 py-3 text-sm font-bold hover:border-ink">Explorer les destinations</Link>
+      </div>
+      {!loggedIn && <span className="text-[13px] text-muted">Déjà un compte ? <Link href="/auth/login?next=/dashboard">Connectez-vous</Link> pour retrouver vos voyages.</span>}
+    </div>
+  );
+}
+
+function Ring({ pct }: { pct: number }) {
+  const r = 52, c = 2 * Math.PI * r;
+  return (
+    <div className="relative h-28 w-28 shrink-0">
+      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden>
+        <circle cx="60" cy="60" r={r} fill="none" stroke="#EFEBE4" strokeWidth="12" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke={pct > 100 ? "#A33A3A" : "#C9A24B"} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${(Math.min(pct, 100) / 100) * c} ${c}`} />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[22px] font-extrabold tracking-[-0.03em]">{pct}%</span>
     </div>
   );
 }
@@ -213,196 +250,264 @@ function TripView({ plan, tab, setTab, editing, setEditing, saving, onSave, onRe
   plan: Plan; tab: Tab; setTab: (t: Tab) => void; editing: boolean; setEditing: (b: boolean) => void;
   saving: boolean; onSave: () => void; onRemove: () => void; loggedIn: boolean;
 }) {
-  const [form, setForm] = useState({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" });
-  useEffect(() => setForm({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" }), [plan.depart, plan.ret, plan.travelers, plan.budget]);
-
   const spent = planTotal(plan);
-  const sum = (t: string) => plan.items.filter(i => i.type === t).reduce((s, i) => s + (i.price || 0), 0);
-  const has = (t: string) => plan.items.some(i => i.type === t);
   const nights = nightsBetween(plan.depart, plan.ret);
   const cat = findDestination(plan.destination);
   const city = cat ? searchCity(cat) : plan.destination;
   const ctx = `dest=${encodeURIComponent(city)}&depart=${plan.depart}&return=${plan.ret}&pax=${plan.travelers}`;
   const cover = flightCoverage(plan);
-  const alert = !cover.outbound ? { t: "Aucun vol aller n'est encore ajouté à ce voyage.", cta: "Chercher un vol", href: `/explore/flights?${ctx}` }
-    : !cover.return ? { t: "Le vol retour n'est pas encore choisi.", cta: "Chercher le retour", href: "/explore/flights?leg=retour" }
-    : !has("hotel") ? { t: "L'hébergement n'est pas encore choisi.", cta: "Trouver un hôtel", href: `/explore/hotels?${ctx}` }
-    : !has("activity") ? { t: "Aucune activité prévue sur place.", cta: "Ajouter des activités", href: `/explore/activities?${ctx}` }
+  const has = (t: string) => plan.items.some(i => i.type === t);
+  const steps = [cover.outbound, cover.return, has("hotel"), has("activity")].filter(Boolean).length;
+  const [big, small] = countdown(plan.depart);
+  const shortDate = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+
+  const alert = !cover.outbound ? { t: "Vol aller à ajouter", href: `/explore/flights?${ctx}` }
+    : !cover.return ? { t: `Vol retour du ${shortDate(plan.ret)} à ajouter`, href: "/explore/flights?leg=retour" }
+    : !has("hotel") ? { t: `Hébergement à choisir pour ${nights} nuit${nights > 1 ? "s" : ""}`, href: `/explore/hotels?${ctx}` }
+    : !has("activity") ? { t: "Une activité à prévoir sur place ?", href: `/explore/activities?${ctx}` }
     : null;
 
-  const applyEdit = async () => {
-    const patch = { depart: form.depart, ret: form.ret < form.depart ? form.depart : form.ret, travelers: form.travelers, budget: form.budget ? Number(form.budget) : null };
-    updatePlan(patch);
-    if (plan.tripId) {
-      try { await axios.patch(`/api/trips/${plan.tripId}`, { start_date: patch.depart, end_date: patch.ret }); } catch { /* ignoré */ }
-    }
-    setEditing(false);
-  };
-
-  // Itinéraire : un jour par date du séjour, les éléments datés à leur place
   const days = useMemo(() => {
     const out: { date: string; items: PlanItem[] }[] = [];
     for (let n = 0; n <= Math.min(nights, 30); n++) {
-      const date = new Date(new Date(plan.depart + "T12:00:00Z").getTime() + n * 86400000).toISOString().slice(0, 10);
+      const date = addDays(plan.depart, n);
       out.push({ date, items: plan.items.filter(i => (i.date || "") === date) });
     }
     return out;
   }, [plan, nights]);
   const unplaced = plan.items.filter(i => !i.date || !days.some(d => d.date === i.date));
+  const dayPhotos: PhotoKey[] = [photoOf(plan.destination), "market", "alley", "lake", "food", "boat", "hike", "balloons"];
 
   return (
     <>
+      {/* Hero du voyage */}
+      <section className="relative flex min-h-[clamp(300px,38vw,420px)] flex-col justify-between overflow-hidden rounded-[32px] bg-ink-2 p-[clamp(20px,3vw,32px)] text-white">
+        <Photo k={photoOf(plan.destination)} alt={plan.destination} priority sizes="(max-width: 1240px) 100vw, 1240px" className="absolute inset-0" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,14,26,0.8) 0%, rgba(8,14,26,0.2) 55%, rgba(8,14,26,0.35) 100%)" }} />
+        <div className="relative flex items-center justify-between gap-3">
+          <span className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-bold text-ink ${plan.tripId ? "bg-[#CFE6D6]" : "bg-gold-soft"}`}>{plan.tripId ? "Sauvegardé" : "Brouillon"}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setEditing(!editing)} aria-label="Modifier les dates et voyageurs" title="Modifier" className={glassBtn}><Pencil className="h-[18px] w-[18px]" aria-hidden /></button>
+            <button onClick={() => share(plan)} aria-label="Partager" title="Partager" className={glassBtn}><Share2 className="h-[18px] w-[18px]" aria-hidden /></button>
+            <button onClick={() => downloadICS(plan)} aria-label="Exporter dans l'agenda" title="Exporter dans l'agenda (.ics)" className={glassBtn}><CalendarPlus className="h-[18px] w-[18px]" aria-hidden /></button>
+            <button onClick={onRemove} aria-label="Supprimer ce voyage" title="Supprimer" className={glassBtn}><Trash2 className="h-[18px] w-[18px]" aria-hidden /></button>
+          </div>
+        </div>
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div className="flex flex-col gap-2">
+            <h1 className="m-0 text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.95] tracking-[-0.05em] text-white">{plan.destination}</h1>
+            <span className="text-base font-semibold text-white/90">{formatRange(plan.depart, plan.ret)} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex flex-col items-end gap-0.5 whitespace-nowrap rounded-[22px] border border-white/30 bg-white/15 px-5 py-3.5 backdrop-blur-[12px] max-[1100px]:mr-16">
+            <span className="text-[clamp(28px,3vw,40px)] font-extrabold leading-none tracking-[-0.04em]">{big}</span>
+            <span className="text-[13px] font-semibold text-white/85">{small}</span>
+          </div>
+        </div>
+      </section>
+
+      {editing && <EditTrip plan={plan} onClose={() => setEditing(false)} />}
+
       {!plan.tripId && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3.5">
-          <span className="text-sm">
-            Ce voyage est enregistré dans ce navigateur seulement. {loggedIn ? "Sauvegardez-le pour le retrouver partout." : "Créez un compte gratuit pour le garder et le retrouver sur tous vos appareils."}
-          </span>
-          <button onClick={onSave} disabled={saving} className="flex items-center gap-2 whitespace-nowrap rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">
+        <div className="flex flex-wrap items-center gap-3 rounded-full bg-ink py-2 pl-5 pr-2 text-white max-sm:rounded-[24px]">
+          <span className="min-w-0 flex-1 text-sm font-semibold">{loggedIn ? "Ce voyage n'est enregistré que dans ce navigateur." : "Créez un compte gratuit pour garder ce voyage et le retrouver partout."}</span>
+          <button onClick={onSave} disabled={saving} className="flex items-center gap-2 whitespace-nowrap rounded-full bg-white py-2 pl-4 pr-2 text-sm font-bold text-ink hover:bg-gold-soft disabled:opacity-60">
             {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {loggedIn ? "Sauvegarder" : "Sauvegarder avec un compte"}
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-gold"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
           </button>
         </div>
       )}
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] text-muted">{plan.tripId ? "Sauvegardé" : "Brouillon"} · {countdown(plan.depart)}</span>
-          <h1 className="m-0 text-[clamp(32px,4vw,48px)] leading-[1.05]">{plan.destination}</h1>
-          <span className="text-[15px] text-muted-2">{formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""}</span>
+      {alert && (
+        <Link href={alert.href} className="plain-link flex items-center gap-3 rounded-full bg-gold-soft py-2 pl-4 pr-2 hover:bg-[#E8D3A4]">
+          <AlertCircle className="h-[18px] w-[18px] shrink-0 text-gold-deep" aria-hidden />
+          <span className="min-w-0 flex-1 text-sm font-semibold">{alert.t}</span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-gold"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
+        </Link>
+      )}
+
+      {/* Chiffres */}
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))]">
+        <div className="flex items-center gap-5 rounded-[28px] bg-white p-[22px] shadow-[0_1px_0_#E4DFD5]">
+          <Ring pct={plan.budget ? Math.round((spent / plan.budget) * 100) : 0} />
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="text-[13px] font-semibold text-muted">Budget utilisé</span>
+            <span className="whitespace-nowrap text-2xl font-extrabold tracking-[-0.03em]">{eur(spent)}</span>
+            {plan.budget
+              ? <span className="whitespace-nowrap text-[13px] text-muted">sur {eur(plan.budget)}</span>
+              : <button onClick={() => setEditing(true)} className="self-start text-[13px] font-semibold text-gold-deep hover:text-[#6E5323]">Fixer un budget</button>}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setEditing(!editing)} className="whitespace-nowrap rounded-full border border-line-2 px-3.5 py-[9px] text-sm font-medium hover:border-ink">Modifier</button>
-          <button onClick={() => downloadICS(plan)} className="whitespace-nowrap rounded-full border border-line-2 px-3.5 py-[9px] text-sm font-medium hover:border-ink">Exporter dans l&apos;agenda</button>
-          <button onClick={onRemove} aria-label="Supprimer ce voyage" title="Supprimer ce voyage" className="flex items-center rounded-full border border-line-2 px-3 py-[9px] text-muted-2 hover:border-danger hover:text-danger"><Trash2 className="h-4 w-4" aria-hidden /></button>
+        <div className="flex flex-col justify-between gap-4 rounded-[28px] bg-white p-[22px] shadow-[0_1px_0_#E4DFD5]">
+          <span className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#DCEFE3] text-ok"><Wallet className="h-5 w-5" aria-hidden /></span>
+          <div className="flex flex-col gap-0.5">
+            {plan.budget ? (
+              <>
+                <span className={`whitespace-nowrap text-[26px] font-extrabold tracking-[-0.03em] ${spent > plan.budget ? "text-danger" : "text-ok"}`}>{eur(Math.abs(plan.budget - spent))}</span>
+                <span className="text-[13px] font-semibold text-muted">{spent > plan.budget ? "Au-dessus du budget" : "Reste disponible"}</span>
+              </>
+            ) : (
+              <>
+                <span className="whitespace-nowrap text-[26px] font-extrabold tracking-[-0.03em]">{eur(spent)}</span>
+                <span className="text-[13px] font-semibold text-muted">Total estimé du voyage</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col justify-between gap-4 rounded-[28px] bg-white p-[22px] shadow-[0_1px_0_#E4DFD5]">
+          <span className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-gold-soft"><Check className="h-5 w-5" aria-hidden /></span>
+          <div className="flex flex-col gap-0.5">
+            <span className="whitespace-nowrap text-[26px] font-extrabold tracking-[-0.03em]">{steps} / 4</span>
+            <span className="text-[13px] font-semibold text-muted">Étapes prêtes · aller, retour, hôtel, activité</span>
+          </div>
         </div>
       </div>
 
-      {editing && (
-        <div className="grid gap-3 rounded-[20px] border border-line bg-cream p-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-          <label className="flex flex-col gap-1 text-xs text-muted">Départ<input type="date" value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
-          <label className="flex flex-col gap-1 text-xs text-muted">Retour<input type="date" value={form.ret} min={form.depart} onChange={e => setForm(f => ({ ...f, ret: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
-          <label className="flex flex-col gap-1 text-xs text-muted">Voyageurs<input type="number" min={1} max={9} value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: Math.max(1, Number(e.target.value) || 1) }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
-          <label className="flex flex-col gap-1 text-xs text-muted">Budget total (€)<input type="number" min={0} step={50} value={form.budget} placeholder="Facultatif" onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} className="rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink" /></label>
-          <div className="col-span-full flex gap-2">
-            <button onClick={applyEdit} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink-2">Enregistrer</button>
-            <button onClick={() => setEditing(false)} className="rounded-full border border-line-2 px-4 py-2 text-sm hover:border-ink">Annuler</button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-6 overflow-x-auto border-b border-line" role="tablist">
+      {/* Onglets */}
+      <div className="flex max-w-full gap-1 self-start overflow-x-auto rounded-full bg-[#EFEBE4] p-1" role="tablist">
         {([["overview", "Aperçu"], ["itinerary", "Itinéraire"], ["proposal", "Proposition IA"], ["docs", "Documents"]] as const).map(([id, label]) => (
-          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`shrink-0 border-b-2 pb-3 text-sm font-medium ${tab === id ? "border-gold-deep text-ink" : "border-transparent text-muted"}`}>{label}</button>
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`shrink-0 whitespace-nowrap rounded-full px-[18px] py-2.5 text-sm font-bold ${tab === id ? "bg-white text-ink shadow-[0_1px_3px_rgba(15,27,45,0.12)]" : "text-muted-2"}`}>{label}</button>
         ))}
       </div>
 
       {tab === "overview" && (
-        <div className="flex flex-col gap-8">
-          {alert && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3.5">
-              <span className="text-sm">{alert.t}</span>
-              <Link href={alert.href} className="text-sm font-semibold">{alert.cta} <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
-            </div>
-          )}
-          <div className="grid gap-8 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[15px] font-semibold">Budget</span>
-                <span className="tabular whitespace-nowrap text-sm font-semibold">{eur(spent)}{plan.budget ? ` / ${eur(plan.budget)}` : ""}</span>
-              </div>
-              {plan.budget ? (
-                <div className="h-1.5 overflow-hidden rounded-sm bg-line"><div className={`h-full ${spent > plan.budget ? "bg-danger" : "bg-gold-deep"}`} style={{ width: `${Math.min(100, Math.round((spent / plan.budget) * 100))}%` }} /></div>
-              ) : (
-                <button onClick={() => setEditing(true)} className="self-start text-[13px] text-gold-deep hover:text-[#6E5323]">Fixer un budget</button>
-              )}
-              <div className="mt-1 flex flex-col border-t border-line">
-                {[["Vols", sum("flight")], ["Hébergement", sum("hotel")], ["Activités", sum("activity")]].map(([k, v]) => (
-                  <div key={k as string} className="flex justify-between border-b border-line py-[11px] text-sm"><span className="text-muted-2">{k}</span><span className="tabular whitespace-nowrap font-semibold">{eur(v as number)}</span></div>
-                ))}
-                {plan.budget ? (
-                  <div className="flex justify-between py-[11px] text-sm">
-                    <span className="text-muted-2">{spent > plan.budget ? "Dépassement" : "Reste disponible"}</span>
-                    <span className={`tabular whitespace-nowrap font-semibold ${spent > plan.budget ? "text-danger" : "text-ok"}`}>{eur(Math.abs(plan.budget - spent))}</span>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <span className="text-[15px] font-semibold">Compléter le voyage</span>
-              <div className="flex flex-col border-t border-line">
-                {[["Rechercher un vol", `/explore/flights?${ctx}`], ["Trouver un hébergement", `/explore/hotels?${ctx}`], ["Ajouter des activités", `/explore/activities?${ctx}`]].map(([label, href]) => (
-                  <Link key={label} href={href} className="plain-link flex justify-between border-b border-line py-[13px] text-sm hover:!text-gold-deep"><span>{label}</span><ArrowRight className="h-4 w-4 text-muted" aria-hidden /></Link>
-                ))}
-                <button onClick={() => ask(`Je prépare ${plan.destination} du ${formatRange(plan.depart, plan.ret)} pour ${plan.travelers} personnes. Que me conseilles-tu ?`)} className="flex justify-between py-[13px] text-left text-sm hover:text-gold-deep"><span>Demander au copilote</span><ArrowRight className="h-4 w-4 text-muted" aria-hidden /></button>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <span className="text-[15px] font-semibold">Éléments du voyage</span>
-            {plan.items.length === 0 ? (
-              <p className="m-0 text-sm text-muted">Rien pour l&apos;instant. Les vols, hôtels et activités que vous ajoutez apparaissent ici.</p>
-            ) : (
-              <div className="flex flex-col border-t border-line">
-                {plan.items.map(i => (
-                  <div key={i.key} className="grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-4 border-b border-line py-3.5">
-                    <span className="text-[13px] text-muted">{KIND[i.type]}</span>
-                    <span className="flex min-w-0 flex-col gap-0.5"><span className="text-[15px] font-medium">{i.title}</span>{i.subtitle && <span className="text-[13px] text-muted">{i.subtitle}</span>}</span>
-                    <span className="flex items-center gap-3">
-                      <span className="flex flex-col items-end gap-0.5">
-                        <span className="tabular whitespace-nowrap text-sm font-semibold">{i.price != null ? eur(i.price) : "—"}</span>
-                        <span className="text-xs text-gold-deep">{i.estimated ? "Estimé · à réserver" : "À réserver"}</span>
+        <div className="flex flex-col gap-4">
+          {plan.items.length > 0 && (
+            <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))]">
+              {plan.items.map(i => {
+                const Icon = ICON[i.type];
+                return (
+                  <div key={i.key} className="flex flex-col gap-3.5 rounded-[24px] bg-white p-[18px] shadow-[0_1px_0_#E4DFD5]">
+                    <div className="flex items-center justify-between">
+                      <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#F3EEE6]"><Icon className="h-[18px] w-[18px]" aria-hidden /></span>
+                      <span className="flex items-center gap-2">
+                        {i.url && <a href={i.url} target="_blank" rel="noopener noreferrer" aria-label="Réserver chez le partenaire" title="Réserver chez le partenaire" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>}
+                        <button onClick={() => removeItem(i.key)} aria-label={`Retirer ${i.title}`} title="Retirer" className="text-muted hover:text-danger"><X className="h-4 w-4" aria-hidden /></button>
+                        <span className="whitespace-nowrap rounded-full bg-gold-soft px-[11px] py-[5px] text-xs font-bold text-gold-deep">À réserver</span>
                       </span>
-                      {i.url && <a href={i.url} target="_blank" rel="noopener noreferrer" aria-label="Réserver chez le partenaire" title="Réserver chez le partenaire" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>}
-                      <button onClick={() => removeItem(i.key)} aria-label={`Retirer ${i.title}`} title="Retirer" className="text-muted hover:text-danger"><Trash2 className="h-4 w-4" aria-hidden /></button>
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-[3px]">
+                      <span className="text-base font-bold tracking-[-0.02em]">{shortTitle(i)}</span>
+                      {i.subtitle && <span className="line-clamp-2 text-[13px] text-muted">{i.subtitle}</span>}
+                    </div>
+                    <span className="whitespace-nowrap text-xl font-extrabold tracking-[-0.03em]">
+                      {i.price === 0 ? "Gratuit" : i.price != null ? eur(i.price) : "—"}
+                      {i.estimated && i.price ? <span className="ml-1.5 text-xs font-semibold text-muted">estimé</span> : null}
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
-            <p className="m-0 text-[13px] text-muted">AIVANA ne réserve pas à votre place : chaque élément renvoie vers le partenaire (compagnie, Booking.com, GetYourGuide).</p>
+                );
+              })}
+            </div>
+          )}
+          <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))]">
+            {[
+              { label: "Un vol", href: cover.outbound && !cover.return ? "/explore/flights?leg=retour" : `/explore/flights?${ctx}`, Icon: Plane, bg: "bg-sky" },
+              { label: "Un hôtel", href: `/explore/hotels?${ctx}`, Icon: BedDouble, bg: "bg-gold-soft" },
+              { label: "Une activité", href: `/explore/activities?${ctx}`, Icon: Ticket, bg: "bg-[#DCEFE3]" },
+            ].map(a => (
+              <Link key={a.label} href={a.href} className="plain-link flex items-center gap-3.5 rounded-full border-[1.5px] border-dashed border-line-2 px-4 py-3.5 text-[15px] font-bold hover:border-ink hover:bg-white">
+                <span className={`flex h-[38px] w-[38px] items-center justify-center rounded-full ${a.bg}`}><a.Icon className="h-[17px] w-[17px]" aria-hidden /></span>{a.label}
+              </Link>
+            ))}
+            <button onClick={() => ask(`Je prépare ${plan.destination} (${formatRange(plan.depart, plan.ret)}, ${plan.travelers} personnes). Que me conseilles-tu ?`)} className="flex items-center gap-3.5 rounded-full border-[1.5px] border-dashed border-line-2 px-4 py-3.5 text-left text-[15px] font-bold hover:border-ink hover:bg-white">
+              <span className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-ink text-gold"><MessageSquare className="h-[17px] w-[17px]" aria-hidden /></span>Le copilote
+            </button>
           </div>
+          <p className="m-0 text-[13px] text-muted">Prix estimés. AIVANA ne réserve pas à votre place : l&apos;icône de chaque élément ouvre le partenaire avec vos dates.</p>
         </div>
       )}
 
       {tab === "itinerary" && (
-        <div className="flex flex-col">
-          {days.map((d, n) => (
-            <div key={d.date} className="grid gap-5 border-b border-line py-[18px] [grid-template-columns:minmax(90px,140px)_minmax(0,1fr)]">
-              <div className="flex flex-col gap-0.5"><span className="text-[15px] font-semibold">Jour {n + 1}</span><span className="text-[13px] text-muted">{new Date(d.date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span></div>
-              <div className="flex flex-col gap-2.5 text-sm">
-                {n === 0 && <span className="text-muted-2">Départ de {plan.origin}</span>}
-                {d.items.map(i => <span key={i.key}><span className="text-muted">{KIND[i.type]} · </span>{i.title}</span>)}
-                {n === days.length - 1 && n > 0 && <span className="text-muted-2">Retour vers {plan.origin}</span>}
-                {n > 0 && n < days.length - 1 && !d.items.length && <span className="text-muted">Journée libre</span>}
+        <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))]">
+          {days.map((d, n) => {
+            const lines = [
+              ...(n === 0 ? [{ t: "Départ", what: `Depuis ${plan.origin}` }] : []),
+              ...d.items.map(i => ({ t: KIND[i.type], what: shortTitle(i) })),
+              ...(n === days.length - 1 && n > 0 ? [{ t: "Retour", what: `Vers ${plan.origin}` }] : []),
+            ];
+            return (
+              <div key={d.date} className="overflow-hidden rounded-[24px] bg-white shadow-[0_1px_0_#E4DFD5]">
+                <div className="relative h-[120px]">
+                  <Photo k={dayPhotos[n % dayPhotos.length]} sizes="320px" className="h-full w-full" />
+                  <span className="absolute left-3 top-3 rounded-full bg-white px-[11px] py-[5px] text-xs font-extrabold">Jour {n + 1}</span>
+                </div>
+                <div className="flex flex-col gap-3 px-[18px] pb-[18px] pt-4">
+                  <span className="text-[13px] font-semibold text-muted">{new Date(d.date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</span>
+                  {lines.length ? lines.map((l, j) => (
+                    <div key={j} className="flex items-baseline gap-3"><span className="w-[64px] shrink-0 text-[13px] font-extrabold text-gold-deep">{l.t}</span><span className="text-[15px] font-semibold">{l.what}</span></div>
+                  )) : <span className="text-[15px] font-semibold text-muted">Journée libre</span>}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {unplaced.length > 0 && (
-            <div className="flex flex-col gap-2 py-5 text-sm">
-              <span className="font-semibold">À placer dans le séjour</span>
-              {unplaced.map(i => <span key={i.key}><span className="text-muted">{KIND[i.type]} · </span>{i.title}</span>)}
+            <div className="flex flex-col gap-3 rounded-[24px] border-[1.5px] border-dashed border-line-2 p-[18px]">
+              <span className="text-[13px] font-semibold text-muted">À placer dans le séjour</span>
+              {unplaced.map(i => <div key={i.key} className="flex items-baseline gap-3"><span className="w-[64px] shrink-0 text-[13px] font-extrabold text-gold-deep">{KIND[i.type]}</span><span className="text-[15px] font-semibold">{shortTitle(i)}</span></div>)}
             </div>
           )}
         </div>
       )}
 
-      {tab === "proposal" && (plan.tripId
-        ? <TripProposal tripId={plan.tripId} destinationName={plan.destination} />
-        : (
-          <div className="flex max-w-[640px] flex-col items-start gap-3 rounded-[22px] border border-dashed border-line-2 p-9">
-            <span className="text-base font-semibold">Sauvegardez d&apos;abord le voyage</span>
-            <p className="m-0 text-sm leading-relaxed text-muted-2">L&apos;itinéraire jour par jour est généré à partir de votre voyage enregistré.</p>
-            <button onClick={onSave} disabled={saving} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">{loggedIn ? "Sauvegarder" : "Sauvegarder avec un compte"}</button>
+      {tab === "proposal" && (
+        <div className="flex max-w-[760px] items-start gap-3.5">
+          <CopilotMark size={44} />
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="rounded-[6px_24px_24px_24px] bg-white px-5 py-[18px] text-base leading-relaxed shadow-[0_1px_0_#E4DFD5]">
+              {plan.tripId
+                ? <TripProposal tripId={plan.tripId} destinationName={plan.destination} />
+                : <>Sauvegardez ce voyage et je vous proposerai un itinéraire jour par jour pour {plan.destination} : où aller, quoi ne pas manquer et comment se déplacer.</>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[`${nights} nuits`, `${plan.travelers} voyageur${plan.travelers > 1 ? "s" : ""}`, ...(cat ? [`Idéal en ${cat.months.slice(0, 2).join(", ")}`] : [])].map(t => (
+                <span key={t} className="rounded-full bg-[#EFEBE4] px-3.5 py-2 text-[13px] font-semibold">{t}</span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {!plan.tripId && <button onClick={onSave} disabled={saving} className="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-ink-2 disabled:opacity-60">{loggedIn ? "Sauvegarder" : "Sauvegarder avec un compte"}</button>}
+              <button onClick={() => ask(`Affine mon voyage à ${plan.destination} (${formatRange(plan.depart, plan.ret)}, ${plan.travelers} personnes${plan.budget ? `, budget ${plan.budget} €` : ""}).`)} className="flex items-center gap-3 self-start rounded-full bg-ink py-[5px] pl-[18px] pr-[5px] text-sm font-bold text-white hover:bg-ink-2">
+                Affiner avec le copilote
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
+              </button>
+            </div>
           </div>
-        ))}
+        </div>
+      )}
 
       {tab === "docs" && (
-        <div className="flex max-w-[640px] flex-col items-start gap-3 rounded-[22px] border border-dashed border-line-2 p-9">
-          <span className="text-base font-semibold">Documents : bientôt</span>
-          <p className="m-0 text-sm leading-relaxed text-muted-2">Le rangement des billets et confirmations en PDF, et l&apos;import depuis Gmail ou Outlook, arrivent dans une prochaine version. Pour l&apos;instant, gardez vos confirmations dans votre boîte mail.</p>
+        <div className="flex flex-col items-center gap-3.5 rounded-[28px] border-[1.5px] border-dashed border-line-2 px-6 py-12 text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gold-soft"><Upload className="h-6 w-6" aria-hidden /></span>
+          <span className="text-lg font-extrabold tracking-[-0.02em]">Glissez vos billets ici</span>
+          <span className="text-sm text-muted">Bientôt : billets et confirmations en PDF, accessibles hors ligne</span>
+          <button disabled className="cursor-not-allowed rounded-full bg-ink px-5 py-3 text-sm font-bold text-white opacity-40">Importer un fichier</button>
         </div>
       )}
     </>
+  );
+}
+
+function EditTrip({ plan, onClose }: { plan: Plan; onClose: () => void }) {
+  const [form, setForm] = useState({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" });
+  const apply = async () => {
+    const patch = { depart: form.depart, ret: form.ret < form.depart ? form.depart : form.ret, travelers: form.travelers, budget: form.budget ? Number(form.budget) : null };
+    updatePlan(patch);
+    if (plan.tripId) {
+      try { await axios.patch(`/api/trips/${plan.tripId}`, { start_date: patch.depart, end_date: patch.ret }); } catch { /* ignoré */ }
+    }
+    onClose();
+  };
+  const field = "rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink";
+  return (
+    <div className="grid gap-3 rounded-[28px] bg-white p-5 shadow-[0_1px_0_#E4DFD5] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Départ<input type="date" value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className={field} /></label>
+      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Retour<input type="date" value={form.ret} min={form.depart} onChange={e => setForm(f => ({ ...f, ret: e.target.value }))} className={field} /></label>
+      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Voyageurs<input type="number" min={1} max={9} value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: Math.max(1, Number(e.target.value) || 1) }))} className={field} /></label>
+      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Budget total (€)<input type="number" min={0} step={50} value={form.budget} placeholder="Facultatif" onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} className={field} /></label>
+      <div className="col-span-full flex gap-2">
+        <button onClick={apply} className="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper hover:bg-ink-2">Enregistrer</button>
+        <button onClick={onClose} className="rounded-full border border-line-2 px-5 py-2.5 text-sm font-bold hover:border-ink">Annuler</button>
+      </div>
+    </div>
   );
 }
 
@@ -415,19 +520,19 @@ function Settings({ name, email, onLogout, onClose }: { name: string; email: str
     setStatus(error ? "L'enregistrement a échoué." : "Profil mis à jour.");
   };
   return (
-    <div className="flex max-w-[520px] flex-col gap-6">
+    <div className="flex max-w-[560px] flex-col gap-5 rounded-[28px] bg-white p-6 shadow-[0_1px_0_#E4DFD5]">
       <div className="flex items-center justify-between">
-        <h1 className="m-0 text-[32px]">Paramètres</h1>
+        <h1 className="m-0 text-[28px]">Paramètres</h1>
         <button onClick={onClose} className="text-sm text-muted-2 hover:text-ink">Retour au voyage</button>
       </div>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">Nom<input value={n} onChange={e => setN(e.target.value)} className="h-[46px] rounded-full border border-line-2 bg-cream px-4 text-[15px] font-normal" /></label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">Adresse email<input value={email} disabled className="h-[46px] rounded-full border border-line bg-paper px-4 text-[15px] font-normal text-muted" /></label>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={save} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2">Enregistrer</button>
-        <Link href="/onboarding" className="text-sm">Modifier mes préférences de voyage</Link>
+        <button onClick={save} className="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper hover:bg-ink-2">Enregistrer</button>
+        <Link href="/onboarding" className="text-sm">Mes préférences de voyage</Link>
         {status && <span className="text-sm text-muted">{status}</span>}
       </div>
-      <button onClick={onLogout} className="self-start rounded-full border border-line-2 px-4 py-2.5 text-sm hover:border-danger hover:text-danger">Se déconnecter</button>
+      <button onClick={onLogout} className="self-start rounded-full border border-line-2 px-5 py-2.5 text-sm hover:border-danger hover:text-danger">Se déconnecter</button>
     </div>
   );
 }
