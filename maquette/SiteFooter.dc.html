@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="data.js"></script>
+</helmet>
+<footer style="position:relative;font-family:'Manrope',system-ui,sans-serif;color:#FFFFFF;background:#0B1422;overflow:hidden">
+  <img src="{{ bg }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+  <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)"></div>
+  <div style="position:absolute;left:-10%;right:-10%;top:-90px;height:300px;filter:blur(30px);pointer-events:none;background:radial-gradient(ellipse 24% 50% at 15% 40%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 22% 45% at 50% 30%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 26% 55% at 85% 40%, #F9F8F6 55%, transparent 72%), linear-gradient(to bottom, #F9F8F6 40%, transparent 85%)"></div>
+  <div style="position:relative;padding:220px 24px 120px;display:flex;flex-direction:column;align-items:center;gap:26px;text-align:center">
+    <h2 style="margin:0;font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.045em;font-size:clamp(38px,5vw,72px);line-height:1.02;text-shadow:0 2px 24px rgba(0,0,0,0.25)">Des idées de voyage<br><em style="font-family:'Newsreader',serif;font-style:italic;font-weight:600;letter-spacing:-0.03em">livrées</em> chaque mois</h2>
+    <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+      <form onSubmit="{{ submit }}" style="width:100%;max-width:700px;display:flex;gap:6px;padding:6px;border-radius:999px;background:#FFFFFF">
+        <input type="email" required="" value="{{ email }}" onChange="{{ setEmail }}" placeholder="Votre adresse email" style="flex:1;min-width:0;border:none;outline:none;background:transparent;color:#0F1B2D;font-size:17px;padding:0 22px;height:58px">
+        <button type="submit" style="cursor:pointer;border:none;background:#5A5450;color:#FFFFFF;font-weight:700;font-size:16px;padding:0 26px;border-radius:999px;white-space:nowrap" style-hover="background:#0F1B2D">S'inscrire</button>
+      </form>
+    </sc-if>
+    <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+      <span style="font-size:16px;font-weight:600;padding:16px 26px;border-radius:999px;background:rgba(255,255,255,0.18);backdrop-filter:blur(14px)">Merci, à très vite dans votre boîte mail.</span>
+    </sc-if>
+    <span style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.88)">Une seule lettre par mois · Désinscription en un clic</span>
+  </div>
+  <div style="position:relative;max-width:1400px;margin:0 auto;padding:40px clamp(24px,4vw,80px) 32px;display:flex;flex-direction:column;gap:56px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:48px">
+      <div style="display:flex;flex-direction:column;gap:22px;grid-column:span 2;min-width:min(100%,280px)">
+        <span style="position:relative;display:inline-block;align-self:flex-start;font-family:'Kaushan Script',cursive;font-size:48px;line-height:1;color:#FFFFFF;padding:0 14px 6px 0">Aivana<span style="position:absolute;right:-6px;top:-8px;font-size:22px;color:#C9A24B;transform:rotate(-30deg)"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg></span><span style="position:absolute;left:8%;right:18%;bottom:0;height:2px;border-radius:2px;background:#C9A24B;transform:rotate(-2deg)"></span></span>
+        <p style="margin:0;font-size:17px;font-weight:500;line-height:1.5;color:rgba(255,255,255,0.85);max-width:460px">Le copilote qui transforme une envie en itinéraire chiffré. Chaque voyage mérite d'être raconté.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;max-width:420px">
+          <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+            <a href="{{ c.href }}" style="display:flex;align-items:center;gap:8px;padding:4px 14px 4px 4px;border-radius:999px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:600" style-hover="background:rgba(255,255,255,0.2);color:#FFFFFF"><img src="{{ c.img }}" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover">{{ c.name }}</a>
+          </sc-for>
+          <a href="Destinations.dc.html" style="display:flex;align-items:center;gap:8px;padding:4px 16px 4px 4px;border-radius:999px;background:#FFFFFF;color:#0F1B2D;text-decoration:none;font-size:15px;font-weight:600" style-hover="color:#0F1B2D;background:#F1E3C2"><span style="width:26px;height:26px;border-radius:50%;background:#0F1B2D;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:13px"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:0 0 auto"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>Toutes les destinations</a>
+        </div>
+      </div>
+      <sc-for list="{{ cols }}" as="c" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:600;font-size:30px;padding-bottom:18px;border-bottom:1.5px dashed rgba(255,255,255,0.3)">{{ c.t }}</span>
+          <sc-for list="{{ c.links }}" as="l" hint-placeholder-count="5">
+            <a href="{{ l.href }}" style="font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);text-decoration:none" style-hover="color:#FFFFFF">{{ l.label }}</a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.15);font-size:14px;color:rgba(255,255,255,0.6)">
+      <span>© 2026 Aivana · Photos Unsplash</span>
+      <div style="display:flex;gap:20px"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none">Mentions légales</a><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none">Confidentialité</a></div>
+    </div>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { email: "", sent: false, ready: !!window.AIVANA_PHOTOS };
+  componentDidMount() { if (!this.state.ready) this.t = setInterval(() => { if (window.AIVANA_PHOTOS) { clearInterval(this.t); this.setState({ ready: true }); } }, 60); }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const P = window.AIVANA_PHOTOS, img = (k, w) => (P ? P.url(k, w) : "");
+    return {
+      bg: img("clouds", 2200),
+      email: this.state.email, setEmail: e => this.setState({ email: e.target.value }),
+      submit: e => { e.preventDefault(); this.setState({ sent: true }); },
+      sent: this.state.sent, notSent: !this.state.sent,
+      chips: [["Japon", "NRT", "c1"], ["Maroc", "RAK", "t1"], ["Islande", "KEF", "c2"], ["Maldives", "MLE", "l1"], ["Bali", "DPS", "t3"], ["Kenya", "NBO", "m5"]].map(([name, k, id]) => ({ name, img: img(k, 80), href: "Destination.dc.html?id=" + id })),
+      cols: [
+        { t: "Pages", links: [{ label: "Accueil", href: "Accueil.dc.html" }, { label: "Destinations", href: "Destinations.dc.html" }, { label: "Journal", href: "Journal.dc.html" }, { label: "Tarifs", href: "Tarifs.dc.html" }, { label: "Mes voyages", href: "Dashboard.dc.html" }] },
+        { t: "Planifier", links: [{ label: "Copilote IA", href: "Assistant.dc.html" }, { label: "Vols", href: "Vols.dc.html" }, { label: "Hôtels", href: "Hotels.dc.html" }, { label: "Activités", href: "Activites.dc.html" }] },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

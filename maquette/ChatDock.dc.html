@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="data.js"></script>
+</helmet>
+<div style="position:fixed;right:{{ edge }};bottom:{{ edge }};z-index:200;display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-family:'Manrope',system-ui,sans-serif;color:#0F1B2D;pointer-events:none">
+  <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+    <div style="pointer-events:auto;width:{{ panelW }};height:{{ panelH }};display:flex;flex-direction:column;background:rgba(255,253,249,0.96);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border:1px solid rgba(211,204,191,0.8);border-radius:28px;box-shadow:0 30px 80px rgba(15,27,45,0.22);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 16px 14px 18px;border-bottom:1px solid #EAE5DC">
+        <span style="position:relative;width:40px;height:40px;flex:0 0 auto;display:flex">
+          <span style="width:40px;height:40px;border-radius:30%;background:#0F1B2D;display:flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="62%" height="62%" viewBox="0 0 24 24" fill="none" stroke="#C9A24B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M4 20 12 4l8 16"></path><path d="M7.5 14c3-1.6 6-1.6 9 0"></path></svg></span>
+          <span style="position:absolute;right:2px;bottom:2px;width:9px;height:9px;border-radius:50%;background:#3F8F5A;border:2px solid #FFFDF9"></span>
+        </span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.03em;font-size:17px;letter-spacing:0.02em">Copilote AIVANA</span>
+          <span style="font-size:12px;color:#736E66">{{ status }}</span>
+        </div>
+        <button onClick="{{ reset }}" title="Nouvelle conversation" style="cursor:pointer;height:34px;padding:0 12px;border-radius:999px;border:1px solid #E4DFD5;background:transparent;color:#4D4943;font-size:12px" style-hover="border-color:#0F1B2D">Nouveau</button>
+        <button onClick="{{ toggle }}" aria-label="Fermer" style="cursor:pointer;width:34px;height:34px;border-radius:50%;border:none;background:#EFEBE4;color:#0F1B2D;font-size:16px;line-height:1" style-hover="background:#E4DFD5"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:0 0 auto"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+
+      <div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ messages }}" as="m" hint-placeholder-count="1">
+          <div style="display:flex;flex-direction:column;align-items:{{ m.align }};gap:10px">
+            <div style="max-width:86%;font-size:14px;line-height:1.55;white-space:pre-wrap;padding:11px 15px;border-radius:{{ m.radius }};background:{{ m.bg }};color:{{ m.fg }}">{{ m.text }}</div>
+            <sc-if value="{{ m.hasOptions }}" hint-placeholder-val="{{ false }}">
+              <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ m.options }}" as="o" hint-placeholder-count="3">
+                  <a href="{{ o.href }}" style="display:flex;gap:12px;align-items:center;padding:8px;border-radius:18px;background:#FFFFFF;border:1px solid #E4DFD5;text-decoration:none;color:#0F1B2D" style-hover="border-color:#0F1B2D;color:#0F1B2D">
+                    <img src="{{ o.img }}" alt="" loading="lazy" style="width:64px;height:64px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:#D9D2C4">
+                    <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                      <span style="font-size:15px;font-weight:500">{{ o.name }}</span>
+                      <span style="font-size:12px;color:#736E66">{{ o.country }} · {{ o.nights }} nuits · {{ o.pax }} pers.</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto">
+                      <span style="font-size:15px;font-weight:600;white-space:nowrap">{{ o.total }}</span>
+                      <span style="font-size:11px;color:#736E66;white-space:nowrap">estimé</span>
+                    </span>
+                  </a>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ m.hasLinks }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ m.links }}" as="l" hint-placeholder-count="2">
+                  <a href="{{ l.href }}" style="font-size:13px;font-weight:500;padding:7px 13px;border-radius:999px;background:#0F1B2D;color:#FFFFFF;text-decoration:none" style-hover="background:#1E2E47;color:#FFFFFF">{{ l.label }}</a>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+          <div style="align-self:flex-start;display:flex;gap:5px;padding:14px 16px;border-radius:20px 20px 20px 6px;background:#EFEBE4">
+            <span style="width:6px;height:6px;border-radius:50%;background:#736E66;opacity:0.5"></span><span style="width:6px;height:6px;border-radius:50%;background:#736E66;opacity:0.75"></span><span style="width:6px;height:6px;border-radius:50%;background:#736E66"></span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <span style="font-size:12px;color:#736E66">Pour commencer</span>
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="4">
+              <button onClick="{{ s.pick }}" style="cursor:pointer;text-align:left;font-size:14px;padding:11px 14px;border-radius:16px;border:1px solid #E4DFD5;background:#FFFFFF;color:#0F1B2D" style-hover="border-color:#0F1B2D">{{ s.text }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <form onSubmit="{{ submit }}" style="display:flex;align-items:center;gap:8px;margin:0 12px 12px;padding:5px 5px 5px 16px;border-radius:999px;background:#FFFFFF;border:1px solid #E4DFD5">
+        <input value="{{ input }}" onChange="{{ setInput }}" placeholder="Budget, dates, envies…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:15px;height:40px;color:#0F1B2D">
+        <button type="submit" aria-label="Envoyer" style="cursor:pointer;width:40px;height:40px;border-radius:50%;border:none;background:#0F1B2D;color:#FFFFFF;font-size:17px" style-hover="background:#1E2E47"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:0 0 auto"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg></button>
+      </form>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showLauncher }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ toggle }}" style="pointer-events:auto;cursor:pointer;display:flex;align-items:center;gap:12px;padding:{{ launchPad }};border-radius:999px;border:1px solid rgba(255,255,255,0.18);background:#0F1B2D;color:#FFFFFF;box-shadow:0 16px 40px rgba(15,27,45,0.3)" style-hover="background:#1E2E47">
+      <span style="position:relative;width:44px;height:44px;flex:0 0 auto;display:flex">
+        <span style="width:44px;height:44px;border-radius:30%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="62%" height="62%" viewBox="0 0 24 24" fill="none" stroke="#C9A24B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M4 20 12 4l8 16"></path><path d="M7.5 14c3-1.6 6-1.6 9 0"></path></svg></span>
+        <span style="position:absolute;right:3px;bottom:3px;width:9px;height:9px;border-radius:50%;background:#5FBF7F;border:2px solid #0F1B2D"></span>
+      </span>
+      <span style="display:{{ labelDisplay }};flex-direction:column;align-items:flex-start;gap:1px">
+        <span style="font-size:15px;font-weight:500">{{ launchTitle }}</span>
+        <sc-if value="{{ launchSub }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:rgba(255,255,255,0.7)">Décrivez votre voyage, je m'occupe du reste</span></sc-if>
+      </span>
+    </button>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:720}}">
+class Component extends DCLogic {
+  greeting = { role: "assistant", text: "Bonjour ! Dites-moi votre budget, la période et ce que vous aimez. Je vous propose des destinations avec un coût total estimé, puis on affine ensemble." };
+  constructor(p) {
+    super(p);
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("aivana-chat") || "null"); } catch (e) {}
+    this.state = { open: !!(saved && saved.open), messages: (saved && saved.messages) || [this.greeting], input: "", loading: false, w: window.innerWidth, ready: !!window.AIVANA_DATA };
+    this.scrollRef = React.createRef();
+  }
+  componentDidMount() {
+    this.onR = () => this.setState({ w: window.innerWidth }); window.addEventListener("resize", this.onR);
+    if (!this.state.ready) this.t = setInterval(() => { if (window.AIVANA_DATA) { clearInterval(this.t); this.setState({ ready: true }); } }, 60);
+    this.onAsk = e => { this.setState({ open: true }); if (e.detail) this.send(e.detail); };
+    window.addEventListener("aivana-ask", this.onAsk);
+    window.__aivanaDock = true;
+  }
+  componentWillUnmount() { window.removeEventListener("resize", this.onR); window.removeEventListener("aivana-ask", this.onAsk); clearInterval(this.t); clearTimeout(this.r); }
+  componentDidUpdate() {
+    try { localStorage.setItem("aivana-chat", JSON.stringify({ open: this.state.open, messages: this.state.messages.slice(-20) })); } catch (e) {}
+    const el = this.scrollRef.current; if (el && this.lastLen !== this.state.messages.length + (this.state.loading ? 1 : 0)) { this.lastLen = this.state.messages.length + (this.state.loading ? 1 : 0); el.scrollTop = el.scrollHeight; }
+  }
+  answer(text) {
+    const A = window.AIVANA_DATA;
+    if (!A) return { role: "assistant", text: "Un instant, je charge les destinations…" };
+    if (/\bvol|avion|billet/i.test(text) && !/\d{3,}/.test(text)) return { role: "assistant", text: "Je peux comparer les vols au départ de Paris. Indiquez une destination et des dates, ou ouvrez directement la recherche.", links: [{ label: "Rechercher un vol", href: "Vols.dc.html" }] };
+    if (/hôtel|hotel|dormir|logement/i.test(text) && !/\d{3,}/.test(text)) return { role: "assistant", text: "Dites-moi la ville et le nombre de nuits. Vous pouvez aussi comparer les hôtels tout de suite.", links: [{ label: "Voir les hôtels", href: "Hotels.dc.html" }] };
+    const bm = text.replace(/\s/g, "").match(/(\d{3,6})€?/);
+    const budget = bm ? parseInt(bm[1], 10) : 1500;
+    const jm = text.match(/(\d+)\s*(jours|j\b|nuits)/i), sm = /(\d+)\s*semaines?/i.exec(text);
+    const nights = jm ? Math.max(2, parseInt(jm[1], 10) - (/nuits/i.test(jm[2]) ? 0 : 1)) : sm ? parseInt(sm[1], 10) * 7 : /deux semaines/i.test(text) ? 14 : /week-end/i.test(text) ? 3 : 7;
+    const pax = /solo|seul/i.test(text) ? 1 : /famille|enfants/i.test(text) ? 4 : 2;
+    const est = d => d.flightFrom * 2 * pax + d.hotelFrom * nights + 60 * pax;
+    let pool = A.destinations.slice();
+    if (/froid|neige|aurore|décembre/i.test(text)) pool = pool.filter(d => d.months.includes("Déc") || d.name === "Islande");
+    if (/plage|tropical|soleil|mer/i.test(text)) pool = pool.filter(d => d.styles.includes("Plage") || ["Marrakech", "Istanbul"].includes(d.name));
+    if (/nature|rando|montagne/i.test(text)) pool = pool.filter(d => d.styles.includes("Nature"));
+    if (/culture|musée|ville/i.test(text)) pool = pool.filter(d => d.styles.includes("Culture"));
+    if (/europe/i.test(text)) pool = pool.filter(d => d.continent === "Europe");
+    if (/asie/i.test(text)) pool = pool.filter(d => d.continent === "Asie");
+    if (!pool.length) pool = A.destinations.slice();
+    let fit = pool.filter(d => est(d) <= budget).sort((a, b) => b.rating - a.rating || est(a) - est(b)).slice(0, 3);
+    const over = !fit.length;
+    if (over) fit = pool.sort((a, b) => est(a) - est(b)).slice(0, 3);
+    const who = `${pax} voyageur${pax > 1 ? "s" : ""}`;
+    return {
+      role: "assistant",
+      text: over ? `Avec ${A.eur(budget)} pour ${who} et ${nights} nuits, c'est serré. Voici les options les plus proches :` : `Pour ${who}, ${nights} nuits et ${A.eur(budget)} maximum, voici mes trois idées :`,
+      options: fit.map(d => ({ id: d.id, name: d.name, country: d.country, code: d.code, nights, pax, total: A.eur(est(d)) })),
+      links: [{ label: "Affiner dans l'assistant", href: "Assistant.dc.html?q=" + encodeURIComponent(text) }],
+    };
+  }
+  send(text) {
+    if (!text || !text.trim() || this.state.loading) return;
+    this.setState(s => ({ messages: [...s.messages, { role: "user", text }], input: "", loading: true }));
+    clearTimeout(this.r);
+    this.r = setTimeout(() => this.setState(s => ({ messages: [...s.messages, this.answer(text)], loading: false })), 900);
+  }
+  renderVals() {
+    const S = this.state, P = window.AIVANA_PHOTOS;
+    const mobile = S.w < 640;
+    const img = k => (P ? P.url(k, 200) : "");
+    const messages = S.messages.map(m => {
+      const u = m.role === "user";
+      return {
+        text: m.text, align: u ? "flex-end" : "flex-start",
+        bg: u ? "#0F1B2D" : "#EFEBE4", fg: u ? "#FFFFFF" : "#0F1B2D",
+        radius: u ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
+        hasOptions: !!(m.options && m.options.length), hasLinks: !!(m.links && m.links.length), links: m.links || [],
+        options: (m.options || []).map(o => ({ ...o, img: img(o.code), href: "Destination.dc.html?id=" + o.id })),
+      };
+    });
+    return {
+      open: S.open, showLauncher: !S.open || !mobile, messages, loading: S.loading, empty: S.messages.length === 1,
+      edge: mobile ? "12px" : "24px",
+      panelW: mobile ? "calc(100vw - 24px)" : "400px", panelH: mobile ? "calc(100vh - 24px)" : "min(620px, calc(100vh - 120px))",
+      launchTitle: S.open ? "Réduire" : "Planifier avec l'IA", launchSub: !S.open && S.w >= 1100, compact: S.w < 1100 && !S.open, labelDisplay: S.w < 1100 && !S.open ? "none" : "flex", launchPad: S.w < 1100 && !S.open ? "6px" : "6px 20px 6px 6px",
+      status: S.loading ? "Écrit…" : "En ligne · répond en quelques secondes",
+      avatar: img("backpack"),
+      input: S.input, setInput: e => this.setState({ input: e.target.value }),
+      submit: e => { e.preventDefault(); this.send(S.input); },
+      toggle: () => this.setState(s => ({ open: !s.open })),
+      reset: () => this.setState({ messages: [this.greeting], input: "" }),
+      scrollRef: this.scrollRef,
+      suggestions: ["Soleil en avril, 1 500 € à deux", "Aurores boréales en décembre", "Week-end culturel en Europe, 600 €", "Plage tropicale, 2 semaines, 3 000 €"].map(t => ({ text: t, pick: () => this.send(t) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

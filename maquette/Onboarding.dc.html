@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,500;1,6..72,600&family=Kaushan+Script&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F9F8F6;color:#0F1B2D;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#9A7A34}a:hover{color:#6E5323}input,button{font-family:inherit}::placeholder{color:#736E66}h1,h2,h3,h4,h5,h6{font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.035em}</style>
+<script src="image-slot.js"></script>
+<script src="data.js"></script>
+</helmet>
+<div data-screen-label="Onboarding" style="min-height:100vh;background:#F9F8F6;display:flex;flex-direction:column">
+  <div style="height:64px;border-bottom:1px solid #E4DFD5;display:flex;align-items:center;justify-content:space-between;padding:0 24px">
+    <span style="font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.03em;font-size:21px;letter-spacing:0.14em">AI<span style="color:#9A7A34">VANA</span></span>
+    <a href="Dashboard.dc.html" style="font-size:14px;color:#736E66;text-decoration:none">Passer</a>
+  </div>
+  <div style="flex:1;display:flex;justify-content:center;padding:56px 24px">
+    <div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:32px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;color:#736E66">Étape {{ stepN }} sur 3</span>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+          <sc-for list="{{ bars }}" as="b" hint-placeholder-count="3"><div style="height:3px;border-radius:2px;background:{{ b.c }}"></div></sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:28px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h1 style="margin:0;font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.035em;font-size:clamp(30px,4vw,40px);line-height:1.1">Bienvenue <em style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;letter-spacing:-0.02em">à bord</em></h1>
+            <p style="margin:0;font-size:16px;color:#4D4943">Trois réponses pour que l'assistant vise juste dès la première recherche.</p>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:14px;font-weight:600">Vous partez généralement de</span>
+            <input value="{{ city }}" onChange="{{ setCity }}" style="height:46px;background:#FFFDF9;border:1px solid #D3CCBF;border-radius:999px;color:#0F1B2D;font-size:15px;padding:0 14px;outline:none">
+          </label>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:14px;font-weight:600">Budget habituel par voyage, pour deux</span>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+              <sc-for list="{{ budgets }}" as="b" hint-placeholder-count="4">
+                <button onClick="{{ b.pick }}" style="cursor:pointer;display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px;border-radius:999px;border:1px solid {{ b.border }};background:{{ b.bg }};color:#0F1B2D">
+                  <span style="font-size:14px;font-weight:600">{{ b.label }}</span><span style="font-size:12px;color:#736E66">{{ b.range }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:14px;font-weight:600">Ce que vous aimez <span style="font-weight:400;color:#736E66">· plusieurs choix</span></span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ styles }}" as="s" hint-placeholder-count="8">
+                <button onClick="{{ s.toggle }}" style="cursor:pointer;font-size:14px;padding:8px 13px;border-radius:999px;border:1px solid {{ s.border }};background:{{ s.bg }};color:{{ s.fg }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ s2 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h1 style="margin:0;font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.035em;font-size:clamp(30px,4vw,40px);line-height:1.1">Vos réservations existantes</h1>
+            <p style="margin:0;font-size:16px;color:#4D4943">Vous avez déjà un voyage réservé ? Ajoutez-le pour le retrouver dans votre espace.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ methods }}" as="m" hint-placeholder-count="2">
+              <button onClick="{{ m.pick }}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;text-align:left;padding:16px;border-radius:20px;border:1px solid {{ m.border }};background:{{ m.bg }};color:#0F1B2D">
+                <span style="display:flex;flex-direction:column;gap:4px"><span style="font-size:15px;font-weight:600">{{ m.label }}</span><span style="font-size:14px;line-height:1.5;color:#4D4943">{{ m.desc }}</span></span>
+                <span style="font-size:12px;color:{{ m.tagColor }};white-space:nowrap">{{ m.tag }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#736E66">L'import email utilisera un accès en lecture seule (OAuth 2.0). Seules les informations de réservation sont conservées.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ s3 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <h1 style="margin:0;font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-0.035em;font-size:clamp(30px,4vw,40px);line-height:1.1">C'est prêt</h1>
+          <div style="display:flex;flex-direction:column;border-top:1px solid #E4DFD5">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #E4DFD5;font-size:14px"><span style="color:#4D4943">Départ</span><span>{{ city }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #E4DFD5;font-size:14px"><span style="color:#4D4943">Budget</span><span>{{ budgetLabel }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #E4DFD5;font-size:14px"><span style="color:#4D4943">Envies</span><span style="text-align:right">{{ stylesLabel }}</span></div>
+          </div>
+          <p style="margin:0;font-size:15px;color:#4D4943">Modifiable à tout moment dans les paramètres.</p>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #E4DFD5;padding-top:20px">
+        <button onClick="{{ back }}" style="cursor:pointer;background:transparent;border:none;color:{{ backColor }};font-size:14px;padding:10px 0">Retour</button>
+        <button onClick="{{ next }}" style="cursor:pointer;border:none;background:#0F1B2D;color:#F9F8F6;font-weight:600;font-size:14px;padding:12px 20px;border-radius:999px" style-hover="background:#1E2E47">{{ nextLabel }}</button>
+      </div>
+    </div>
+  </div>
+  <dc-import name="ChatDock" hint-size="0px,0px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { step: 1, city: "Paris", budget: "Confort", styles: { Culture: true, Gastronomie: true }, method: "manual" };
+  renderVals() {
+    const S = this.state;
+    const B = [["Essentiel", "< 1 500 €"], ["Confort", "1 500 – 3 500 €"], ["Premium", "3 500 – 6 000 €"], ["Prestige", "6 000 € +"]];
+    const picked = Object.keys(S.styles).filter(k => S.styles[k]);
+    return {
+      stepN: S.step, s1: S.step === 1, s2: S.step === 2, s3: S.step === 3,
+      bars: [1, 2, 3].map(n => ({ c: n <= S.step ? "#9A7A34" : "#E4DFD5" })),
+      city: S.city, setCity: e => this.setState({ city: e.target.value }),
+      budgets: B.map(([label, range]) => ({ label, range, border: S.budget === label ? "#9A7A34" : "#D3CCBF", bg: S.budget === label ? "rgba(138,106,47,0.08)" : "#FFFDF9", pick: () => this.setState({ budget: label }) })),
+      styles: ["Culture", "Plage", "Nature", "Gastronomie", "Aventure", "Bien-être", "Histoire", "Fête"].map(label => {
+        const on = !!S.styles[label];
+        return { label, bg: on ? "#0F1B2D" : "transparent", fg: on ? "#F9F8F6" : "#4D4943", border: on ? "#0F1B2D" : "#D3CCBF", toggle: () => this.setState(s => ({ styles: { ...s.styles, [label]: !on } })) };
+      }),
+      methods: [
+        { id: "manual", label: "Ajouter manuellement", desc: "Saisissez vos vols et hôtels, ou ajoutez-les depuis les recherches AIVANA.", tag: "Disponible", tagColor: "#2E7650" },
+        { id: "email", label: "Importer depuis Gmail ou Outlook", desc: "AIVANA lira vos confirmations de réservation et créera le voyage pour vous.", tag: "Bientôt", tagColor: "#9A7A34" },
+      ].map(m => ({ ...m, border: S.method === m.id ? "#9A7A34" : "#D3CCBF", bg: S.method === m.id ? "rgba(138,106,47,0.06)" : "#FFFDF9", pick: () => this.setState({ method: m.id }) })),
+      budgetLabel: `${S.budget} · ${B.find(b => b[0] === S.budget)[1]}`,
+      stylesLabel: picked.length ? picked.join(", ") : "Non précisé",
+      backColor: S.step > 1 ? "#4D4943" : "transparent",
+      back: () => this.setState(s => ({ step: Math.max(1, s.step - 1) })),
+      nextLabel: S.step === 3 ? "Planifier mon premier voyage" : "Continuer",
+      next: () => { if (S.step === 3) window.location.href = "Assistant.dc.html"; else this.setState(s => ({ step: s.step + 1 })); },
+    };
+  }
+}
+</script>
+</body>
+</html>
