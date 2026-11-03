@@ -73,11 +73,20 @@ export const byId = (id: string | null | undefined) => DESTINATIONS.find(d => d.
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
-// Retrouve une destination du catalogue à partir d'un nom libre ("Kyoto", "lisbon", "Japon"…)
+// Villes ou régions que le copilote cite et qui correspondent à une destination du catalogue
+const ALIASES: Record<string, string> = {
+    reykjavik: "c2", islande: "c2", iceland: "c2", tokyo: "c1", kyoto: "c1", osaka: "c1", japon: "c1",
+    athenes: "m1", santorin: "m1", santorini: "m1", phuket: "m3", krabi: "m3", "ko phi phi": "m3",
+    nairobi: "m5", "masai mara": "m5", kenya: "m5", male: "l1", "bora bora": "l2", papeete: "l2", tahiti: "l2", moorea: "l2",
+    lisbon: "t2", ubud: "t3", "chiang mai": "b3", hanoi: "b4", "baie d'halong": "b4", krakow: "b5", tbilisi: "b2", dubai: "l3",
+};
+
+// Retrouve une destination du catalogue à partir d'un nom libre ("Kyoto", "lisbon", "Reykjavik"…)
 export function findDestination(name: string | null | undefined): CatalogDestination | undefined {
     if (!name) return undefined;
     const n = norm(name);
     if (!n) return undefined;
+    if (ALIASES[n]) return byId(ALIASES[n]);
     return DESTINATIONS.find(d => norm(d.name) === n)
         || DESTINATIONS.find(d => norm(d.name).split(/[\s&+]+/).some(part => part.length > 3 && n.includes(part)))
         || DESTINATIONS.find(d => n.includes(norm(d.name)) || norm(d.name).includes(n))
@@ -103,3 +112,30 @@ export function estimate(d: CatalogDestination, nights: number, pax: number) {
 export function currentMonthShort(date = new Date()) {
     return MONTHS_SHORT[date.getMonth()];
 }
+
+// Coordonnées (ville de référence) et monnaie locale : utilisées pour la météo,
+// le taux de change et les lieux à voir (sources gratuites, voir /api/destination-info).
+export const GEO: Record<string, { lat: number; lon: number; currency: string; currencyName: string }> = {
+    t1: { lat: 31.63, lon: -7.99, currency: "MAD", currencyName: "dirham marocain" },
+    t2: { lat: 38.72, lon: -9.14, currency: "EUR", currencyName: "euro" },
+    t3: { lat: -8.51, lon: 115.26, currency: "IDR", currencyName: "roupie indonésienne" },
+    t4: { lat: 6.24, lon: -75.58, currency: "COP", currencyName: "peso colombien" },
+    t5: { lat: -45.03, lon: 168.66, currency: "NZD", currencyName: "dollar néo-zélandais" },
+    b1: { lat: 47.5, lon: 19.04, currency: "HUF", currencyName: "forint" },
+    b2: { lat: 41.72, lon: 44.79, currency: "GEL", currencyName: "lari" },
+    b3: { lat: 18.79, lon: 98.98, currency: "THB", currencyName: "baht" },
+    b4: { lat: 21.03, lon: 105.85, currency: "VND", currencyName: "dong" },
+    b5: { lat: 50.06, lon: 19.94, currency: "PLN", currencyName: "zloty" },
+    m1: { lat: 37.98, lon: 23.73, currency: "EUR", currencyName: "euro" },
+    m2: { lat: 41.01, lon: 28.98, currency: "TRY", currencyName: "livre turque" },
+    m3: { lat: 7.88, lon: 98.39, currency: "THB", currencyName: "baht" },
+    m4: { lat: -34.6, lon: -58.38, currency: "ARS", currencyName: "peso argentin" },
+    m5: { lat: -1.29, lon: 36.82, currency: "KES", currencyName: "shilling kényan" },
+    c1: { lat: 35.01, lon: 135.77, currency: "JPY", currencyName: "yen" },
+    c2: { lat: 64.15, lon: -21.94, currency: "ISK", currencyName: "couronne islandaise" },
+    c3: { lat: 40.71, lon: -74.01, currency: "USD", currencyName: "dollar américain" },
+    c4: { lat: -33.87, lon: 151.21, currency: "AUD", currencyName: "dollar australien" },
+    l1: { lat: 4.18, lon: 73.51, currency: "MVR", currencyName: "rufiyaa" },
+    l2: { lat: -17.54, lon: -149.57, currency: "XPF", currencyName: "franc Pacifique" },
+    l3: { lat: 25.2, lon: 55.27, currency: "AED", currencyName: "dirham des Émirats" },
+};

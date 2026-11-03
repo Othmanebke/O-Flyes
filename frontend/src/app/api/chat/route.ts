@@ -4,8 +4,8 @@ import { getGroqChatCompletion } from '@/lib/ai/groq';
 import { extractJsonFromText } from '@/lib/ai/json';
 import { z } from 'zod';
 import { FREE_SEARCHES_PER_MONTH } from '@/lib/limits';
-import { getIATA, bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
-import { searchFlights, searchHotelOffers } from '@/lib/travel/amadeus';
+import { bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
+import { estimate, findDestination } from '@/lib/catalog';
 import { searchRealActivities } from '@/lib/travel/opentripmap';
 import type { DraftDestination, EnrichedDestination } from '@/types/chat';
 
@@ -18,7 +18,7 @@ const chatRequestSchema = z.object({
     ).min(1).max(50),
 });
 
-// on limite à 3 pour pas exploser le quota Amadeus à chaque message
+// 3 destinations maximum par réponse
 const MAX_DESTINATIONS_TO_GROUND = 3;
 
 function addDays(date: Date, days: number): string {
@@ -33,69 +33,44 @@ function parseTravelDate(estimate: unknown): string | null {
     return estimate;
 }
 
-const ACTIVITY_EMOJIS = ['🏛️', '🌅', '🍽️', '🚶', '🎭', '🌿', '🏖️', '🛶'];
-
+// Prix : il n'existe plus d'API gratuite de prix en direct (Amadeus a fermé son offre
+// gratuite en juillet 2026). Pour les destinations du catalogue, on renvoie une
+// estimation explicite ; pour les autres, aucun chiffre plutôt qu'un prix inventé.
 async function groundDestination(draft: DraftDestination, originCity: string, travelDate: string | null): Promise<EnrichedDestination> {
     const nights = draft.nights && draft.nights > 0 ? Math.min(draft.nights, 21) : 7;
     // 45 jours = première fenêtre dispo sur la plupart des compagnies low-cost
     const departDate = travelDate || addDays(new Date(), 45);
     const checkin = departDate;
     const checkout = addDays(new Date(departDate + 'T00:00:00'), nights);
-    const originCode = getIATA(originCity);
-    const destCode = getIATA(draft.name);
     const adults = 2;
-
-    const [flights, hotels, activities] = await Promise.all([
-        searchFlights(originCode, destCode, departDate, adults, checkout),
-        searchHotelOffers(draft.name, checkin, checkout, adults),
-        searchRealActivities(draft.name, 6),
-    ]);
-
-    const cheapestFlight = flights ? Math.min(...flights.map(f => f.price)) : null;
-    const cheapestHotel = hotels ? Math.min(...hotels.map(h => h.pricePerNight)) : null;
-
-    let dataSource: 'real' | 'unavailable' = 'unavailable';
-    let priceEstimate: number | null = null;
-
-    if (cheapestFlight !== null && cheapestHotel !== null) {
-        priceEstimate = Math.round(cheapestFlight + cheapestHotel * nights);
-        dataSource = 'real';
-    }
-
-    const realActivities = (activities || []).slice(0, 3).map((a, i) => ({
-        name: a.title,
-        emoji: ACTIVITY_EMOJIS[i % ACTIVITY_EMOJIS.length],
-        price: null,
-    }));
+    const cat = findDestination(draft.name);
+    const est = cat ? estimate(cat, nights, adults) : null;
+    const activities = await searchRealActivities(draft.name, 3);
 
     return {
-        name: draft.name,
-        country: draft.country,
-        emoji: draft.emoji || '✈️',
-        dataSource,
-        price_estimate: priceEstimate,
-        // On renvoie les composantes réelles en plus du total : sans elles, l'interface
-        // devait deviner une répartition vol/hôtel, ce qui revenait à inventer des prix.
-        flight_price: cheapestFlight !== null ? Math.round(cheapestFlight) : null,
-        hotel_price_per_night: cheapestHotel !== null ? Math.round(cheapestHotel) : null,
+        name: cat?.name || draft.name,
+        country: cat?.country || draft.country,
+        emoji: '',
+        dataSource: est ? 'estimate' : 'unavailable',
+        price_estimate: est ? est.flight + est.hotel : null,
+        flight_price: est ? est.flight : null,
+        hotel_price_per_night: cat ? cat.hotelFrom : null,
         nights,
         depart_date: departDate,
         return_date: checkout,
         adults,
         booking_url: bookingHotelUrl({ city: draft.name, checkin, checkout, adults }),
         flights_url: skyscannerFlightUrl({ origin: originCity, destination: draft.name, depart: departDate, return: checkout, adults }),
-        activities: realActivities,
+        activities: (activities || []).map(a => ({ name: a.title, emoji: '', price: null })),
     };
 }
 
 function buildBudgetNote(budgetEur: number | null, grounded: EnrichedDestination[]): string {
     if (!budgetEur) return '';
-
-    const overBudget = grounded.filter(d => d.dataSource === 'real' && d.price_estimate !== null && d.price_estimate > budgetEur * 1.1);
-    if (overBudget.length === 0) return '';
-
-    const lines = overBudget.map(d => `- **${d.name}** : environ **${d.price_estimate!.toLocaleString('fr-FR')} €** (vol + hôtel pour 2, données réelles actuelles) contre ${budgetEur.toLocaleString('fr-FR')} € annoncés`);
-    return `\n\n⚠️ **À noter sur le budget** : d'après les prix réels actuels, le budget de ${budgetEur.toLocaleString('fr-FR')} € est en dessous de ce qu'il faut prévoir pour :\n${lines.join('\n')}\n\nJe te conseille d'ajuster ton budget en conséquence (ou de viser une autre période/destination moins chère).`;
+    const over = grounded.filter(d => d.price_estimate !== null && d.price_estimate > budgetEur * 1.1);
+    if (over.length === 0) return '';
+    const lines = over.map(d => `- **${d.name}** : environ **${d.price_estimate!.toLocaleString('fr-FR')} €** (vols + hôtel pour 2, estimation) pour ${budgetEur.toLocaleString('fr-FR')} € annoncés`);
+    return `\n\n**À noter sur le budget** : d'après nos estimations, ${budgetEur.toLocaleString('fr-FR')} € risque d'être juste pour :\n${lines.join('\n')}`;
 }
 
 // Sans compte : 5 recherches par mois, comptées dans un cookie (c'est l'offre affichée
@@ -199,8 +174,10 @@ RÈGLES DE CONVERSATION (très important) :
         const toGround = draftDestinations.slice(0, MAX_DESTINATIONS_TO_GROUND);
         const grounded = await Promise.all(toGround.map(d => groundDestination(d, originCity, travelDate)));
 
-        if (grounded.some(d => d.dataSource === 'unavailable')) {
-            assistantMessage += `\n\n_Note : pour certaines destinations, les prix en temps réel n'ont pas pu être récupérés à l'instant — pas de chiffre affiché plutôt qu'une estimation peu fiable. Réessaie dans un instant pour des prix à jour._`;
+        if (grounded.some(d => d.price_estimate !== null)) {
+            assistantMessage += `
+
+_Totaux estimés à partir de notre catalogue : vérifiez le prix du jour chez la compagnie et l'hôtel avant de réserver._`;
         }
 
         if (originCity === "Paris" && grounded.length > 0) {

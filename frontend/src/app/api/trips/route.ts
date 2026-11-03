@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { sendTripConfirmationSMS } from '@/lib/sms';
 
 const createTripSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -64,8 +63,6 @@ export async function POST(request: Request) {
 
         if (error) throw error;
 
-        // SMS non-bloquant — s'envoie si BREVO_API_KEY + numéro configurés
-        sendTripConfirmationSMS(user.user_metadata?.phone, newTrip.title).catch(console.error);
 
         return NextResponse.json(newTrip, { status: 201 });
     } catch (err: unknown) {

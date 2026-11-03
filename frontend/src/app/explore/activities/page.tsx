@@ -112,7 +112,7 @@ function ActivitiesContent() {
               <p className="m-0 line-clamp-2 text-[13px] leading-normal text-muted-2">{a.description}</p>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
-                  <span className="text-[13px] text-muted">{a.duration}{a.rating ? ` · ${String(a.rating).replace(".", ",")}/5` : ""}</span>
+                  <span className="text-[13px] text-muted">{a.duration}</span>
                   <span className="tabular whitespace-nowrap text-sm font-semibold">{eur(a.price)} / pers.</span>
                 </div>
                 <span className="flex items-center gap-3">

@@ -18,12 +18,18 @@ Accueil ou copilote IA  →  fiche destination  →  « Créer ce voyage »
 
 ## Ce qui est réel, ce qui est estimé
 
-| Donnée | Source | Sans clé |
+| Donnée | Source | Gratuit |
 |---|---|---|
-| Réponses du copilote | Groq (`openai/gpt-oss-20b`) | Estimation tirée du catalogue, signalée comme telle |
-| Vols, hôtels | Amadeus (API de test) | Prix estimés, marqués « estimé » |
-| Activités | OpenTripMap | Sélection par ville, prix indicatifs |
-| Catalogue des 22 destinations | `src/lib/catalog.ts` | — |
+| Réponses du copilote | Groq (`openai/gpt-oss-20b`) | Oui, avec une clé |
+| Météo du mois de voyage | Open-Meteo (relevés de l'année précédente) | Oui, sans clé |
+| Taux de change du jour | open.er-api.com | Oui, sans clé |
+| Lieux à voir | Wikipédia (recherche géographique) | Oui, sans clé |
+| Lieux pour la page Activités | OpenTripMap | Oui, avec une clé (facultatif) |
+| Prix des vols, hôtels, activités | **Estimations** (catalogue + tarifs habituels) | — |
+
+Il n'existe plus d'API gratuite de prix en direct : l'offre gratuite d'Amadeus a fermé en juillet 2026.
+Les prix sont donc toujours affichés comme « estimés », et chaque vol ou hôtel renvoie vers Google Flights
+ou Booking.com avec les dates du voyage pour voir le tarif du jour et réserver.
 
 ## Stack
 
@@ -39,9 +45,9 @@ frontend/src/
 │   ├── destination/[id]/      Fiche destination + estimation
 │   ├── assistant/             Copilote en plein écran
 │   ├── dashboard/             Carnet de voyage
-│   ├── auth/                  Connexion (lien email, Google, Microsoft)
+│   ├── auth/                  Connexion (lien par email, Google)
 │   ├── onboarding/ pricing/ blog/ legal/
-│   └── api/                   chat, partner/*, trips/*, newsletter
+│   └── api/                   chat, partner/*, trips/*, destination-info, newsletter
 ├── components/                layout, chat, trip, ui
 └── lib/                       catalog, photos, plan, chat, session, articles, supabase, travel, ai
 ```
@@ -56,23 +62,23 @@ npm run dev
 
 ### Variables d'environnement (`frontend/.env.local`)
 
+Voir `frontend/.env.example` :
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GROQ_API_KEY=
-
-# optionnels : sans eux, les prix sont affichés comme estimés
-AMADEUS_CLIENT_ID=
-AMADEUS_CLIENT_SECRET=
-OPENTRIPMAP_API_KEY=
-BREVO_API_KEY=          # SMS de confirmation
+OPENTRIPMAP_API_KEY=     # facultatif
 ```
 
-### Base de données
+### Supabase
 
-Sur un projet Supabase vide : **SQL Editor → New query**, coller `frontend/supabase/setup.sql`, **Run**.
-Puis **Authentication → URL Configuration** : ajouter `http://localhost:3000/**` aux Redirect URLs.
+1. **SQL Editor → New query** : coller `frontend/supabase/setup.sql`, **Run**.
+2. **Authentication → URL Configuration** : ajouter `http://localhost:3000/**` aux Redirect URLs.
+3. Connexion par email : active par défaut. Connexion Google (facultatif) : créer un client OAuth « Web » dans
+   Google Cloud avec l'URI de redirection `https://<projet>.supabase.co/auth/v1/callback`, puis coller
+   l'ID et le secret dans **Authentication → Sign In / Providers → Google**.
 
 ## Scripts
 

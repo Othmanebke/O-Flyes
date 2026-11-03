@@ -14,7 +14,7 @@ const AIRLINES = [
     { name: "Iberia", logo: "IB", hub: "MAD" },
 ];
 
-// buckets approximatifs au départ de Paris, utilisés en fallback si Amadeus ne répond pas
+// tarifs habituels au départ de Paris, base de l'estimation
 const ROUTE_PRICES: Record<string, { base: number; range: number; duration: string }> = {
     // Europe (short-haul)
     "LHR": { base: 80,  range: 120, duration: "01:20" },
@@ -90,7 +90,7 @@ function addHours(date: Date, h: number) {
     return new Date(date.getTime() + h * 3600000);
 }
 
-// Heure "murale" sans fuseau (AAAA-MM-JJTHH:MM:00), comme Amadeus : le navigateur
+// Heure "murale" sans fuseau (AAAA-MM-JJTHH:MM:00) : le navigateur
 // l'affiche telle quelle au lieu de la décaler selon son fuseau.
 function wallClock(d: Date) {
     const p = (n: number) => String(n).padStart(2, '0');
@@ -107,99 +107,6 @@ function parseDuration(dur: string): number {
     return h + m / 60;
 }
 
-let amadeusToken: string | null = null;
-let amadeusTokenExpiry = 0;
-
-async function getAmadeusToken(): Promise<string | null> {
-    const clientId = process.env.AMADEUS_CLIENT_ID;
-    const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
-    if (!clientId || !clientSecret) return null;
-
-    if (amadeusToken && Date.now() < amadeusTokenExpiry) return amadeusToken;
-
-    try {
-        const res = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                grant_type: 'client_credentials',
-                client_id: clientId,
-                client_secret: clientSecret,
-            }),
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        amadeusToken = data.access_token;
-        amadeusTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
-        return amadeusToken;
-    } catch {
-        return null;
-    }
-}
-
-async function fetchAmadeusFlights(originCode: string, destCode: string, departDate: string, adults: number, originCity: string, destCity: string, returnDate: string) {
-    const token = await getAmadeusToken();
-    if (!token) return null;
-
-    try {
-        const params = new URLSearchParams({
-            originLocationCode: originCode,
-            destinationLocationCode: destCode,
-            departureDate: departDate,
-            returnDate: returnDate,
-            adults: String(adults),
-            max: '5',
-            currencyCode: 'EUR',
-        });
-
-        const res = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?${params}`,
-            { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(6000) }
-        );
-        if (!res.ok) return null;
-        const data = await res.json();
-
-        return (data.data || []).map((offer: any) => {
-            const outbound = offer.itineraries[0];
-            const inbound = offer.itineraries[1];
-            const seg = outbound.segments[0];
-            const lastSeg = outbound.segments[outbound.segments.length - 1];
-            // price.total = aller-retour complet, pas le prix par personne
-            const price = parseFloat(offer.price.total);
-            const fareDetails = offer.travelerPricings[0].fareDetailsBySegment[0];
-            const includedBags = fareDetails.includedCheckedBags?.quantity || 0;
-            const baggageStatus = includedBags > 0 ? "Bagage cabine + soute" : "Sans bagage (cabine uniquement)";
-
-            const inSeg = inbound?.segments[0];
-            const inLastSeg = inbound?.segments[inbound.segments.length - 1];
-
-            return {
-                id: offer.id,
-                airline: seg.carrierCode,
-                origin: seg.departure.iataCode,
-                originCode: seg.departure.iataCode,
-                destination: lastSeg.arrival.iataCode,
-                destinationCode: lastSeg.arrival.iataCode,
-                departure: seg.departure.at,
-                arrival: lastSeg.arrival.at,
-                duration: outbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase(),
-                returnDeparture: inSeg?.departure.at ?? null,
-                returnArrival: inLastSeg?.arrival.at ?? null,
-                returnDuration: inbound ? inbound.duration.replace('PT', '').replace('H', 'h').replace('M', 'm').toLowerCase() : null,
-                price: Math.round(price),
-                currency: 'EUR',
-                type: outbound.segments.length === 1 ? 'Direct' : 'Escale',
-                class: fareDetails.cabin === 'BUSINESS' ? 'Business' : 'Economy',
-                baggage: baggageStatus,
-                booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, return: returnDate, airline: seg.carrierCode }),
-                source: 'amadeus',
-            };
-        });
-    } catch {
-        return null;
-    }
-}
-
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const origin = searchParams.get('origin') || 'Paris';
@@ -212,12 +119,8 @@ export async function GET(request: Request) {
     const originCode = getIATA(origin);
     const destCode = getIATA(destination);
 
-    const amadeusFlights = await fetchAmadeusFlights(originCode, destCode, depart, adults, origin, destination, returnDate);
-    if (amadeusFlights && amadeusFlights.length > 0) {
-        return NextResponse.json(amadeusFlights);
-    }
-
-    // fallback statique si Amadeus est KO ou quota atteint
+    // Plus d'API gratuite de prix en direct (offre gratuite Amadeus fermée en juillet 2026) :
+    // on calcule une estimation à partir des tarifs habituels de la ligne.
     const routeInfo = ROUTE_PRICES[destCode] || { base: 200, range: 400, duration: "05:00" };
     const durationH = parseDuration(routeInfo.duration);
 
@@ -240,7 +143,7 @@ export async function GET(request: Request) {
         const retDep = addHours(returnDeptDate, depOffset + 1);
         const retArr = addHours(retDep, legH);
 
-        // prix = total ALLER-RETOUR pour tous les voyageurs, comme Amadeus
+        // prix = total ALLER-RETOUR pour tous les voyageurs
         const priceMultiplier = [0.85, 1.0, 1.2, 0.95][i];
         const basePrice = routeInfo.base + Math.floor((seed * (i + 1) * 13) % routeInfo.range);
         const price = Math.round(basePrice * priceMultiplier * adults * 2);

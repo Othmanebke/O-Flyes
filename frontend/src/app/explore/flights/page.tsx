@@ -23,7 +23,6 @@ interface Flight {
   type: string;
   baggage: string;
   booking_url: string;
-  source?: "amadeus" | "estimate";
 }
 
 const time = (iso?: string | null) => (iso ? iso.slice(11, 16) : "—");
@@ -69,7 +68,6 @@ function FlightsContent() {
     return [...r].sort((a, b) => sort === "cheap" ? a.price - b.price : sort === "fast" ? minutes(a.duration) - minutes(b.duration) : score(a) - score(b));
   }, [flights, off, stops, sort]);
 
-  const estimated = flights.some(f => f.source !== "amadeus");
   const tripName = plan?.destination || findDestination(searched?.dest)?.name || searched?.dest || ctx.dest;
   const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: k === "pax" ? Number(v) : v }));
 
@@ -81,7 +79,7 @@ function FlightsContent() {
       key, type: "flight",
       title: `Vol ${f.airline} · ${f.originCode} → ${f.destinationCode}`,
       subtitle: `Aller-retour · ${day(f.departure)} ${time(f.departure)} – retour ${day(f.returnDeparture)} · ${searched.pax} pers. · ${f.type}`,
-      price: f.price, estimated: f.source !== "amadeus", provider: f.airline, url: f.booking_url, date: searched.depart,
+      price: f.price, estimated: true, provider: f.airline, url: f.booking_url, date: searched.depart,
     }, planInputFrom(searched));
     toast(`Vol ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
   };
@@ -164,7 +162,7 @@ function FlightsContent() {
                   <div className="flex items-center justify-end gap-3.5">
                     <span className="flex flex-col items-end">
                       <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price / (searched?.pax || 1))}</span>
-                      <span className="whitespace-nowrap text-xs text-muted">A/R par pers.{f.source !== "amadeus" ? " · estimé" : ""}</span>
+                      <span className="whitespace-nowrap text-xs text-muted">A/R par pers. · estimé</span>
                     </span>
                     <button onClick={() => toggle(f)} className={`whitespace-nowrap rounded-full border border-ink px-3 py-[9px] text-[13px] font-semibold ${added ? "bg-transparent text-ink" : "bg-ink text-paper hover:bg-ink-2"}`}>
                       {added ? "Ajouté ✓" : `Ajouter à ${tripName}`}
@@ -177,9 +175,7 @@ function FlightsContent() {
             {!loading && searched && rows.length === 0 && <p className="py-6 text-sm text-muted-2">Aucun vol ne correspond à ces filtres.</p>}
           </div>
           <span className="text-[13px] text-muted">
-            {estimated
-              ? "Prix estimés à partir des tarifs habituels sur cette ligne : le service de prix en direct (Amadeus) n'est pas disponible. Vérifiez le tarif chez la compagnie avant de réserver."
-              : "Prix Amadeus en euros, taxes incluses, pour tous les voyageurs. La réservation se fait chez la compagnie."}
+            Prix estimés à partir des tarifs habituels sur cette ligne, pour comparer et construire votre budget. L&apos;icône à côté de chaque vol ouvre Google Flights avec vos dates pour voir le tarif du jour et réserver.
           </span>
         </div>
       </div>

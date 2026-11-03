@@ -16,7 +16,7 @@ export default function LegalPage() {
       <section id="confidentialite" className="flex scroll-mt-28 flex-col gap-2">
         <h2 className="m-0 text-2xl">Confidentialité</h2>
         <p className="m-0">Sans compte, votre voyage en cours et la conversation avec le copilote sont enregistrés uniquement dans votre navigateur (stockage local). Un cookie compte vos recherches gratuites du mois.</p>
-        <p className="m-0">Avec un compte (connexion Google ou Microsoft), nous conservons votre email, votre nom, vos voyages sauvegardés et, si vous l&apos;indiquez, votre numéro de téléphone pour les SMS de confirmation. Les messages envoyés au copilote sont transmis au fournisseur d&apos;IA (Groq) pour générer la réponse.</p>
+        <p className="m-0">Avec un compte (connexion par email ou Google), nous conservons votre email, votre nom et vos voyages sauvegardés. Les messages envoyés au copilote sont transmis au fournisseur d&apos;IA (Groq) pour générer la réponse.</p>
         <p className="m-0">Vous pouvez supprimer vos voyages depuis le carnet. Pour supprimer votre compte, écrivez-nous depuis l&apos;adresse associée.</p>
       </section>
       <p className="m-0 text-sm text-muted">Photos : Unsplash.</p>

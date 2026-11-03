@@ -32,7 +32,7 @@ describe("calculateTripBudget", () => {
             booking({ type: "hotel", price_estimate: undefined }),
             booking({ type: "activity", price_estimate: 0 }),
         ];
-        // Amadeus renvoie parfois des prix manquants ou à 0 — ils ne doivent pas casser le total
+        // certains éléments ont un prix manquant ou à 0 — ils ne doivent pas casser le total
         expect(calculateTripBudget(items)).toBe(300);
     });
 });

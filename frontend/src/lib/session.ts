@@ -8,7 +8,6 @@ export interface SessionUser {
     id: string;
     email: string;
     name: string;
-    phone?: string;
     onboarded?: boolean;
 }
 
@@ -25,7 +24,6 @@ export function useSession() {
             id: u.id,
             email: u.email || "",
             name: (u.user_metadata?.full_name as string) || u.email?.split("@")[0] || "Voyageur",
-            phone: u.user_metadata?.phone as string | undefined,
             onboarded: !!u.user_metadata?.onboarded,
         } : null;
         supabase.auth.getSession().then(({ data }) => { setUser(toUser(data.session?.user)); setReady(true); });

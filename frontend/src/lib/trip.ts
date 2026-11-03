@@ -1,6 +1,6 @@
 import type { Booking, TripAnalysis } from "@/types/trip";
 
-// Amadeus peut renvoyer des prix à null sur certaines offres, on les ignore
+// certains éléments n'ont pas de prix (null) : on les ignore
 export function calculateTripBudget(items: Booking[]): number {
     return items.reduce((sum, b) => sum + (b.price_estimate || 0), 0);
 }

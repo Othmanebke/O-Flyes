@@ -197,7 +197,7 @@ function DashboardContent() {
 
       <main className="flex min-w-0 max-w-[1040px] flex-1 flex-col gap-7 p-[clamp(20px,4vw,40px)]">
         {settings && user ? (
-          <Settings name={user.name} email={user.email} phone={user.phone} onLogout={logout} onClose={() => setSettings(false)} />
+          <Settings name={user.name} email={user.email} onLogout={logout} onClose={() => setSettings(false)} />
         ) : !plan ? (
           <Empty loggedIn={!!user} />
         ) : (
@@ -403,13 +403,12 @@ function TripView({ plan, tab, setTab, editing, setEditing, saving, onSave, onRe
   );
 }
 
-function Settings({ name, email, phone, onLogout, onClose }: { name: string; email: string; phone?: string; onLogout: () => void; onClose: () => void }) {
+function Settings({ name, email, onLogout, onClose }: { name: string; email: string; onLogout: () => void; onClose: () => void }) {
   const [n, setN] = useState(name);
-  const [p, setP] = useState(phone || "");
   const [status, setStatus] = useState<string | null>(null);
   const save = async () => {
     setStatus("Enregistrement…");
-    const { error } = await createClient().auth.updateUser({ data: { full_name: n.trim() || name, phone: p.trim() } });
+    const { error } = await createClient().auth.updateUser({ data: { full_name: n.trim() || name } });
     setStatus(error ? "L'enregistrement a échoué." : "Profil mis à jour.");
   };
   return (
@@ -420,10 +419,6 @@ function Settings({ name, email, phone, onLogout, onClose }: { name: string; ema
       </div>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">Nom<input value={n} onChange={e => setN(e.target.value)} className="h-[46px] rounded-full border border-line-2 bg-cream px-4 text-[15px] font-normal" /></label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">Adresse email<input value={email} disabled className="h-[46px] rounded-full border border-line bg-paper px-4 text-[15px] font-normal text-muted" /></label>
-      <label className="flex flex-col gap-1.5 text-sm font-semibold">
-        Téléphone <span className="font-normal text-muted">Pour recevoir un SMS quand un voyage est sauvegardé (facultatif)</span>
-        <input value={p} onChange={e => setP(e.target.value)} placeholder="+33 6 12 34 56 78" className="h-[46px] rounded-full border border-line-2 bg-cream px-4 text-[15px] font-normal" />
-      </label>
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={save} className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-ink-2">Enregistrer</button>
         <Link href="/onboarding" className="text-sm">Modifier mes préférences de voyage</Link>

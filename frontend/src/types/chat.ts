@@ -15,7 +15,7 @@ export interface EnrichedDestination {
     name: string;
     country: string;
     emoji: string;
-    dataSource: 'real' | 'unavailable';
+    dataSource: 'estimate' | 'unavailable';
     price_estimate: number | null;
     // Composantes réelles de l'estimation, renvoyées séparément pour que l'interface
     // affiche le vrai prix du vol et de l'hôtel au lieu d'inventer une répartition.

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 import Photo from "@/components/ui/Photo";
 import TripBar from "@/components/trip/TripBar";
+import DestinationFacts from "@/components/trip/DestinationFacts";
 import { byId, eur, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import { addDays, defaultDepart, startPlan, toast, usePlan } from "@/lib/plan";
@@ -128,6 +129,8 @@ function View({ id }: { id: string }) {
 
       <div className="flex flex-wrap items-start gap-12">
         <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-12">
+          <DestinationFacts id={d.id} depart={depart} />
+
           <section className="flex flex-col gap-4">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 className="m-0 text-[28px]">Vols depuis Paris</h2>

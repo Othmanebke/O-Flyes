@@ -23,7 +23,6 @@ interface Hotel {
   description: string;
   amenities: string[];
   booking_url: string;
-  source?: "amadeus" | "estimate";
 }
 
 function HotelsContent() {
@@ -61,7 +60,6 @@ function HotelsContent() {
     return [...r].sort((a, b) => sort === "cheap" ? a.price_per_night - b.price_per_night : sort === "stars" ? b.stars - a.stars : (b.stars * 40 - b.price_per_night * 0.3) - (a.stars * 40 - a.price_per_night * 0.3));
   }, [hotels, stars, max, sort]);
 
-  const estimated = hotels.some(h => h.source !== "amadeus");
   const tripName = plan?.destination || findDestination(searched?.dest)?.name || searched?.dest || ctx.dest;
   const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: k === "pax" ? Number(v) : v }));
 
@@ -73,7 +71,7 @@ function HotelsContent() {
       key, type: "hotel",
       title: h.name,
       subtitle: `${h.stars} étoiles · ${nights} nuit${nights > 1 ? "s" : ""} · ${eur(h.price_per_night)} / nuit`,
-      price: h.price_per_night * nights, estimated: h.source !== "amadeus", provider: "Booking.com", url: h.booking_url, date: searched.depart,
+      price: h.price_per_night * nights, estimated: true, provider: "Booking.com", url: h.booking_url, date: searched.depart,
     }, planInputFrom(searched));
     toast(`Hôtel ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
   };
@@ -135,13 +133,13 @@ function HotelsContent() {
                   <Photo k={photoFor(h.name, "hotel")} alt="" sizes="168px" className="h-[120px] flex-[0_0_168px] rounded-[18px] border border-line" />
                   <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1.5">
                     <span className="text-base font-semibold">{h.name}</span>
-                    <span className="text-[13px] text-muted">{h.stars} étoiles · {h.category}{h.source === "amadeus" && h.rating ? ` · ${String(h.rating).replace(".", ",")}/5` : ""}</span>
+                    <span className="text-[13px] text-muted">{h.stars} étoiles · {h.category}</span>
                     {!!h.amenities?.length && <span className="text-[13px] text-muted-2">{h.amenities.join(", ")}</span>}
                   </div>
                   <div className="ml-auto flex flex-[0_0_auto] flex-col items-end justify-between gap-2.5">
                     <span className="flex flex-col items-end">
                       <span className="tabular whitespace-nowrap text-base font-semibold">{eur(h.price_per_night)} / nuit</span>
-                      <span className="whitespace-nowrap text-xs text-muted">{eur(h.price_per_night * nights)} pour {nights} nuit{nights > 1 ? "s" : ""}{h.source !== "amadeus" ? " · estimé" : ""}</span>
+                      <span className="whitespace-nowrap text-xs text-muted">{eur(h.price_per_night * nights)} pour {nights} nuit{nights > 1 ? "s" : ""} · estimé</span>
                     </span>
                     <span className="flex items-center gap-3">
                       <a href={h.booking_url} target="_blank" rel="noopener noreferrer" title="Vérifier et réserver chez le partenaire" aria-label={`Voir ${h.name} chez le partenaire`} className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
@@ -156,9 +154,7 @@ function HotelsContent() {
             {!loading && searched && rows.length === 0 && <p className="py-5 text-sm text-muted-2">Aucun hôtel ne correspond. Augmentez le prix maximum ou changez de catégorie.</p>}
           </div>
           <span className="text-[13px] text-muted">
-            {estimated
-              ? "Prix par nuit estimés : le service de disponibilités en direct (Amadeus) n'est pas disponible. Vérifiez le tarif sur Booking.com avant de réserver."
-              : `Disponibilités et prix Amadeus pour ${searched?.pax || 2} adultes, taxes incluses.`}
+            Prix par nuit estimés selon la catégorie et la ville. L&apos;icône à côté de chaque hôtel ouvre Booking.com avec vos dates pour voir la disponibilité et le prix du jour.
           </span>
         </div>
       </div>

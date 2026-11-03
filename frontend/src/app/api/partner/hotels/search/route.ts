@@ -107,71 +107,6 @@ function generateGenericHotels(city: string): HotelTemplate[] {
     ];
 }
 
-async function fetchAmadeusHotels(city: string, checkin: string, checkout: string, adults: number) {
-    const clientId = process.env.AMADEUS_CLIENT_ID;
-    const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
-    if (!clientId || !clientSecret) return null;
-
-    try {
-        const tokenRes = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
-        });
-        if (!tokenRes.ok) return null;
-        const { access_token } = await tokenRes.json();
-
-        const cityRes = await fetch(
-            `https://test.api.amadeus.com/v1/reference-data/locations?keyword=${encodeURIComponent(city)}&subType=CITY&max=1`,
-            { headers: { Authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(5000) }
-        );
-        if (!cityRes.ok) return null;
-        const cityData = await cityRes.json();
-        const cityCode = cityData.data?.[0]?.iataCode;
-        if (!cityCode) return null;
-
-        const hotelsRes = await fetch(
-            `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${cityCode}`,
-            { headers: { Authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(5000) }
-        );
-        if (!hotelsRes.ok) return null;
-        const hotelsData = await hotelsRes.json();
-        const hotelIds = (hotelsData.data || []).slice(0, 8).map((h: any) => h.hotelId).join(',');
-        if (!hotelIds) return null;
-
-        const offersRes = await fetch(
-            `https://test.api.amadeus.com/v3/shopping/hotel-offers?hotelIds=${hotelIds}&adults=${adults}&checkInDate=${checkin}&checkOutDate=${checkout}&currencyCode=EUR`,
-            { headers: { Authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(8000) }
-        );
-        if (!offersRes.ok) return null;
-        const offersData = await offersRes.json();
-
-        return (offersData.data || []).map((item: any) => {
-            const hotel = item.hotel;
-            const offer = item.offers?.[0];
-            const price = parseFloat(offer?.price?.total || '0');
-            return {
-                id: hotel.hotelId,
-                name: hotel.name,
-                city,
-                country: hotel.address?.countryCode || '',
-                price_per_night: Math.round(price),
-                currency: 'EUR',
-                rating: hotel.rating ? parseFloat(hotel.rating) : 4.0,
-                stars: hotel.rating ? parseInt(hotel.rating) : 4,
-                category: 'Classique',
-                image_url: `https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80`,
-                description: hotel.description?.text || `Séjour à ${hotel.name}`,
-                amenities: [],
-                booking_url: bookingHotelUrl({ city, hotelName: hotel.name, checkin, checkout, adults }),
-                source: 'amadeus',
-            };
-        });
-    } catch {
-        return null;
-    }
-}
-
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
@@ -179,12 +114,7 @@ export async function GET(request: Request) {
     const checkout = searchParams.get('checkout') || new Date(Date.now() + 37 * 86400000).toISOString().split('T')[0];
     const adults = parseInt(searchParams.get('adults') || '2', 10);
 
-    const amadeusHotels = await fetchAmadeusHotels(city, checkin, checkout, adults);
-    if (amadeusHotels && amadeusHotels.length > 0) {
-        return NextResponse.json(amadeusHotels);
-    }
-
-    // fallback sur les données statiques si Amadeus ne répond pas
+    // Estimation par ville (pas d'API gratuite de disponibilités hôtelières)
     const cityKey = Object.keys(HOTELS_BY_CITY).find(k =>
         city.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(city.toLowerCase())
     );

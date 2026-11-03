@@ -21,7 +21,7 @@ export interface ChatOption {
     hotel: number | null;
     activities: number | null;
     total: number | null;
-    estimated: boolean; // true = estimation catalogue, false = prix Amadeus du jour
+    estimated: boolean; // toujours true aujourd'hui : pas d'API gratuite de prix en direct
 }
 
 export interface ChatLink { label: string; href: string }
@@ -116,15 +116,11 @@ function fromEnriched(e: EnrichedDestination): ChatOption {
     const cat = findDestination(e.name);
     const nights = e.nights || 7;
     const pax = e.adults || 2;
-    const real = e.dataSource === "real" && e.price_estimate != null;
-    if (!real && cat) {
-        return { ...toOption(cat, nights, pax, e.depart_date || defaultDepart()), name: cat.name };
-    }
-    const hotel = e.hotel_price_per_night != null ? e.hotel_price_per_night * nights : null;
+    // Destination du catalogue : estimation complète ; sinon pas de chiffre inventé
+    if (cat) return toOption(cat, nights, pax, e.depart_date || defaultDepart());
     return {
-        name: cat?.name || e.name, country: cat?.country || e.country, destId: cat?.id, code: cat?.code,
-        nights, pax, depart: e.depart_date, ret: e.return_date,
-        flight: e.flight_price, hotel, activities: null, total: e.price_estimate, estimated: !real,
+        name: e.name, country: e.country, nights, pax, depart: e.depart_date, ret: e.return_date,
+        flight: null, hotel: null, activities: null, total: null, estimated: true,
     };
 }
 
