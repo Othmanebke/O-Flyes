@@ -189,31 +189,33 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
       </nav>
 
       {open && (
-        <div className="fixed inset-0 z-[300] grid overflow-y-auto bg-paper font-sans text-ink [grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))]" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="flex flex-col gap-7 p-6 sm:p-12">
+        <div className="fixed inset-0 z-[300] flex bg-paper font-sans text-ink" role="dialog" aria-modal="true" aria-label="Menu">
+          {/* Colonne des liens : défile si l'écran est trop bas, tailles indexées sur largeur ET hauteur */}
+          <div className="flex min-w-0 flex-1 flex-col gap-[clamp(16px,3vh,28px)] overflow-y-auto px-5 py-5 sm:px-10 sm:py-[clamp(20px,4vh,40px)]">
             <div className="flex items-center justify-between">
-              <button onClick={() => setOpen(false)} className="flex items-center gap-3 text-base font-bold text-ink">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white"><X className="h-[22px] w-[22px]" aria-hidden /></span>
+              <button onClick={() => setOpen(false)} className="flex items-center gap-3 text-[15px] font-bold text-ink">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white"><X className="h-5 w-5" aria-hidden /></span>
                 Fermer
               </button>
-              <Logo size={30} />
+              <Logo size={28} />
             </div>
-            <div className="mt-auto flex flex-col">
+            <nav className="grid gap-x-10 sm:grid-cols-2 sm:my-auto">
               {[...LINKS, user ? { label: "Mon compte", href: "/dashboard", note: user.name } : { label: "Connexion", href: "/auth/login", note: "Ou créer un compte" }].map(l => (
                 <Link
                   key={l.label}
                   href={l.href}
-                  className="plain-link flex items-baseline justify-between gap-4 border-b border-dashed border-line-2 py-3 transition-colors hover:!text-gold-deep"
+                  className="plain-link flex items-baseline justify-between gap-4 border-b border-dashed border-line-2 py-[clamp(8px,1.4vh,14px)] transition-colors hover:!text-gold-deep"
                 >
-                  <span className={clsx("text-[clamp(28px,4vw,48px)] font-bold leading-[1.05] tracking-[-0.04em]", pathname === l.href && "text-gold-deep")}>{l.label}</span>
-                  <span className="font-serif text-base italic text-muted">{l.note}</span>
+                  <span className={clsx("text-[clamp(20px,min(3vw,4.2vh),34px)] font-bold leading-[1.1] tracking-[-0.035em]", pathname === l.href && "text-gold-deep")}>{l.label}</span>
+                  <span className="hidden whitespace-nowrap font-serif text-[15px] italic text-muted min-[420px]:inline">{l.note}</span>
                 </Link>
               ))}
-            </div>
+            </nav>
             <ArrowPillInline onClick={plan} />
           </div>
-          <div className="relative m-4 hidden min-h-[300px] overflow-hidden rounded-[28px] bg-[#2A2620] min-[980px]:block">
-            <Photo k="balloons" sizes="50vw" className="absolute inset-0" />
+          {/* Photo : uniquement sur grand écran, elle ne prend jamais la place des liens */}
+          <div className="relative m-4 hidden w-[38%] max-w-[560px] shrink-0 overflow-hidden rounded-[28px] bg-[#2A2620] min-[1100px]:block">
+            <Photo k="balloons" sizes="40vw" className="absolute inset-0" />
             <div className="absolute inset-x-6 bottom-6 flex flex-col gap-1.5 text-white">
               <span className="font-serif text-[26px] italic">Où partez-vous ensuite ?</span>
               <span className="text-[15px] text-white/85">22 destinations, de 650 € à deux.</span>

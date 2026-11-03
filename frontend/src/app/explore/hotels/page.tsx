@@ -78,8 +78,7 @@ function HotelsContent() {
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
-      {/* 4 colonnes maximum, sinon une case vide apparaît à côté des 4 champs */}
-      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [grid-template-columns:repeat(auto-fit,minmax(max(180px,calc(25%-1px)),1fr))]">
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] flex flex-wrap gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [&>*]:flex-[1_1_170px]">
         <CityInput id="city" label="Ville" value={ctx.dest} onChange={set("dest")} />
         <Field id="in" label="Arrivée"><input id="in" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
         <Field id="out" label="Départ"><input id="out" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
@@ -88,7 +87,7 @@ function HotelsContent() {
             {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} adulte{n > 1 ? "s" : ""}</option>)}
           </select>
         </Field>
-        <button type="submit" disabled={loading} className="col-span-full flex min-h-[52px] items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
+        <button type="submit" disabled={loading} className="flex min-h-[52px] !basis-full items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
       </form>

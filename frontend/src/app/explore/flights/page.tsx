@@ -134,8 +134,8 @@ function FlightsContent() {
     />
     <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
 
-      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-        <div className="col-span-full flex flex-wrap items-center gap-2 bg-cream px-3.5 py-2.5">
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] flex flex-wrap gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [&>*]:flex-[1_1_170px]">
+        <div className="flex !basis-full flex-wrap items-center gap-2 bg-cream px-3.5 py-2.5">
           {isReturn ? (
             <>
               <span className="text-sm text-muted-2">Aller simple, de {ctx.origin} vers {ctx.dest}.</span>
@@ -160,7 +160,7 @@ function FlightsContent() {
             {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} adulte{n > 1 ? "s" : ""}</option>)}
           </select>
         </Field>
-        <button type="submit" disabled={loading} className="col-span-full flex min-h-[52px] items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
+        <button type="submit" disabled={loading} className="flex min-h-[52px] !basis-full items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
       </form>
