@@ -14,10 +14,12 @@ export async function POST(request: Request) {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
         return NextResponse.json({ error: 'Inscription indisponible' }, { status: 503 });
     }
+    // Insertion simple : un upsert (ON CONFLICT) exigerait aussi un droit de lecture RLS.
+    // Email déjà inscrit (23505) = succès pour la personne.
     const { error } = await createClient()
         .from('newsletter_subscribers')
-        .upsert({ email: parsed.data.email.toLowerCase() }, { onConflict: 'email', ignoreDuplicates: true });
-    if (error) {
+        .insert({ email: parsed.data.email.toLowerCase() });
+    if (error && error.code !== '23505') {
         return NextResponse.json({ error: 'Inscription indisponible' }, { status: 503 });
     }
     return NextResponse.json({ ok: true }, { status: 201 });
