@@ -37,7 +37,7 @@ export default function Footer() {
 
   return (
     <footer className="relative overflow-hidden bg-[#0B1422] font-sans text-white">
-      <Photo k="clouds" sizes="100vw" className="absolute inset-0" />
+      <Photo k="clouds" sizes="100vw" className="absolute inset-0 opacity-75" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)" }} />
       <div className="pointer-events-none absolute -left-[10%] -right-[10%] -top-[90px] h-[300px] blur-[30px]" style={{ background: MIST }} />
 
@@ -65,7 +65,7 @@ export default function Footer() {
         </span>
       </div>
 
-      <div className="relative mx-auto flex max-w-[1400px] flex-col gap-14 px-[clamp(24px,4vw,80px)] pb-8 pt-10">
+      <div className="relative mx-auto flex max-w-[1400px] flex-col gap-14 px-[clamp(24px,4vw,80px)] pb-14 pt-10">
         <div className="grid gap-12 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
           <div className="flex min-w-[min(100%,280px)] flex-col gap-[22px] md:col-span-2">
             <span className="self-start text-white"><Logo size={48} /></span>
@@ -92,13 +92,6 @@ export default function Footer() {
               ))}
             </div>
           ))}
-        </div>
-        <div className="flex flex-wrap justify-between gap-3 border-t border-white/15 pt-6 text-sm text-white/60">
-          <span>© 2026 Aivana · Photos Unsplash</span>
-          <div className="flex gap-5">
-            <Link href="/legal" className="plain-link !text-white/60 hover:!text-white">Mentions légales</Link>
-            <Link href="/legal#confidentialite" className="plain-link !text-white/60 hover:!text-white">Confidentialité</Link>
-          </div>
         </div>
       </div>
     </footer>

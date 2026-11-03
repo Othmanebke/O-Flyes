@@ -1,7 +1,11 @@
+import PageBanner from "@/components/layout/PageBanner";
+
 export const metadata = { title: "Mentions légales et confidentialité – AIVANA" };
 
 export default function LegalPage() {
   return (
+    <>
+    <PageBanner k="notebook" />
     <div className="mx-auto flex max-w-[760px] flex-col gap-8 px-6 pb-24 pt-12 text-[16px] leading-[1.7]">
       <h1 className="m-0 text-[clamp(32px,4.4vw,48px)] leading-[1.08]">Mentions <em className="accent">légales</em></h1>
       <section className="flex flex-col gap-2">
@@ -21,5 +25,6 @@ export default function LegalPage() {
       </section>
       <p className="m-0 text-sm text-muted">Photos : Unsplash.</p>
     </div>
+    </>
   );
 }

@@ -136,9 +136,12 @@ function AssistantContent() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-2.5 rounded-3xl border border-dashed border-line-2 p-7">
+          <div className="flex flex-col gap-2.5 overflow-hidden rounded-3xl border border-dashed border-line-2">
+            <Photo k="map" sizes="400px" className="h-[180px] w-full" />
+            <div className="flex flex-col gap-2.5 px-7 pb-7 pt-3">
             <span className="text-[15px] font-semibold">Votre proposition</span>
             <p className="m-0 text-sm leading-[1.55] text-muted">Décrivez votre voyage : le détail du budget (vols, hébergement, activités) s&apos;affiche ici, avec le bouton pour créer le voyage.</p>
+            </div>
           </div>
         )}
       </aside>

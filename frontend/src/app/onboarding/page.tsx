@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
+import Photo from "@/components/ui/Photo";
 import { TIERS } from "@/lib/catalog";
 import { getPlan, getPrefs, setPrefs } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
@@ -48,6 +49,7 @@ export default function OnboardingPage() {
         <Link href="/" className="plain-link text-ink" aria-label="Accueil"><Logo size={28} /></Link>
         <button onClick={skip} className="text-sm text-muted hover:text-ink">Passer</button>
       </div>
+      <div className="flex flex-1">
       <div className="flex flex-1 justify-center px-6 py-14">
         <div className="flex w-full max-w-[560px] flex-col gap-8">
           <div className="flex flex-col gap-2.5">
@@ -129,6 +131,12 @@ export default function OnboardingPage() {
             <button onClick={next} className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper hover:bg-ink-2">{step === 3 ? "Planifier mon premier voyage" : "Continuer"}</button>
           </div>
         </div>
+      </div>
+      <div className="relative m-4 hidden w-[40%] max-w-[620px] overflow-hidden rounded-[28px] lg:block">
+        <Photo k={step === 1 ? "backpack" : step === 2 ? "map" : "balloons"} sizes="40vw" className="absolute inset-0" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,14,26,0.6) 0%, rgba(8,14,26,0) 55%)" }} />
+        <span className="absolute bottom-6 left-6 right-6 font-serif text-[26px] italic text-white">{step === 1 ? "Dites-nous comment vous voyagez." : step === 2 ? "Vous préparez, vous réservez." : "Prêt pour le départ."}</span>
+      </div>
       </div>
     </div>
   );

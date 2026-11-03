@@ -2,6 +2,7 @@
 import Image, { type ImageLoaderProps } from "next/image";
 import { useState, type CSSProperties } from "react";
 import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { photoBase, type PhotoKey } from "@/lib/photos";
 
 // Unsplash redimensionne lui-même : on lui demande la bonne largeur au lieu de
@@ -24,7 +25,8 @@ interface Props {
 export default function Photo({ k, alt = "", sizes = "100vw", priority, className, imgClassName, style, imgStyle }: Props) {
     const [failed, setFailed] = useState(false);
     return (
-        <div className={clsx("relative overflow-hidden bg-placeholder", className)} style={style}>
+        // twMerge : un « absolute » passé en className remplace bien le « relative » par défaut
+        <div className={twMerge("relative overflow-hidden bg-placeholder", className)} style={style}>
             {!failed && (
                 <Image
                     loader={unsplashLoader}
