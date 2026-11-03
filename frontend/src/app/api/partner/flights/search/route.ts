@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getIATA, googleFlightsUrl } from '@/lib/iata';
+import { googleFlightsUrl } from '@/lib/iata';
+import { findDestination } from '@/lib/catalog';
+import { airportCode, fareFactor, distanceKm, routeOptions, unknownRoute } from '@/lib/travel/airlines';
+import { cityCoordinates } from '@/lib/travel/wikipedia';
 
-const AIRLINES = [
-    { name: "Air France", logo: "AF", hub: "CDG" },
-    { name: "Emirates", logo: "EK", hub: "DXB" },
-    { name: "Qatar Airways", logo: "QR", hub: "DOH" },
-    { name: "Lufthansa", logo: "LH", hub: "FRA" },
-    { name: "British Airways", logo: "BA", hub: "LHR" },
-    { name: "Turkish Airlines", logo: "TK", hub: "IST" },
-    { name: "Singapore Airlines", logo: "SQ", hub: "SIN" },
-    { name: "KLM", logo: "KL", hub: "AMS" },
-    { name: "Swiss International", logo: "LX", hub: "ZRH" },
-    { name: "Iberia", logo: "IB", hub: "MAD" },
-];
 
 // tarifs habituels au départ de Paris, base de l'estimation
 const ROUTE_PRICES: Record<string, { base: number; range: number; duration: string }> = {
@@ -76,15 +67,6 @@ const ROUTE_PRICES: Record<string, { base: number; range: number; duration: stri
     "MEL": { base: 900, range: 800, duration: "22:30" },
 };
 
-function pickAirlines(count: number, seed: number) {
-    const arr = [...AIRLINES];
-    // pseudo-shuffle based on seed
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = (seed * (i + 1) * 7) % (i + 1);
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr.slice(0, count);
-}
 
 function addHours(date: Date, h: number) {
     return new Date(date.getTime() + h * 3600000);
@@ -102,10 +84,6 @@ function formatHours(h: number) {
     return `${Math.floor(total / 60)}h${String(total % 60).padStart(2, '0')}`;
 }
 
-function parseDuration(dur: string): number {
-    const [h, m] = dur.split(':').map(Number);
-    return h + m / 60;
-}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -117,68 +95,75 @@ export async function GET(request: Request) {
     const returnDate = oneWay ? null : (searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0]);
     const adults = parseInt(searchParams.get('adults') || '1', 10);
 
-    const originCode = getIATA(origin);
-    const destCode = getIATA(destination);
-
+    // Compagnies réelles de la ligne quand on la connaît (voir lib/travel/airlines.ts).
     // Plus d'API gratuite de prix en direct (offre gratuite Amadeus fermée en juillet 2026) :
-    // on calcule une estimation à partir des tarifs habituels de la ligne. Les tarifs sont
-    // indexés au départ de Paris : pour un vol retour (X → Paris), on lit la ligne Paris → X.
-    const routeKey = ROUTE_PRICES[destCode] ? destCode : originCode;
-    const routeInfo = ROUTE_PRICES[routeKey] || { base: 200, range: 400, duration: "05:00" };
-    const durationH = parseDuration(routeInfo.duration);
+    // horaires et prix sont des estimations, le tarif du jour est sur Google Flights.
+    const route = routeOptions(origin, destination);
+    const { reverse, known } = route;
+    let { options } = route;
+    const fromCode = airportCode(origin);
+    const toCode = airportCode(destination);
+    const farCode = reverse ? fromCode : toCode; // l'aéroport qui n'est pas à Paris
+    const cat = findDestination(reverse ? origin : destination);
+    const routeInfo = farCode ? ROUTE_PRICES[farCode] : undefined;
+    // tarif « dès » d'un aller simple par personne
+    let base = cat ? cat.flightFrom : routeInfo ? routeInfo.base + routeInfo.range / 2 : 300;
+    if (!known) {
+        // Ligne inconnue : durée et prix d'après la distance réelle entre les deux villes
+        const [a, b] = await Promise.all([cityCoordinates(origin), cityCoordinates(destination)]);
+        const u = unknownRoute(a && b ? distanceKm(a, b) : 1500);
+        options = u.options;
+        base = u.baseFare;
+    }
 
-    // Graine déterministe : mêmes résultats pour la même ligne
-    const seed = routeKey.charCodeAt(0) + routeKey.charCodeAt(1) * 3 + (routeKey.charCodeAt(2) || 0) * 7;
-    const airlines = pickAirlines(4, seed);
+    const key = farCode || destination;
+    const seed = [...key].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const departDate = new Date(depart + 'T07:00:00Z');
+    const returnDeptDate = returnDate ? new Date(returnDate + 'T07:00:00Z') : null;
+    const offsets = [0, 2.5, 5.5, 9, 11.5];
 
-    const departDate = new Date(depart + 'T08:00:00Z');
-    const returnDeptDate = returnDate ? new Date(returnDate + 'T08:00:00Z') : null;
-
-    // Estimation : données cohérentes entre elles (durée = arrivée - départ, classe
-    // économique partout) et marquées `source: 'estimate'` pour que l'interface ne les
-    // présente jamais comme des prix en direct.
-    const flights = airlines.map((airline, i) => {
-        const depOffset = [0, 2.5, 5.5, 9][i];
-        const isStop = durationH > 5 && i % 2 === 1;
-        const legH = durationH + (isStop ? 1.5 : 0);
-        const dep = addHours(departDate, depOffset);
-        const arr = addHours(dep, legH);
-        const retDep = returnDeptDate ? addHours(returnDeptDate, depOffset + 1) : null;
-        const retArr = retDep ? addHours(retDep, legH) : null;
+    const flights = options.map((opt, i) => {
+        const hours = opt.hours;
+        const far = opt.dest || farCode;
+        const from = known ? (reverse ? (far || origin) : opt.paris) : (fromCode || origin);
+        const to = known ? (reverse ? opt.paris : (far || destination)) : (toCode || destination);
+        const dep = addHours(departDate, offsets[i % offsets.length]);
+        const arr = addHours(dep, hours);
+        const retDep = returnDeptDate ? addHours(returnDeptDate, offsets[i % offsets.length] + 1) : null;
+        const retArr = retDep ? addHours(retDep, hours) : null;
 
         // prix = total pour tous les voyageurs (un trajet, ou les deux en aller-retour)
-        const priceMultiplier = [0.85, 1.0, 1.2, 0.95][i];
-        const basePrice = routeInfo.base + Math.floor((seed * (i + 1) * 13) % routeInfo.range);
-        const price = Math.round(basePrice * priceMultiplier * adults * (oneWay ? 1 : 2));
-        const link = googleFlightsUrl({ origin, destination, depart, return: returnDate || undefined, airline: airline.name });
+        const perPerson = base * fareFactor(opt.kind, hours) * (1 + ((seed * (i + 3)) % 14) / 100);
+        const price = Math.round(perPerson * adults * (oneWay ? 1 : 2));
+        const stopsLabel = opt.stops === 0 ? 'Direct' : `${opt.stops} escale${opt.stops > 1 ? 's' : ''} · ${opt.via}`;
+        const link = googleFlightsUrl({ origin, destination, depart, return: returnDate || undefined, airline: opt.airline });
 
         return {
-            id: `${originCode}-${destCode}-${oneWay ? 'ow' : 'rt'}-${i}`,
-            airline: airline.name,
-            airlineCode: airline.logo,
+            id: `${from}-${to}-${opt.airline.replace(/\W+/g, '')}-${oneWay ? 'ow' : 'rt'}`,
+            airline: opt.airline,
             origin,
-            originCode,
+            originCode: from,
             destination,
-            destinationCode: destCode,
+            destinationCode: to,
             departure: wallClock(dep),
             arrival: wallClock(arr),
-            duration: formatHours(legH),
+            duration: formatHours(hours),
             returnDeparture: retDep ? wallClock(retDep) : null,
             returnArrival: retArr ? wallClock(retArr) : null,
-            returnDuration: retDep ? formatHours(legH) : null,
+            returnDuration: retDep ? formatHours(hours) : null,
             price,
             currency: "EUR",
-            type: isStop ? "1 escale" : "Direct",
+            type: stopsLabel,
             class: "Economy",
-            baggage: "Bagage cabine",
+            baggage: opt.kind === 'low' ? 'Bagage cabine, soute en option' : 'Bagages selon le tarif',
             booking_url: link,
             google_flights_url: link,
             source: 'estimate',
+            // true = compagnies qui desservent habituellement cette ligne ; false = correspondances indicatives
+            knownRoute: known,
         };
     });
 
-    // Sort by price
     flights.sort((a, b) => a.price - b.price);
-
     return NextResponse.json(flights);
 }

@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 import Photo from "@/components/ui/Photo";
 import TripBar from "@/components/trip/TripBar";
+import { ROUTES, fareFactor } from "@/lib/travel/airlines";
+import { GENERIC, LODGING } from "@/lib/travel/lodging";
 import DestinationFacts from "@/components/trip/DestinationFacts";
 import { byId, eur, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
@@ -66,17 +68,18 @@ function View({ id }: { id: string }) {
 
   const b = d.flightFrom * 2;
   const hb = d.hotelFrom;
-  const dur = d.flightFrom < 150 ? ["2 h 30", "2 h 45", "4 h 10"] : d.flightFrom < 500 ? ["5 h", "5 h 30", "8 h"] : ["11 h", "12 h", "14 h"];
-  const flights = [
-    { airline: "Compagnie low-cost", meta: `Low-cost · Direct · ${dur[0]}`, price: b },
-    { airline: "Compagnie régulière", meta: `Bagage inclus · Direct · ${dur[1]}`, price: Math.round(b * 1.4) },
-    { airline: "Avec escale", meta: `Confort+ · 1 escale · ${dur[2]}`, price: Math.round(b * 1.8) },
-  ];
-  const hotels = [
-    { name: "Auberge ou maison d'hôtes", meta: "2 étoiles · petit-déjeuner souvent inclus", price: hb },
-    { name: "Hôtel de charme", meta: "4 étoiles · piscine ou spa", price: Math.round(hb * 2.2) },
-    { name: "Hôtel de luxe", meta: "5 étoiles · vue, conciergerie", price: Math.round(hb * 4.5) },
-  ];
+  // Mêmes compagnies et mêmes types d'hébergement que les pages Vols et Hôtels
+  const hrs = (h: number) => `${Math.floor(h)} h${h % 1 ? ` ${String(Math.round((h % 1) * 60)).padStart(2, "0")}` : ""}`;
+  const flights = (ROUTES[d.code] || []).slice(0, 4).map(r => ({
+    airline: r.airline,
+    meta: `${r.paris === "ORY" ? "Orly" : r.paris === "BVA" ? "Beauvais" : "Charles-de-Gaulle"} · ${r.via ? `via ${r.via}` : "Direct"} · ${hrs(r.hours)}`,
+    price: Math.round(b * fareFactor(r.kind, r.hours)),
+  })).sort((x, y) => x.price - y.price);
+  const hotels = (LODGING[d.id] || GENERIC).slice(0, 4).map(t => ({
+    name: t.label,
+    meta: `${t.area} · ${"★".repeat(t.stars)}`,
+    price: Math.round(hb * t.factor),
+  })).sort((x, y) => x.price - y.price);
   const activities = d.styles.flatMap(s => ACT[s] || []).slice(0, 6);
   const flight = flights[f].price * pax, hotel = hotels[h].price * nights, act = 60 * pax, total = flight + hotel + act;
 
@@ -136,7 +139,7 @@ function View({ id }: { id: string }) {
               <h2 className="m-0 text-[28px]">Vols depuis Paris</h2>
               <Link href={`/explore/flights?${ctx}`} className="text-sm">Voir les vols du jour <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
             </div>
-            <p className="-mt-2 text-[13px] text-muted">Fourchettes indicatives pour estimer le budget. Les horaires et prix réels sont dans la recherche de vols.</p>
+            <p className="-mt-2 text-[13px] text-muted">Compagnies qui desservent habituellement la ligne, avec un prix estimé pour le budget. Les horaires sont dans la recherche de vols.</p>
             <div className="flex flex-col border-t border-line">
               {flights.map((x, i) => (
                 <button key={x.airline} onClick={() => setF(i)} aria-pressed={i === f} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3.5 border-b border-line px-1 py-4 text-left hover:bg-cream">

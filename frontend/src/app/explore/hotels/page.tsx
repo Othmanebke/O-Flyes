@@ -10,18 +10,17 @@ import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
 import { planInputFrom, syncPlanWithSearch, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
 import { addItem, nightsBetween, removeItem, toast, usePlan } from "@/lib/plan";
-import { photoFor } from "@/lib/photos";
+import { isPhotoKey, photoFor } from "@/lib/photos";
 
 interface Hotel {
   id: string;
   name: string;
   city: string;
   price_per_night: number;
-  rating: string | number;
-  stars: number;
-  category: string;
-  description: string;
+  stars: number; // niveau de confort
+  category: string; // quartier / contexte
   amenities: string[];
+  photo: string;
   booking_url: string;
 }
 
@@ -70,7 +69,7 @@ function HotelsContent() {
     const p = await addItem({
       key, type: "hotel",
       title: h.name,
-      subtitle: `${h.stars} étoiles · ${nights} nuit${nights > 1 ? "s" : ""} · ${eur(h.price_per_night)} / nuit`,
+      subtitle: `${h.category} · ${nights} nuit${nights > 1 ? "s" : ""} · ${eur(h.price_per_night)} / nuit`,
       price: h.price_per_night * nights, estimated: true, provider: "Booking.com", url: h.booking_url, date: searched.depart,
     }, planInputFrom(searched));
     toast(`Hôtel ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
@@ -97,9 +96,9 @@ function HotelsContent() {
       <div className="flex flex-wrap items-start gap-10">
         <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
           <div className="flex flex-col gap-2.5">
-            <span className="text-sm font-semibold">Catégorie</span>
+            <span className="text-sm font-semibold">Confort</span>
             <div className="flex flex-wrap gap-1.5">
-              {[[0, "Toutes"], [3, "3 ★"], [4, "4 ★"], [5, "5 ★"]].map(([v, label]) => (
+              {[[0, "Tous"], [3, "3 ★"], [4, "4 ★"], [5, "5 ★"]].map(([v, label]) => (
                 <Chip key={v} active={stars === v} onClick={() => setStars(v as number)}>{label}</Chip>
               ))}
             </div>
@@ -129,10 +128,10 @@ function HotelsContent() {
               const added = !!plan?.items.some(i => i.key === `hotel:${h.id}:${searched?.depart}`);
               return (
                 <div key={h.id} className="flex flex-wrap gap-5 border-b border-line py-[18px]">
-                  <Photo k={photoFor(h.name, "hotel")} alt="" sizes="168px" className="h-[120px] flex-[0_0_168px] rounded-[18px] border border-line" />
+                  <Photo k={isPhotoKey(h.photo) ? h.photo : photoFor(h.name, "hotel")} alt="" sizes="168px" className="h-[120px] flex-[0_0_168px] rounded-[18px] border border-line" />
                   <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1.5">
                     <span className="text-base font-semibold">{h.name}</span>
-                    <span className="text-[13px] text-muted">{h.stars} étoiles · {h.category}</span>
+                    <span className="text-[13px] text-muted">{h.category} · <span className="text-gold-deep" aria-label={`Confort ${h.stars} sur 5`}>{"★".repeat(h.stars)}</span></span>
                     {!!h.amenities?.length && <span className="text-[13px] text-muted-2">{h.amenities.join(", ")}</span>}
                   </div>
                   <div className="ml-auto flex flex-[0_0_auto] flex-col items-end justify-between gap-2.5">
@@ -153,7 +152,7 @@ function HotelsContent() {
             {!loading && searched && rows.length === 0 && <p className="py-5 text-sm text-muted-2">Aucun hôtel ne correspond. Augmentez le prix maximum ou changez de catégorie.</p>}
           </div>
           <span className="text-[13px] text-muted">
-            Prix par nuit estimés selon la catégorie et la ville. L&apos;icône à côté de chaque hôtel ouvre Booking.com avec vos dates pour voir la disponibilité et le prix du jour.
+            Les types d&apos;hébergement qu&apos;on trouve sur place, avec un prix par nuit estimé. L&apos;icône ouvre Booking.com avec vos dates et ce type de logement, pour choisir une adresse et voir le prix du jour.
           </span>
         </div>
       </div>
@@ -168,8 +167,8 @@ export default function HotelsPage() {
         photo="hotel1"
         eyebrow="Hôtels et appartements"
         title={<>Où <em className="font-serif font-medium italic tracking-[-0.02em]">dormir</em></>}
-        text="Le prix du séjour entier dès la recherche, pour comparer les quartiers et les catégories avant de réserver."
-        points={["Prix total du séjour", "Filtre par catégorie", "Disponibilités sur Booking.com"]}
+        text="Riad, villa, ryokan ou hôtel : les logements typiques de votre destination, le bon quartier et le prix du séjour entier."
+        points={["Hébergements typiques du pays", "Prix total du séjour", "Adresses sur Booking.com"]}
       />
       <Suspense><HotelsContent /></Suspense>
     </div>

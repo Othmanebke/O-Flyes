@@ -26,6 +26,7 @@ interface Flight {
   type: string;
   baggage: string;
   booking_url: string;
+  knownRoute?: boolean;
 }
 
 const time = (iso?: string | null) => (iso ? iso.slice(11, 16) : "—");
@@ -243,7 +244,9 @@ function FlightsContent() {
             {!loading && searched && rows.length === 0 && <p className="py-6 text-sm text-muted-2">Aucun vol ne correspond à ces filtres.</p>}
           </div>
           <span className="text-[13px] text-muted">
-            Prix estimés à partir des tarifs habituels sur cette ligne, pour comparer et construire votre budget. L&apos;icône à côté de chaque vol ouvre Google Flights avec vos dates pour voir le tarif du jour et réserver.
+            {flights.some(f => f.knownRoute)
+              ? "Compagnies qui desservent habituellement cette ligne depuis Paris (programme variable selon la saison). Horaires et prix sont estimés pour construire votre budget."
+              : "Correspondances indicatives via les grands aéroports européens. Horaires et prix sont estimés pour construire votre budget."} L&apos;icône à côté de chaque vol ouvre Google Flights avec vos dates pour voir le tarif du jour et réserver.
           </span>
         </div>
       </div>
