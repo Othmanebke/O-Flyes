@@ -1,20 +1,13 @@
-import { Plane } from "lucide-react";
 import { clsx } from "clsx";
 
-/* Logo « Aivana » : écriture Kaushan Script, petit avion doré incliné en haut à
-   droite et trait doré légèrement penché sous le mot. */
+/* Logo « Aivana » : écriture Kaushan Script et trait doré légèrement penché sous le mot. */
 export default function Logo({ size = 36, className }: { size?: number; className?: string }) {
     return (
         <span
             className={clsx("relative inline-block font-logo leading-none", className)}
-            style={{ fontSize: size, padding: "0 14px 6px 0" }}
+            style={{ fontSize: size, padding: "0 4px 6px 0" }}
         >
             Aivana
-            <Plane
-                aria-hidden
-                className="absolute text-gold"
-                style={{ right: -6, top: -8, width: size * 0.42, height: size * 0.42, transform: "rotate(-30deg)" }}
-            />
             <span aria-hidden className="absolute bottom-0 h-[2px] rounded-sm bg-gold" style={{ left: "8%", right: "18%", transform: "rotate(-2deg)" }} />
         </span>
     );

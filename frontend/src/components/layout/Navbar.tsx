@@ -55,7 +55,7 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
         aria-haspopup="menu"
         className={clsx(
           "flex items-center gap-2 whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors",
-          overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[52px] border-line-2 text-ink hover:bg-white",
+          overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[44px] border-line-2 text-ink hover:bg-white",
         )}
       >
         Mes voyages <ChevronDown className={clsx("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden />
@@ -134,14 +134,14 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
           "font-sans",
           overlay
             ? "px-4 py-4 sm:px-9 sm:py-7"
-            : "border-b border-line-2/60 bg-paper/80 px-4 py-2.5 backdrop-blur-[18px] backdrop-saturate-150 sm:px-8 sm:py-3",
+            : "border-b border-line-2/60 bg-paper/95 px-4 py-2 sm:px-8",
         )}
       >
         <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-4">
           <button onClick={() => setOpen(true)} className={clsx("flex items-center gap-3 justify-self-start text-[15px] font-bold", fg)} aria-label="Ouvrir le menu">
             <span className={clsx(
               "flex h-[46px] w-[46px] items-center justify-center rounded-full bg-white text-xl text-ink",
-              overlay ? "sm:h-[60px] sm:w-[60px]" : "shadow-[0_0_0_1px_#E4DFD5] sm:h-[50px] sm:w-[50px]",
+              overlay ? "sm:h-[60px] sm:w-[60px]" : "shadow-[0_0_0_1px_#E4DFD5] sm:h-[42px] sm:w-[42px]",
             )}>
               <Menu className="h-5 w-5" aria-hidden />
             </span>
@@ -150,7 +150,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
 
           <Link href="/" aria-label="Accueil Aivana" className={clsx("plain-link", fg)}>
             <span className="sm:hidden"><Logo size={30} /></span>
-            <span className="hidden sm:inline"><Logo size={overlay ? 44 : 36} /></span>
+            <span className="hidden sm:inline"><Logo size={overlay ? 44 : 30} /></span>
           </Link>
 
           <div className="flex items-center gap-2.5 justify-self-end">
@@ -162,7 +162,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
                 href="/auth/login"
                 className={clsx(
                   "plain-link hidden items-center whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors min-[860px]:flex",
-                  overlay ? "h-[60px] border-white/55 !text-white hover:bg-white/10" : "h-[52px] border-line-2 !text-ink hover:bg-white",
+                  overlay ? "h-[60px] border-white/55 !text-white hover:bg-white/10" : "h-[44px] border-line-2 !text-ink hover:bg-white",
                 )}
               >
                 Connexion
@@ -179,7 +179,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
               <span className="hidden whitespace-nowrap min-[860px]:inline">Planifier un voyage</span>
               <span className={clsx(
                 "flex h-[38px] w-[38px] items-center justify-center rounded-full bg-ink text-gold",
-                overlay ? "sm:h-[50px] sm:w-[50px]" : "sm:h-[42px] sm:w-[42px]",
+                overlay ? "sm:h-[50px] sm:w-[50px]" : "sm:h-[34px] sm:w-[34px]",
               )}>
                 <ArrowUpRight className="h-[18px] w-[18px]" aria-hidden />
               </span>

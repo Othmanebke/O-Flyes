@@ -97,7 +97,7 @@ function AssistantContent() {
         </div>
       </div>
 
-      <aside className="sticky top-[88px] my-7 max-w-full flex-[1_1_340px]">
+      <aside className="sticky top-20 my-7 max-w-full flex-[1_1_340px]">
         {pick ? (
           <div className="overflow-hidden rounded-3xl border border-line bg-cream">
             <div className="relative h-[170px]">

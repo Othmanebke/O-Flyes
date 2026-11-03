@@ -180,7 +180,7 @@ function View({ id }: { id: string }) {
           </section>
         </div>
 
-        <aside className="sticky top-[88px] flex max-w-full flex-[1_1_320px] flex-col gap-[18px] rounded-3xl border border-line bg-cream p-[22px]">
+        <aside className="sticky top-20 flex max-w-full flex-[1_1_320px] flex-col gap-[18px] rounded-3xl border border-line bg-cream p-[22px]">
           <span className="text-[22px] font-bold tracking-[-0.035em]">Votre estimation</span>
           <div className="flex flex-col border-t border-line">
             <label className="flex items-center justify-between border-b border-line py-3">

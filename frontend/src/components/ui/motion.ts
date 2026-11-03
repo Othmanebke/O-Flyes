@@ -42,47 +42,93 @@ export function useReveal(root: RefObject<HTMLElement>) {
    - [data-float="k"]   flottement doux (sin, ±9 px)
    - [data-marquee="v"] défilement infini (contenu dupliqué deux fois)
    - [data-arc]         sur un marquee : carrousel courbé selon la distance au centre
-   - [data-parallax="f"] translation verticale proportionnelle au scroll */
+   - [data-parallax="f"] translation verticale proportionnelle au scroll
+   Performance : les éléments et leurs dimensions sont lus une fois (puis au
+   redimensionnement), jamais à chaque image, et seuls les éléments visibles à
+   l'écran sont animés. */
 export function useMotionLoop(root: RefObject<HTMLElement>) {
     useEffect(() => {
         const el = root.current;
         if (!el || reducedMotion()) return;
-        const offsets = new WeakMap<Element, number>();
+
+        interface Marquee { node: HTMLElement; speed: number; half: number; x: number; base: number; arc: { node: HTMLElement; left: number; width: number }[] | null }
+        let marquees: Marquee[] = [];
+        let floats: { node: HTMLElement; k: number; base: string }[] = [];
+        let parallax: { node: HTMLElement; f: number }[] = [];
+        const visible = new Set<Element>();
+        const io = new IntersectionObserver(entries => entries.forEach(e => {
+            if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+        }), { rootMargin: "100px" });
+
+        const measure = () => {
+            for (const m of marquees) {
+                m.half = m.node.scrollWidth / 2;
+                // le parent n'est pas transformé : sa position sert de référence fixe
+                m.base = m.node.parentElement?.getBoundingClientRect().left ?? 0;
+                if (m.arc) m.arc = (Array.from(m.node.children) as HTMLElement[]).map(c => ({ node: c, left: c.offsetLeft, width: c.offsetWidth }));
+            }
+        };
+
+        const collect = () => {
+            io.disconnect();
+            visible.clear();
+            marquees = Array.from(el.querySelectorAll<HTMLElement>("[data-marquee]")).map(node => ({
+                node, speed: parseFloat(node.dataset.marquee || "1"), half: 0, x: 0, base: 0,
+                arc: node.hasAttribute("data-arc") ? [] : null,
+            }));
+            floats = Array.from(el.querySelectorAll<HTMLElement>("[data-float]")).map(node => {
+                if (node.dataset.baseT === undefined) node.dataset.baseT = node.style.transform || "";
+                return { node, k: parseFloat(node.dataset.float || "1"), base: node.dataset.baseT };
+            });
+            parallax = Array.from(el.querySelectorAll<HTMLElement>("[data-parallax]")).map(node => ({ node, f: parseFloat(node.dataset.parallax || "0") }));
+            [...marquees, ...floats, ...parallax].forEach(x => io.observe(x.node));
+            measure();
+        };
+        collect();
+
+        let pending = 0;
+        const mo = new MutationObserver(() => { clearTimeout(pending); pending = window.setTimeout(collect, 200); });
+        mo.observe(el, { childList: true, subtree: true });
+        window.addEventListener("resize", measure);
+        // la largeur des bandeaux de texte change quand les polices arrivent
+        document.fonts?.ready.then(measure).catch(() => {});
+
         const t0 = performance.now();
         let raf = 0;
         const loop = (now: number) => {
             const t = (now - t0) / 1000;
-            el.querySelectorAll<HTMLElement>("[data-marquee]").forEach(m => {
-                const speed = parseFloat(m.dataset.marquee || "1");
-                const half = m.scrollWidth / 2;
-                let x = (offsets.get(m) || 0) - speed;
-                if (half > 0 && x <= -half) x += half;
-                offsets.set(m, x);
-                m.style.transform = `translateX(${x}px)`;
-                if (m.hasAttribute("data-arc")) {
-                    const W = window.innerWidth;
-                    for (const c of Array.from(m.children) as HTMLElement[]) {
-                        const r = c.getBoundingClientRect();
-                        if (!r.width) continue;
-                        let n = (r.left + r.width / 2 - W / 2) / (W / 2);
-                        n = Math.max(-1.4, Math.min(1.4, n));
-                        c.style.transform = `perspective(1400px) rotateY(${n * -24}deg) rotateZ(${n * -2.5}deg) scale(${1 - Math.abs(n) * 0.2})`;
+            const W = window.innerWidth;
+            for (const m of marquees) {
+                if (!visible.has(m.node) || !m.half) continue;
+                m.x -= m.speed;
+                if (m.x <= -m.half) m.x += m.half;
+                m.node.style.transform = `translate3d(${m.x}px,0,0)`;
+                if (m.arc) {
+                    for (const c of m.arc) {
+                        const center = m.base + c.left + m.x + c.width / 2;
+                        const n = Math.max(-1.4, Math.min(1.4, (center - W / 2) / (W / 2)));
+                        c.node.style.transform = `perspective(1400px) rotateY(${n * -24}deg) rotateZ(${n * -2.5}deg) scale(${1 - Math.abs(n) * 0.2})`;
                     }
                 }
-            });
-            el.querySelectorAll<HTMLElement>("[data-float]").forEach(f => {
-                const k = parseFloat(f.dataset.float || "1");
-                if (f.dataset.baseT === undefined) f.dataset.baseT = f.style.transform || "";
-                f.style.transform = `${f.dataset.baseT} translateY(${Math.sin(t * 0.9 + k * 1.7) * 9}px)`;
-            });
-            const y = window.scrollY;
-            el.querySelectorAll<HTMLElement>("[data-parallax]").forEach(p => {
-                p.style.transform = `translateY(${y * parseFloat(p.dataset.parallax || "0")}px)`;
-            });
+            }
+            for (const f of floats) {
+                if (!visible.has(f.node)) continue;
+                f.node.style.transform = `${f.base} translateY(${Math.sin(t * 0.9 + f.k * 1.7) * 9}px)`;
+            }
+            if (parallax.length) {
+                const y = window.scrollY;
+                for (const p of parallax) if (visible.has(p.node)) p.node.style.transform = `translate3d(0,${y * p.f}px,0)`;
+            }
             raf = requestAnimationFrame(loop);
         };
         raf = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(raf);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(pending);
+            io.disconnect();
+            mo.disconnect();
+            window.removeEventListener("resize", measure);
+        };
     }, [root]);
 }
 
