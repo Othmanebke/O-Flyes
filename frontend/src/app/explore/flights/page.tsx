@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
-import PageBanner from "@/components/layout/PageBanner";
+import SearchHero from "@/components/layout/SearchHero";
 import TripBar from "@/components/trip/TripBar";
 import { Chip } from "@/components/ui/Pill";
 import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
@@ -124,36 +124,31 @@ function FlightsContent() {
   const priceLabel = searched?.trip === "roundtrip" ? "A/R par pers. · estimé" : "trajet par pers. · estimé";
 
   return (
-    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-12">
-      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">
-        {isReturn ? <>Votre <em className="accent">vol retour</em></> : <>Trouver <em className="accent">votre vol</em></>}
-      </h1>
-      <TripBar />
+    <>
+    <SearchHero
+      photo="plane"
+      eyebrow={isReturn ? `Retour vers ${ctx.dest}` : `Vols au départ de ${ctx.origin || "Paris"}`}
+      title={isReturn ? <>Votre <em className="font-serif font-medium italic tracking-[-0.02em]">vol retour</em></> : <>Trouver <em className="font-serif font-medium italic tracking-[-0.02em]">votre vol</em></>}
+      text="Comparez vols directs et avec escale, en aller-retour ou en aller simple, et gardez le meilleur dans votre carnet."
+      points={["Prix estimés par personne", "Direct ou avec escale", "Tarif du jour sur Google Flights"]}
+    />
+    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
 
-      {/* Rappel : l'aller est choisi mais pas le retour */}
-      {plan && cover.outbound && !cover.return && !isReturn && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3">
-          <span className="text-sm">Votre vol aller est choisi. Il reste le vol retour.</span>
-          <Link href="/explore/flights?leg=retour" className="text-sm font-semibold">Chercher le retour <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+        <div className="col-span-full flex flex-wrap items-center gap-2 bg-cream px-3.5 py-2.5">
+          {isReturn ? (
+            <>
+              <span className="text-sm text-muted-2">Aller simple, de {ctx.origin} vers {ctx.dest}.</span>
+              <button type="button" onClick={() => router.push("/explore/flights")} className="text-sm font-semibold text-gold-deep hover:text-[#6E5323]">Revenir à la recherche aller</button>
+            </>
+          ) : (
+            <>
+              <Chip active={ctx.trip === "roundtrip"} onClick={() => setTrip("roundtrip")}>Aller-retour</Chip>
+              <Chip active={ctx.trip === "oneway"} onClick={() => setTrip("oneway")}>Aller simple</Chip>
+              {ctx.trip === "oneway" && <span className="text-[13px] text-muted">Vous pourrez chercher le retour juste après.</span>}
+            </>
+          )}
         </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2">
-        {isReturn ? (
-          <>
-            <span className="text-sm text-muted-2">Aller simple, de {ctx.origin} vers {ctx.dest}.</span>
-            <button onClick={() => router.push("/explore/flights")} className="text-sm font-semibold text-gold-deep hover:text-[#6E5323]">Revenir à la recherche aller</button>
-          </>
-        ) : (
-          <>
-            <Chip active={ctx.trip === "roundtrip"} onClick={() => setTrip("roundtrip")}>Aller-retour</Chip>
-            <Chip active={ctx.trip === "oneway"} onClick={() => setTrip("oneway")}>Aller simple</Chip>
-            {ctx.trip === "oneway" && <span className="text-[13px] text-muted">Vous pourrez chercher le retour juste après.</span>}
-          </>
-        )}
-      </div>
-
-      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <CityInput id="origin" label="Départ" value={ctx.origin} onChange={set("origin")} />
         <CityInput id="dest" label="Destination" value={ctx.dest} onChange={set("dest")} />
         <Field id="out" label={isReturn ? "Date du retour" : "Aller"}><input id="out" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
@@ -169,6 +164,15 @@ function FlightsContent() {
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
       </form>
+
+      <TripBar />
+      {/* Rappel : l'aller est choisi mais pas le retour */}
+      {plan && cover.outbound && !cover.return && !isReturn && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3">
+          <span className="text-sm">Votre vol aller est choisi. Il reste le vol retour.</span>
+          <Link href="/explore/flights?leg=retour" className="text-sm font-semibold">Chercher le retour <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-start gap-10">
         <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
@@ -244,13 +248,13 @@ function FlightsContent() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
 export default function FlightsPage() {
   return (
     <div className="bg-paper">
-      <PageBanner k="clouds" />
       <Suspense><FlightsContent /></Suspense>
     </div>
   );

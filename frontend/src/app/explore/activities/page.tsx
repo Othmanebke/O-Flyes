@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ExternalLink, Loader2 } from "lucide-react";
-import PageBanner from "@/components/layout/PageBanner";
+import SearchHero from "@/components/layout/SearchHero";
 import TripBar from "@/components/trip/TripBar";
 import Photo from "@/components/ui/Photo";
 import { Chip } from "@/components/ui/Pill";
@@ -72,17 +72,16 @@ function ActivitiesContent() {
   };
 
   return (
-    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-12">
-      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">Quoi <em className="accent">faire</em> sur place</h1>
-      <TripBar />
-
-      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="flex max-w-[720px] gap-2 rounded-[22px] border border-line-2 bg-cream p-1.5">
+    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] mb-6 flex max-w-[720px] gap-2 rounded-[22px] border border-line-2 bg-cream p-1.5 shadow-[0_24px_60px_rgba(15,27,45,0.18)]">
         <label htmlFor="q" className="sr-only">Ville</label>
         <input id="q" value={ctx.dest} onChange={e => setCtx(c => ({ ...c, dest: e.target.value }))} placeholder="Une ville…" className="h-11 min-w-0 flex-1 border-none bg-transparent px-2.5 text-[15px] text-ink outline-none" />
         <button type="submit" disabled={loading} className="flex items-center gap-2 rounded-full bg-ink px-[18px] text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
       </form>
+
+      <TripBar />
 
       {cats.length > 1 && (
         <div className="flex flex-wrap gap-2">{cats.map(c => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}</div>
@@ -141,7 +140,13 @@ function ActivitiesContent() {
 export default function ActivitiesPage() {
   return (
     <div className="bg-paper">
-      <PageBanner k="rafting" />
+      <SearchHero
+        photo="balloons"
+        eyebrow="Expériences sur place"
+        title={<>Quoi <em className="font-serif font-medium italic tracking-[-0.02em]">faire</em> sur place</>}
+        text="Les lieux à voir autour de vous et des idées de sorties, avec la durée et un prix moyen pour préparer chaque journée."
+        points={["Lieux réels et leur photo", "Prix moyen estimé", "Ajout direct au carnet"]}
+      />
       <Suspense><ActivitiesContent /></Suspense>
     </div>
   );

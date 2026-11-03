@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ExternalLink, Loader2 } from "lucide-react";
-import PageBanner from "@/components/layout/PageBanner";
+import SearchHero from "@/components/layout/SearchHero";
 import TripBar from "@/components/trip/TripBar";
 import Photo from "@/components/ui/Photo";
 import { Chip } from "@/components/ui/Pill";
@@ -77,11 +77,9 @@ function HotelsContent() {
   };
 
   return (
-    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-12">
-      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">Où <em className="accent">dormir</em></h1>
-      <TripBar />
-
-      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+    <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
+      {/* 4 colonnes maximum, sinon une case vide apparaît à côté des 4 champs */}
+      <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [grid-template-columns:repeat(auto-fit,minmax(max(180px,calc(25%-1px)),1fr))]">
         <CityInput id="city" label="Ville" value={ctx.dest} onChange={set("dest")} />
         <Field id="in" label="Arrivée"><input id="in" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
         <Field id="out" label="Départ"><input id="out" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
@@ -94,6 +92,8 @@ function HotelsContent() {
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
       </form>
+
+      <TripBar />
 
       <div className="flex flex-wrap items-start gap-10">
         <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
@@ -165,7 +165,13 @@ function HotelsContent() {
 export default function HotelsPage() {
   return (
     <div className="bg-paper">
-      <PageBanner k="hotel4" />
+      <SearchHero
+        photo="hotel1"
+        eyebrow="Hôtels et appartements"
+        title={<>Où <em className="font-serif font-medium italic tracking-[-0.02em]">dormir</em></>}
+        text="Le prix du séjour entier dès la recherche, pour comparer les quartiers et les catégories avant de réserver."
+        points={["Prix total du séjour", "Filtre par catégorie", "Disponibilités sur Booking.com"]}
+      />
       <Suspense><HotelsContent /></Suspense>
     </div>
   );
