@@ -15,10 +15,16 @@ export function useReveal(root: RefObject<HTMLElement>) {
             const t = e.target as HTMLElement;
             t.style.opacity = "1";
             t.style.transform = "none";
+            t.setAttribute("data-shown", "1");
             io.unobserve(t);
         }), { threshold: 0.12 });
-        const prep = () => el.querySelectorAll<HTMLElement>("[data-reveal]:not([data-rv])").forEach((t, i) => {
-            t.setAttribute("data-rv", "1");
+        // On ne marque un élément « fait » qu'une fois affiché : si l'effet est rejoué
+        // (React le lance deux fois en développement), les éléments encore cachés sont
+        // de nouveau observés au lieu de rester invisibles.
+        const observed = new WeakSet<Element>();
+        const prep = () => el.querySelectorAll<HTMLElement>("[data-reveal]:not([data-shown])").forEach((t, i) => {
+            if (observed.has(t)) return;
+            observed.add(t);
             t.style.opacity = "0";
             t.style.transform = "translateY(28px)";
             const delay = (i % 4) * 0.08;
