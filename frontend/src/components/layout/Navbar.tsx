@@ -1,237 +1,171 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Sparkles, Sun, Moon } from "lucide-react";
-import { clsx } from "clsx";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "./ThemeProvider";
-import { createClient } from "@/lib/supabase/browser";
+import { ArrowUpRight, Menu, Plane, X } from "lucide-react";
+import { clsx } from "clsx";
+import Logo from "@/components/ui/Logo";
+import Photo from "@/components/ui/Photo";
+import { ask } from "@/lib/chat";
+import { usePlan } from "@/lib/plan";
+import { useSession } from "@/lib/session";
 
-const links = [
-  { href: "/explore", label: "Destinations" },
-  { href: "/explore/flights", label: "Vols" },
-  { href: "/explore/hotels", label: "Hôtels" },
-  { href: "/explore/activities", label: "Activités" },
-  { href: "/blog", label: "Blog" },
+const LINKS = [
+  { label: "Accueil", href: "/", note: "Le point de départ" },
+  { label: "Destinations", href: "/explore", note: "22 idées" },
+  { label: "Vols", href: "/explore/flights", note: "Depuis Paris" },
+  { label: "Hôtels", href: "/explore/hotels", note: "Prix par nuit" },
+  { label: "Activités", href: "/explore/activities", note: "Sur place" },
+  { label: "Journal", href: "/blog", note: "Récits" },
+  { label: "Mes voyages", href: "/dashboard", note: "Votre carnet" },
+  { label: "Tarifs", href: "/pricing", note: "Gratuit ou Pro" },
 ];
 
-export default function Navbar() {
+/* Compteur du voyage en cours : « Lisbonne · 3 éléments », mène au carnet. */
+function PlanCounter({ overlay }: { overlay: boolean }) {
+  const plan = usePlan();
+  if (!plan) return null;
+  const n = plan.items.length;
+  return (
+    <Link
+      href="/dashboard"
+      title="Voir mon voyage en cours"
+      className={clsx(
+        "plain-link flex h-[46px] items-center gap-2 whitespace-nowrap rounded-full border pl-1.5 pr-3.5 text-sm font-semibold transition-colors sm:h-[52px]",
+        overlay ? "border-white/55 text-white hover:bg-white/10" : "border-line-2 bg-white text-ink hover:border-ink",
+      )}
+    >
+      <span className={clsx("flex h-8 w-8 items-center justify-center rounded-full sm:h-9 sm:w-9", overlay ? "bg-white/15" : "bg-gold-soft")}>
+        <Plane className="h-4 w-4 -rotate-45" aria-hidden />
+      </span>
+      <span className="max-w-[120px] truncate sm:max-w-[160px]">{plan.destination}</span>
+      <span className={clsx("tabular rounded-full px-2 py-0.5 text-xs", overlay ? "bg-white text-ink" : "bg-ink text-white")}>
+        {n}<span className="hidden sm:inline"> élément{n > 1 ? "s" : ""}</span>
+      </span>
+    </Link>
+  );
+}
+
+export default function Navbar({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
-  const [scrolled, setScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useSession();
+  const [open, setOpen] = useState(false);
 
+  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
+    document.body.style.overflow = open ? "hidden" : "";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsLoggedIn(true);
-        setUserName(session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "");
-      } else {
-        setIsLoggedIn(false);
-        setUserName("");
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setIsLoggedIn(true);
-        setUserName(session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "");
-      } else {
-        setIsLoggedIn(false);
-        setUserName("");
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-  }, [mobileMenuOpen]);
+  const plan = () => { setOpen(false); ask(""); };
+  const fg = overlay ? "text-white" : "text-ink";
+  const account = user
+    ? { label: "Mes voyages", href: "/dashboard" }
+    : { label: "Connexion", href: "/auth/login" };
 
   return (
     <>
       <nav
         className={clsx(
-          "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-6xl px-6 h-16 flex items-center justify-between",
-          "rounded-[24px] transition-all duration-700 ease-out",
-          scrolled
-            ? [
-              "backdrop-blur-2xl px-8",
-              "shadow-[0_20px_50px_var(--shadow-color)]",
-            ].join(" ")
-            : [
-              "backdrop-blur-md px-6",
-              "shadow-sm",
-            ].join(" ")
+          "font-sans",
+          overlay
+            ? "px-4 py-4 sm:px-9 sm:py-7"
+            : "border-b border-line-2/60 bg-paper/80 px-4 py-2.5 backdrop-blur-[18px] backdrop-saturate-150 sm:px-8 sm:py-3",
         )}
-        style={{
-          backgroundColor: scrolled ? 'var(--glass-bg)' : (theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.40)'),
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: scrolled ? 'var(--glass-border)' : (theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(230,224,209,0.30)'),
-        }}
       >
-        {/* Logo */}
-        <Link href="/" className="flex items-center font-serif text-lg tracking-tight group" style={{ color: 'var(--text-primary)' }}>
-          <span className="font-bold leading-none">AI<span className="text-gold">VANA</span></span>
-        </Link>
+        <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <button onClick={() => setOpen(true)} className={clsx("flex items-center gap-3 justify-self-start text-[15px] font-bold", fg)} aria-label="Ouvrir le menu">
+            <span className={clsx(
+              "flex h-[46px] w-[46px] items-center justify-center rounded-full bg-white text-xl text-ink",
+              overlay ? "sm:h-[60px] sm:w-[60px]" : "shadow-[0_0_0_1px_#E4DFD5] sm:h-[50px] sm:w-[50px]",
+            )}>
+              <Menu className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="hidden sm:inline">Menu</span>
+          </button>
 
-        {/* Nav links - Desktop */}
-        <div className="hidden lg:flex items-center gap-8">
-          {links.map(({ href, label }) => (
+          <Link href="/" aria-label="Accueil Aivana" className={clsx("plain-link", fg)}>
+            <span className="sm:hidden"><Logo size={30} /></span>
+            <span className="hidden sm:inline"><Logo size={overlay ? 44 : 36} /></span>
+          </Link>
+
+          <div className="flex items-center gap-2.5 justify-self-end">
+            <span className="hidden md:flex"><PlanCounter overlay={overlay} /></span>
             <Link
-              key={href}
-              href={href}
+              href={account.href}
               className={clsx(
-                "text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group py-2",
-                pathname === href ? "text-gold" : ""
+                "plain-link hidden items-center whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors min-[860px]:flex",
+                overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[52px] border-line-2 text-ink hover:bg-white",
               )}
-              style={pathname !== href ? { color: 'var(--text-muted)' } : undefined}
             >
-              {label}
-              <span
-                className={clsx(
-                  "absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-gold transition-all duration-500 rounded-full",
-                  pathname === href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/3 group-hover:opacity-50"
-                )}
-              />
+              {account.label}
             </Link>
-          ))}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
-            style={{ color: 'var(--text-primary)' }}
-            title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-          >
-            {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-          </button>
-
-          {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2.5 group active:scale-95 transition-all"
-            >
-              <div className="w-8 h-8 bg-gold rounded-xl flex items-center justify-center text-[10px] font-black" style={{ color: 'var(--text-inverse)' }}>
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <span className="text-[10px] uppercase font-black tracking-widest group-hover:text-gold transition-colors" style={{ color: 'var(--text-primary)' }}>Profil</span>
-            </Link>
-          ) : (
-            <Link
-              href="/auth/login"
-              className="hidden sm:flex items-center gap-2 bg-gold px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-gold-300 transition-all shadow-xl shadow-gold/10 active:scale-95"
-              style={{ color: 'var(--text-inverse)' }}
-            >
-              Se connecter
-            </Link>
-          )}
-
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl"
-            style={{
-              color: 'var(--text-primary)',
-              backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(10,17,40,0.05)',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: 'var(--border-color)',
-            }}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            className="fixed inset-0 z-[200] backdrop-blur-3xl flex flex-col items-center justify-center gap-10 p-10"
-            style={{ backgroundColor: 'var(--overlay-light)' }}
-          >
             <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-10 right-10 hover:text-gold transition-colors"
-              style={{ color: 'var(--text-muted)' }}
+              onClick={plan}
+              className={clsx(
+                "flex items-center gap-3.5 rounded-full bg-white p-[5px] text-[15px] font-bold tracking-[-0.01em] text-ink transition-colors hover:bg-[#FBF6EA] min-[860px]:pl-[26px]",
+                !overlay && "shadow-[0_0_0_1px_#E4DFD5]",
+              )}
+              aria-label="Planifier un voyage avec le copilote"
             >
-              <X className="w-8 h-8" />
-            </button>
-
-            <div className="flex flex-col items-center gap-8">
-              {links.map(({ href, label }, idx) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={href}
-                >
-                  <Link
-                    href={href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={clsx(
-                      "text-4xl font-serif transition-all",
-                      pathname === href ? "text-gold italic" : ""
-                    )}
-                    style={pathname !== href ? { color: 'var(--text-muted)' } : undefined}
-                  >
-                    {label}
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Theme toggle in mobile menu */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all"
-              style={{
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span className="text-xs font-black uppercase tracking-widest">
-                {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              <span className="hidden whitespace-nowrap min-[860px]:inline">Planifier un voyage</span>
+              <span className={clsx(
+                "flex h-[38px] w-[38px] items-center justify-center rounded-full bg-ink text-gold",
+                overlay ? "sm:h-[50px] sm:w-[50px]" : "sm:h-[42px] sm:w-[42px]",
+              )}>
+                <ArrowUpRight className="h-[18px] w-[18px]" aria-hidden />
               </span>
             </button>
+          </div>
+        </div>
+        {/* Compteur du voyage en dessous sur mobile */}
+        <div className="mt-2 flex justify-center md:hidden empty:hidden"><PlanCounter overlay={overlay} /></div>
+      </nav>
 
-            <Link
-              href={isLoggedIn ? "/dashboard" : "/auth/login"}
-              onClick={() => setMobileMenuOpen(false)}
-              className="mt-4 bg-gold px-16 py-5 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-gold/20 flex items-center gap-3"
-              style={{ color: 'var(--text-inverse)' }}
-            >
-              <Sparkles className="w-4 h-4" /> Dashboard
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[300] grid overflow-y-auto bg-paper font-sans text-ink [grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))]" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="flex flex-col gap-7 p-6 sm:p-12">
+            <div className="flex items-center justify-between">
+              <button onClick={() => setOpen(false)} className="flex items-center gap-3 text-base font-bold text-ink">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white"><X className="h-[22px] w-[22px]" aria-hidden /></span>
+                Fermer
+              </button>
+              <Logo size={30} />
+            </div>
+            <div className="mt-auto flex flex-col">
+              {[...LINKS, user ? { label: "Mon compte", href: "/dashboard", note: user.name } : { label: "Connexion", href: "/auth/login", note: "Ou créer un compte" }].map(l => (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  className="plain-link flex items-baseline justify-between gap-4 border-b border-dashed border-line-2 py-3 transition-colors hover:!text-gold-deep"
+                >
+                  <span className={clsx("text-[clamp(28px,4vw,48px)] font-bold leading-[1.05] tracking-[-0.04em]", pathname === l.href && "text-gold-deep")}>{l.label}</span>
+                  <span className="font-serif text-base italic text-muted">{l.note}</span>
+                </Link>
+              ))}
+            </div>
+            <ArrowPillInline onClick={plan} />
+          </div>
+          <div className="relative m-4 hidden min-h-[300px] overflow-hidden rounded-[28px] bg-[#2A2620] min-[980px]:block">
+            <Photo k="balloons" sizes="50vw" className="absolute inset-0" />
+            <div className="absolute inset-x-6 bottom-6 flex flex-col gap-1.5 text-white">
+              <span className="font-serif text-[26px] italic">Où partez-vous ensuite ?</span>
+              <span className="text-[15px] text-white/85">22 destinations, de 650 € à deux.</span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
+  );
+}
+
+function ArrowPillInline({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-3 self-start rounded-full bg-ink py-1.5 pl-[22px] pr-1.5 text-[15px] font-bold text-white hover:bg-ink-2">
+      Demander au copilote
+      <span className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-gold-soft text-ink"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
+    </button>
   );
 }

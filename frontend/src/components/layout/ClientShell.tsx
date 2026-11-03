@@ -1,74 +1,31 @@
 "use client";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import Chatbot from "@/components/chat/Chatbot";
-import PlaneBackground from "@/components/layout/PlaneBackground";
-import PageTransition, { FloatingParticles } from "@/components/layout/PageTransition";
-import GlobalLoader from "@/components/ui/GlobalLoader";
+import ChatDock from "@/components/chat/ChatDock";
+import Toaster from "@/components/trip/Toaster";
 
-const STANDALONE_ROUTES = ["/onboarding", "/dashboard"];
-const INTRO_SEEN_KEY = "oflyes_intro_seen";
+// Pages plein écran, sans navbar ni footer du site (elles ont leur propre en-tête)
+const STANDALONE = ["/dashboard", "/auth", "/onboarding"];
 
-function IntroSplash({ children }: { children: React.ReactNode }) {
-  const [showIntro, setShowIntro] = useState(false);
-
-  useEffect(() => {
-    const alreadySeen = sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
-    if (!alreadySeen) setShowIntro(true);
-  }, []);
-
-  const dismissIntro = () => {
-    sessionStorage.setItem(INTRO_SEEN_KEY, "1");
-    setShowIntro(false);
-  };
+export default function ClientShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() || "/";
+  const home = pathname === "/";
+  const standalone = STANDALONE.some(r => pathname.startsWith(r));
+  const assistant = pathname.startsWith("/assistant");
 
   return (
     <>
-      {children}
-      <AnimatePresence>
-        {showIntro && (
-          <motion.div
-            key="intro-splash"
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[9999]"
-          >
-            <GlobalLoader onComplete={() => setTimeout(dismissIntro, 500)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {!standalone && (
+        home
+          ? <div className="absolute inset-x-0 top-0 z-50"><Navbar overlay /></div>
+          : <div className="sticky top-0 z-50"><Navbar /></div>
+      )}
+      <main className="flex-1">{children}</main>
+      {!standalone && !assistant && <Footer />}
+      {/* /assistant est déjà la conversation en plein écran */}
+      {!assistant && <ChatDock />}
+      <Toaster />
     </>
-  );
-}
-
-export default function ClientShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isStandalone = STANDALONE_ROUTES.some((r) => pathname.startsWith(r));
-
-  if (isStandalone) {
-    return (
-      <IntroSplash>
-        <main className="flex-1">{children}</main>
-        <Chatbot />
-      </IntroSplash>
-    );
-  }
-
-  return (
-    <IntroSplash>
-      <FloatingParticles />
-      <PlaneBackground />
-      <Navbar />
-      <main className="flex-1 pt-20">
-        <PageTransition>
-          {children}
-        </PageTransition>
-      </main>
-      <Footer />
-      <Chatbot />
-    </IntroSplash>
   );
 }

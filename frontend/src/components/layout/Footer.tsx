@@ -1,545 +1,106 @@
 "use client";
 import Link from "next/link";
-import { Plane, Send, ArrowRight, Cookie, X, ShieldCheck } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import axios from "axios";
+import { ArrowUpRight } from "lucide-react";
+import Logo from "@/components/ui/Logo";
+import Photo from "@/components/ui/Photo";
+import type { PhotoKey } from "@/lib/photos";
 
-const NAV_LINKS = [
-  { href: "/explore", label: "Destinations" },
-  { href: "/explore/flights", label: "Vols" },
-  { href: "/explore/hotels", label: "Hôtels" },
-  { href: "/explore/activities", label: "Activités" },
-  { href: "/blog", label: "Blog" },
+const CHIPS: [string, PhotoKey, string][] = [
+  ["Japon", "NRT", "c1"], ["Maroc", "RAK", "t1"], ["Islande", "KEF", "c2"],
+  ["Maldives", "MLE", "l1"], ["Bali", "DPS", "t3"], ["Kenya", "NBO", "m5"],
 ];
 
-const SOCIALS = [
-  {
-    name: "Instagram",
-    href: "https://instagram.com",
-    icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z" />
-      </svg>
-    ),
-  },
-  {
-    name: "X",
-    href: "https://twitter.com",
-    icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
-    name: "LinkedIn",
-    href: "https://linkedin.com",
-    icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-      </svg>
-    ),
-  },
-  {
-    name: "TikTok",
-    href: "https://tiktok.com",
-    icon: (
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.66a8.16 8.16 0 004.77 1.52V6.73z" />
-      </svg>
-    ),
-  },
+const COLS = [
+  { t: "Pages", links: [["Accueil", "/"], ["Destinations", "/explore"], ["Journal", "/blog"], ["Tarifs", "/pricing"], ["Mes voyages", "/dashboard"]] },
+  { t: "Planifier", links: [["Copilote IA", "/assistant"], ["Vols", "/explore/flights"], ["Hôtels", "/explore/hotels"], ["Activités", "/explore/activities"]] },
 ];
+
+// Brume blanche qui fond le haut du footer dans la page
+const MIST = "radial-gradient(ellipse 24% 50% at 15% 40%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 22% 45% at 50% 30%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 26% 55% at 85% 40%, #F9F8F6 55%, transparent 72%), linear-gradient(to bottom, #F9F8F6 40%, transparent 85%)";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [cookieVisible, setCookieVisible] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  useEffect(() => {
-    const accepted = localStorage.getItem("cookie_consent");
-    if (!accepted) {
-      const t = setTimeout(() => setCookieVisible(true), 800);
-      return () => clearTimeout(t);
-    }
-  }, []);
-
-  const acceptCookies = () => {
-    localStorage.setItem("cookie_consent", "accepted");
-    setCookieVisible(false);
-  };
-
-  const declineCookies = () => {
-    localStorage.setItem("cookie_consent", "declined");
-    setCookieVisible(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
-      setEmail("");
+    setStatus("sending");
+    try {
+      await axios.post("/api/newsletter", { email });
+      setStatus("sent");
+    } catch {
+      setStatus("error");
     }
   };
 
   return (
-    <>
-      {/* ── Cookie Consent Banner ── */}
-      <div className={`cookie-banner ${cookieVisible ? "cookie-banner--visible" : ""}`}>
-        <div className="cookie-banner-inner">
-          <div className="cookie-banner-icon">
-            <Cookie className="w-5 h-5 text-gold" />
-          </div>
-          <div className="cookie-banner-content">
-            <p className="cookie-banner-title">Nous utilisons des cookies 🍪</p>
-            <p className="cookie-banner-text">
-              Ces cookies nous permettent d&apos;améliorer votre expérience et d&apos;analyser notre trafic.
-              Aucune donnée n&apos;est vendue à des tiers.{" "}
-              <Link href="#" className="cookie-banner-link">En savoir plus</Link>
-            </p>
-          </div>
-          <div className="cookie-banner-actions">
-            <button onClick={declineCookies} className="cookie-btn-decline">
-              <X className="w-3.5 h-3.5" />
-              Refuser
+    <footer className="relative overflow-hidden bg-[#0B1422] font-sans text-white">
+      <Photo k="clouds" sizes="100vw" className="absolute inset-0" />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)" }} />
+      <div className="pointer-events-none absolute -left-[10%] -right-[10%] -top-[90px] h-[300px] blur-[30px]" style={{ background: MIST }} />
+
+      <div className="relative flex flex-col items-center gap-[26px] px-6 pb-[120px] pt-[220px] text-center">
+        <h2 className="m-0 text-[clamp(38px,5vw,72px)] font-bold leading-[1.02] tracking-[-0.045em] [text-shadow:0_2px_24px_rgba(0,0,0,0.25)]">
+          Des idées de voyage<br /><em className="font-serif font-semibold italic tracking-[-0.03em]">livrées</em> chaque mois
+        </h2>
+        {status === "sent" ? (
+          <span className="rounded-full bg-white/20 px-[26px] py-4 text-base font-semibold backdrop-blur-[14px]">Merci, à très vite dans votre boîte mail.</span>
+        ) : (
+          <form id="newsletter" onSubmit={submit} className="flex w-full max-w-[700px] scroll-mt-40 gap-1.5 rounded-full bg-white p-1.5">
+            <label htmlFor="newsletter-email" className="sr-only">Votre adresse email</label>
+            <input
+              id="newsletter-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="Votre adresse email"
+              className="h-[58px] min-w-0 flex-1 border-none bg-transparent px-[22px] text-[17px] text-ink outline-none"
+            />
+            <button type="submit" disabled={status === "sending"} className="whitespace-nowrap rounded-full bg-[#5A5450] px-[26px] text-base font-bold text-white transition-colors hover:bg-ink disabled:opacity-60">
+              {status === "sending" ? "Envoi…" : "S'inscrire"}
             </button>
-            <button onClick={acceptCookies} className="cookie-btn-accept">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Accepter
-            </button>
-          </div>
-        </div>
+          </form>
+        )}
+        <span className="text-sm font-semibold text-white/90">
+          {status === "error" ? "L'inscription n'a pas pu être enregistrée. Réessayez plus tard." : "Une seule lettre par mois · Désinscription en un clic"}
+        </span>
       </div>
 
-      <footer className="relative overflow-hidden border-t footer-root">
-      {/* ── Animated background orbs ── */}
-      <div className="footer-orb footer-orb-1" />
-      <div className="footer-orb footer-orb-2" />
-      <div className="footer-orb footer-orb-3" />
-
-      {/* ── Animated top border ── */}
-      <div className="footer-top-line" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 pt-16 pb-10">
-
-        {/* ── MAIN GRID ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
-
-          {/* ── Col 1 · Brand ── */}
-          <div className="space-y-5">
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="footer-logo-icon group-hover:scale-110 transition-transform duration-300">
-                <Plane className="w-4 h-4 text-gold group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <span className="font-serif text-base font-bold tracking-tight footer-brand-text">
-                AI<span className="text-gold">VANA</span>
-              </span>
-            </Link>
-
-            <p className="text-sm leading-relaxed max-w-xs footer-muted">
-              Explorez le monde avec l&apos;intelligence artificielle. Vos voyages
-              de rêve, planifiés à la perfection.
+      <div className="relative mx-auto flex max-w-[1400px] flex-col gap-14 px-[clamp(24px,4vw,80px)] pb-8 pt-10">
+        <div className="grid gap-12 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
+          <div className="flex min-w-[min(100%,280px)] flex-col gap-[22px] md:col-span-2">
+            <span className="self-start text-white"><Logo size={48} /></span>
+            <p className="m-0 max-w-[460px] text-[17px] font-medium leading-normal text-white/85">
+              Le copilote qui transforme une envie en itinéraire chiffré. Chaque voyage mérite d&apos;être raconté.
             </p>
-
-            {/* Socials */}
-            <div className="flex items-center gap-2 pt-1">
-              {SOCIALS.map((s) => (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  title={s.name}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="footer-social-btn group"
-                >
-                  <span className="footer-social-icon">{s.icon}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Col 2 · Navigation ── */}
-          <div className="space-y-5">
-            <h3 className="footer-section-title">Explorer</h3>
-            <nav className="flex flex-col gap-2.5">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="footer-nav-link group flex items-center gap-2"
-                >
-                  <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-gold" />
-                  <span>{label}</span>
+            <div className="flex max-w-[420px] flex-wrap gap-2.5">
+              {CHIPS.map(([name, k, id]) => (
+                <Link key={id} href={`/destination/${id}`} className="plain-link flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] py-1 pl-1 pr-3.5 text-[15px] font-semibold !text-white transition-colors hover:bg-white/20">
+                  <Photo k={k} sizes="26px" className="h-[26px] w-[26px] rounded-full" />{name}
                 </Link>
               ))}
-            </nav>
+              <Link href="/explore" className="plain-link flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-4 text-[15px] font-semibold !text-ink transition-colors hover:bg-gold-soft">
+                <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-ink text-white"><ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></span>
+                Toutes les destinations
+              </Link>
+            </div>
           </div>
-
-          {/* ── Col 3 · Newsletter ── */}
-          <div className="space-y-5">
-            <h3 className="footer-section-title">Newsletter</h3>
-            <p className="text-sm footer-muted leading-relaxed">
-              Recevez nos meilleures offres et inspirations voyage directement dans votre boîte mail.
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className={`footer-input-wrap ${focused ? "footer-input-focused" : ""}`}>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  placeholder="votre@email.com"
-                  className="footer-input"
-                />
-              </div>
-              <button
-                type="submit"
-                className={`footer-submit-btn ${submitted ? "footer-submit-success" : ""}`}
-              >
-                {submitted ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Inscrit !
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <Send className="w-3.5 h-3.5" />
-                    S&apos;inscrire
-                  </span>
-                )}
-              </button>
-            </form>
-
-            <p className="text-xs footer-muted opacity-60">
-              Pas de spam · Désabonnement en 1 clic
-            </p>
+          {COLS.map(c => (
+            <div key={c.t} className="flex flex-col gap-4">
+              <span className="border-b-[1.5px] border-dashed border-white/30 pb-[18px] font-serif text-[30px] font-semibold italic">{c.t}</span>
+              {c.links.map(([label, href]) => (
+                <Link key={href} href={href} className="plain-link text-[17px] font-medium !text-white/80 hover:!text-white">{label}</Link>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap justify-between gap-3 border-t border-white/15 pt-6 text-sm text-white/60">
+          <span>© 2026 Aivana · Photos Unsplash</span>
+          <div className="flex gap-5">
+            <Link href="/legal" className="plain-link !text-white/60 hover:!text-white">Mentions légales</Link>
+            <Link href="/legal#confidentialite" className="plain-link !text-white/60 hover:!text-white">Confidentialité</Link>
           </div>
         </div>
-
       </div>
-
-      {/* ── Floating animated plane ── */}
-      <div className="footer-plane" aria-hidden>
-        <Plane className="w-full h-full text-gold" />
-      </div>
-
-      <style>{`
-        /* ── Root ── */
-        .footer-root {
-          background: var(--bg-secondary);
-          border-top-color: var(--border-color);
-        }
-
-        /* ── Animated top gradient line ── */
-        .footer-top-line {
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 1px;
-          background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(197,160,89,0.6) 30%,
-            rgba(197,160,89,1) 50%,
-            rgba(197,160,89,0.6) 70%,
-            transparent 100%
-          );
-          background-size: 200% 100%;
-          animation: shimmer-line 4s ease-in-out infinite;
-        }
-        @keyframes shimmer-line {
-          0%   { background-position: 200% center; opacity: 0.4; }
-          50%  { background-position: 0% center;   opacity: 1;   }
-          100% { background-position: -200% center; opacity: 0.4; }
-        }
-
-        /* ── Background orbs ── */
-        .footer-orb {
-          position: absolute;
-          border-radius: 50%;
-          pointer-events: none;
-          filter: blur(80px);
-          animation: orb-drift 10s ease-in-out infinite;
-        }
-        .footer-orb-1 {
-          width: 400px; height: 300px;
-          top: -80px; left: -80px;
-          background: radial-gradient(circle, rgba(197,160,89,0.12) 0%, transparent 70%);
-          animation-duration: 12s;
-        }
-        .footer-orb-2 {
-          width: 350px; height: 350px;
-          top: -60px; right: -60px;
-          background: radial-gradient(circle, rgba(80,105,138,0.10) 0%, transparent 70%);
-          animation-duration: 15s;
-          animation-delay: -4s;
-        }
-        .footer-orb-3 {
-          width: 250px; height: 200px;
-          bottom: 0; left: 40%;
-          background: radial-gradient(circle, rgba(197,160,89,0.07) 0%, transparent 70%);
-          animation-duration: 18s;
-          animation-delay: -8s;
-        }
-        @keyframes orb-drift {
-          0%, 100% { transform: translate(0px, 0px) scale(1); }
-          33%       { transform: translate(20px, -15px) scale(1.05); }
-          66%       { transform: translate(-15px, 10px) scale(0.97); }
-        }
-
-        /* ── Logo icon ── */
-        .footer-logo-icon {
-          width: 36px; height: 36px;
-          border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(197,160,89,0.1);
-          border: 1px solid rgba(197,160,89,0.25);
-          box-shadow: 0 0 20px rgba(197,160,89,0.08);
-        }
-
-        /* ── Brand text ── */
-        .footer-brand-text { color: var(--text-primary); }
-
-        /* ── Muted text ── */
-        .footer-muted { color: var(--text-muted); }
-
-        /* ── Section title ── */
-        .footer-section-title {
-          font-size: 11px;
-          font-weight: 900;
-          text-transform: uppercase;
-          letter-spacing: 0.18em;
-          color: var(--text-primary);
-          position: relative;
-          padding-bottom: 10px;
-        }
-        .footer-section-title::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0;
-          width: 24px; height: 2px;
-          background: linear-gradient(90deg, #C5A059, transparent);
-          border-radius: 2px;
-          animation: title-bar 3s ease-in-out infinite;
-        }
-        @keyframes title-bar {
-          0%, 100% { width: 24px; opacity: 0.8; }
-          50%       { width: 40px; opacity: 1; }
-        }
-
-        /* ── Nav links ── */
-        .footer-nav-link {
-          font-size: 14px;
-          color: var(--text-muted);
-          transition: color 0.2s, transform 0.2s;
-        }
-        .footer-nav-link:hover { color: #C5A059; transform: translateX(4px); }
-
-        /* ── Social buttons ── */
-        .footer-social-btn {
-          width: 32px; height: 32px;
-          border-radius: 8px;
-          display: flex; align-items: center; justify-content: center;
-          border: 1px solid var(--border-color);
-          color: var(--text-muted);
-          transition: all 0.25s;
-          position: relative;
-          overflow: hidden;
-        }
-        .footer-social-btn::before {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05));
-          opacity: 0;
-          transition: opacity 0.25s;
-        }
-        .footer-social-btn:hover::before { opacity: 1; }
-        .footer-social-btn:hover {
-          color: #C5A059;
-          border-color: rgba(197,160,89,0.5);
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(197,160,89,0.15);
-        }
-
-        /* ── Newsletter input ── */
-        .footer-input-wrap {
-          border-radius: 10px;
-          border: 1px solid var(--border-color);
-          background: var(--bg-primary);
-          transition: border-color 0.3s, box-shadow 0.3s;
-          overflow: hidden;
-        }
-        .footer-input-focused {
-          border-color: rgba(197,160,89,0.6);
-          box-shadow: 0 0 0 3px rgba(197,160,89,0.08), 0 0 20px rgba(197,160,89,0.1);
-        }
-        .footer-input {
-          width: 100%; padding: 10px 14px;
-          background: transparent;
-          color: var(--text-primary);
-          font-size: 13px;
-          outline: none;
-          border: none;
-        }
-        .footer-input::placeholder { color: var(--text-muted); opacity: 0.6; }
-
-        /* ── Submit button ── */
-        .footer-submit-btn {
-          width: 100%; padding: 10px;
-          border-radius: 10px;
-          font-size: 12px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.12em;
-          background: linear-gradient(135deg, #C5A059, #d4b070);
-          color: #0a1128;
-          border: none; cursor: pointer;
-          transition: all 0.3s;
-          position: relative;
-          overflow: hidden;
-        }
-        .footer-submit-btn::before {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-        .footer-submit-btn:hover::before { opacity: 1; }
-        .footer-submit-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(197,160,89,0.35);
-        }
-        .footer-submit-btn:active { transform: scale(0.97); }
-        .footer-submit-success {
-          background: linear-gradient(135deg, #5a9e6f, #3d8058) !important;
-          color: #fff !important;
-        }
-
-        /* ── Divider ── */
-        .footer-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--border-color) 30%, var(--border-color) 70%, transparent);
-        }
-
-        /* ── Dot separator ── */
-        .footer-dot { color: var(--border-color); font-size: 12px; }
-
-        /* ── Floating plane ── */
-        .footer-plane {
-          position: absolute;
-          bottom: 16px; right: 24px;
-          width: 28px; height: 28px;
-          opacity: 0.08;
-          animation: plane-float 6s ease-in-out infinite;
-          pointer-events: none;
-        }
-        @keyframes plane-float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50%       { transform: translateY(-8px) rotate(5deg); }
-        }
-
-        /* ── Cookie Banner ── */
-        .cookie-banner {
-          position: fixed;
-          bottom: 24px; left: 50%;
-          transform: translateX(-50%) translateY(120px);
-          z-index: 9999;
-          width: calc(100% - 32px);
-          max-width: 720px;
-          opacity: 0;
-          pointer-events: none;
-          transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
-        }
-        .cookie-banner--visible {
-          transform: translateX(-50%) translateY(0);
-          opacity: 1;
-          pointer-events: all;
-        }
-        .cookie-banner-inner {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 16px 20px;
-          border-radius: 16px;
-          background: var(--bg-secondary);
-          border: 1px solid rgba(197,160,89,0.25);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(197,160,89,0.08);
-          backdrop-filter: blur(20px);
-        }
-        .cookie-banner-icon {
-          flex-shrink: 0;
-          width: 40px; height: 40px;
-          border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(197,160,89,0.1);
-          border: 1px solid rgba(197,160,89,0.2);
-        }
-        .cookie-banner-content { flex: 1; min-width: 0; }
-        .cookie-banner-title {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--text-primary);
-          margin-bottom: 3px;
-        }
-        .cookie-banner-text {
-          font-size: 12px;
-          color: var(--text-muted);
-          line-height: 1.5;
-        }
-        .cookie-banner-link {
-          color: #C5A059;
-          text-decoration: underline;
-          text-underline-offset: 2px;
-        }
-        .cookie-banner-actions {
-          display: flex;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-        .cookie-btn-decline {
-          display: flex; align-items: center; gap-: 6px;
-          padding: 8px 14px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--text-muted);
-          background: transparent;
-          border: 1px solid var(--border-color);
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex; align-items: center; gap: 5px;
-        }
-        .cookie-btn-decline:hover {
-          color: var(--text-primary);
-          border-color: var(--text-muted);
-        }
-        .cookie-btn-accept {
-          display: flex; align-items: center; gap: 5px;
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 800;
-          color: #0a1128;
-          background: linear-gradient(135deg, #C5A059, #d4b070);
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
-        }
-        .cookie-btn-accept:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(197,160,89,0.35);
-        }
-        @media (max-width: 580px) {
-          .cookie-banner-inner { flex-direction: column; align-items: flex-start; }
-          .cookie-banner-actions { width: 100%; justify-content: flex-end; }
-        }
-      `}</style>
     </footer>
-    </>
   );
 }
