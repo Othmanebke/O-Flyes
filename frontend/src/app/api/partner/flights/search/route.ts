@@ -90,6 +90,18 @@ function addHours(date: Date, h: number) {
     return new Date(date.getTime() + h * 3600000);
 }
 
+// Heure "murale" sans fuseau (AAAA-MM-JJTHH:MM:00), comme Amadeus : le navigateur
+// l'affiche telle quelle au lieu de la décaler selon son fuseau.
+function wallClock(d: Date) {
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:00`;
+}
+
+function formatHours(h: number) {
+    const total = Math.round(h * 60);
+    return `${Math.floor(total / 60)}h${String(total % 60).padStart(2, '0')}`;
+}
+
 function parseDuration(dur: string): number {
     const [h, m] = dur.split(':').map(Number);
     return h + m / 60;
@@ -180,6 +192,7 @@ async function fetchAmadeusFlights(originCode: string, destCode: string, departD
                 class: fareDetails.cabin === 'BUSINESS' ? 'Business' : 'Economy',
                 baggage: baggageStatus,
                 booking_url: googleFlightsUrl({ origin: originCity, destination: destCity, depart: departDate, return: returnDate, airline: seg.carrierCode }),
+                source: 'amadeus',
             };
         });
     } catch {
@@ -212,25 +225,25 @@ export async function GET(request: Request) {
     const seed = destCode.charCodeAt(0) + destCode.charCodeAt(1) * 3 + (destCode.charCodeAt(2) || 0) * 7;
     const airlines = pickAirlines(4, seed);
 
-    const departDate = new Date(depart + 'T08:00:00');
-    const returnDeptDate = new Date(returnDate + 'T08:00:00');
+    const departDate = new Date(depart + 'T08:00:00Z');
+    const returnDeptDate = new Date(returnDate + 'T08:00:00Z');
 
+    // Estimation : données cohérentes entre elles (durée = arrivée - départ, classe
+    // économique partout) et marquées `source: 'estimate'` pour que l'interface ne les
+    // présente jamais comme des prix en direct.
     const flights = airlines.map((airline, i) => {
-        // Spread departures through the day
         const depOffset = [0, 2.5, 5.5, 9][i];
+        const isStop = durationH > 5 && i % 2 === 1;
+        const legH = durationH + (isStop ? 1.5 : 0);
         const dep = addHours(departDate, depOffset);
-        const arr = addHours(dep, durationH + (i % 2 === 1 ? 1.5 : 0)); // escale sur vol impair
-
-        // Vol retour : décalage symétrique sur la journée de retour, même compagnie/itinéraire
+        const arr = addHours(dep, legH);
         const retDep = addHours(returnDeptDate, depOffset + 1);
-        const retArr = addHours(retDep, durationH + (i % 2 === 1 ? 1.5 : 0));
+        const retArr = addHours(retDep, legH);
 
-        // Price variation: cheapest early morning, more expensive midday — prix = total ALLER-RETOUR
+        // prix = total ALLER-RETOUR pour tous les voyageurs, comme Amadeus
         const priceMultiplier = [0.85, 1.0, 1.2, 0.95][i];
         const basePrice = routeInfo.base + Math.floor((seed * (i + 1) * 13) % routeInfo.range);
         const price = Math.round(basePrice * priceMultiplier * adults * 2);
-
-        const isStop = durationH > 8 && i % 2 === 1;
 
         return {
             id: `${originCode}-${destCode}-${i}`,
@@ -240,19 +253,20 @@ export async function GET(request: Request) {
             originCode,
             destination,
             destinationCode: destCode,
-            departure: dep.toISOString(),
-            arrival: arr.toISOString(),
-            duration: routeInfo.duration,
-            returnDeparture: retDep.toISOString(),
-            returnArrival: retArr.toISOString(),
-            returnDuration: routeInfo.duration,
+            departure: wallClock(dep),
+            arrival: wallClock(arr),
+            duration: formatHours(legH),
+            returnDeparture: wallClock(retDep),
+            returnArrival: wallClock(retArr),
+            returnDuration: formatHours(legH),
             price,
             currency: "EUR",
             type: isStop ? "1 escale" : "Direct",
-            class: i === 3 ? "Business" : "Economy",
-            baggage: "Sans bagage (cabine uniquement)",
+            class: "Economy",
+            baggage: "Bagage cabine",
             booking_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
             google_flights_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
+            source: 'estimate',
         };
     });
 

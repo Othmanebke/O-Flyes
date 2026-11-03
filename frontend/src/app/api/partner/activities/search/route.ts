@@ -117,8 +117,10 @@ async function fetchOpenTripMap(city: string): Promise<any[] | null> {
                 price: [20, 30, 45, 60, 75, 90][i % 6],
                 duration: ['2h', '3h', '4h', '2h30', '5h', '3h30'][i % 6],
                 currency: 'EUR',
-                rating: (4.2 + Math.random() * 0.7).toFixed(1),
-                reviews: Math.floor(800 + Math.random() * 5000),
+                // OpenTripMap donne le lieu, pas de note ni de prix : on n'en invente pas
+                rating: null,
+                reviews: null,
+                source: 'estimate',
                 image_url: `https://images.unsplash.com/photo-${['1533105079780-92b9be482077', '1499678783-d2352b98df87'][i % 2]}?w=600&q=80`,
                 description: `Visitez ${p.name}, une attraction incontournable de ${city}.`,
                 booking_url: gygActivityUrl(city),
@@ -162,6 +164,7 @@ export async function GET(request: Request) {
         description,
         booking_url: gygActivityUrl(city),
         viator_url: viatorActivityUrl(city),
+        source: 'estimate',
     }));
 
     return NextResponse.json(activities);

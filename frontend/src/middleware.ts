@@ -19,6 +19,12 @@ export async function middleware(request: NextRequest) {
         },
     })
 
+    // Sans clés Supabase (ex. .env.local incomplet), on laisse passer
+    // plutôt que de renvoyer une 500 sur toutes les pages publiques.
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        return supabaseResponse
+    }
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

@@ -164,6 +164,7 @@ async function fetchAmadeusHotels(city: string, checkin: string, checkout: strin
                 description: hotel.description?.text || `Séjour à ${hotel.name}`,
                 amenities: [],
                 booking_url: bookingHotelUrl({ city, hotelName: hotel.name, checkin, checkout, adults }),
+                source: 'amadeus',
             };
         });
     } catch {
@@ -211,6 +212,7 @@ export async function GET(request: Request) {
             description: `Profitez d'un séjour exceptionnel au ${name}, idéalement situé à ${city}.`,
             amenities,
             booking_url: bookingHotelUrl({ city, hotelName: name, checkin, checkout, adults }),
+            source: 'estimate',
         };
     });
 
