@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GEO, byId } from '@/lib/catalog';
+import { nearbySights } from '@/lib/travel/wikipedia';
 
 // Données réelles et gratuites (sans clé) pour la fiche destination :
 // - météo du mois choisi, mesurée l'an dernier : Open-Meteo (archive)
@@ -11,8 +12,7 @@ const DAY = 60 * 60 * 24;
 
 async function json<T>(url: string): Promise<T | null> {
     try {
-        // Wikimédia demande un User-Agent qui identifie l'application
-        const res = await fetch(url, { next: { revalidate: DAY }, signal: AbortSignal.timeout(6000), headers: { 'User-Agent': 'AIVANA/1.0 (projet etudiant de planification de voyage)' } });
+        const res = await fetch(url, { next: { revalidate: DAY }, signal: AbortSignal.timeout(6000) });
         return res.ok ? (await res.json()) as T : null;
     } catch {
         return null;
@@ -50,18 +50,6 @@ async function exchange(currency: string) {
     return rate ? { currency, rate, updated: data?.time_last_update_utc || null } : null;
 }
 
-async function sights(lat: number, lon: number) {
-    const data = await json<{ query?: { geosearch?: { pageid: number; title: string; dist: number }[] } }>(
-        `https://fr.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}%7C${lon}&gsradius=10000&gslimit=60&format=json&origin=*`
-    );
-    // On écarte transports, administrations, événements datés et pages d'homonymie « X (Ville) »
-    const skip = /gare|station|métro|arrêt|aéroport|ambassade|consulat|école|lycée|université|hôpital|^rue |^avenue |^boulevard |district|arrondissement|quartier|paroisse|freguesia|tournoi|championnat|grand prix|élection|liste|\(|\d{4}/i;
-    return (data?.query?.geosearch || [])
-        .filter(p => !skip.test(p.title))
-        .slice(0, 8)
-        .map(p => ({ title: p.title, url: `https://fr.wikipedia.org/?curid=${p.pageid}`, km: Math.round(p.dist / 100) / 10 }));
-}
-
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const d = byId(searchParams.get('id'));
@@ -69,7 +57,7 @@ export async function GET(request: Request) {
     if (!d || !geo) return NextResponse.json({ error: 'Destination inconnue' }, { status: 404 });
 
     const month = Math.min(11, Math.max(0, Number(searchParams.get('month') ?? new Date().getMonth()) || 0));
-    const [w, fx, places] = await Promise.all([weather(geo.lat, geo.lon, month), exchange(geo.currency), sights(geo.lat, geo.lon)]);
+    const [w, fx, places] = await Promise.all([weather(geo.lat, geo.lon, month), exchange(geo.currency), nearbySights(geo.lat, geo.lon)]);
 
     return NextResponse.json({
         month,

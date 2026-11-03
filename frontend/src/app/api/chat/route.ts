@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { FREE_SEARCHES_PER_MONTH } from '@/lib/limits';
 import { bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
 import { estimate, findDestination } from '@/lib/catalog';
-import { searchRealActivities } from '@/lib/travel/opentripmap';
 import type { DraftDestination, EnrichedDestination } from '@/types/chat';
 
 const chatRequestSchema = z.object({
@@ -45,7 +44,6 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
     const adults = 2;
     const cat = findDestination(draft.name);
     const est = cat ? estimate(cat, nights, adults) : null;
-    const activities = await searchRealActivities(draft.name, 3);
 
     return {
         name: cat?.name || draft.name,
@@ -61,7 +59,7 @@ async function groundDestination(draft: DraftDestination, originCity: string, tr
         adults,
         booking_url: bookingHotelUrl({ city: draft.name, checkin, checkout, adults }),
         flights_url: skyscannerFlightUrl({ origin: originCity, destination: draft.name, depart: departDate, return: checkout, adults }),
-        activities: (activities || []).map(a => ({ name: a.title, emoji: '', price: null })),
+        activities: [],
     };
 }
 

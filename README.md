@@ -23,8 +23,7 @@ Accueil ou copilote IA  →  fiche destination  →  « Créer ce voyage »
 | Réponses du copilote | Groq (`openai/gpt-oss-20b`) | Oui, avec une clé |
 | Météo du mois de voyage | Open-Meteo (relevés de l'année précédente) | Oui, sans clé |
 | Taux de change du jour | open.er-api.com | Oui, sans clé |
-| Lieux à voir | Wikipédia (recherche géographique) | Oui, sans clé |
-| Lieux pour la page Activités | OpenTripMap | Oui, avec une clé (facultatif) |
+| Lieux à voir (fiche et page Activités) | Wikipédia + Photon/OpenStreetMap | Oui, sans clé |
 | Prix des vols, hôtels, activités | **Estimations** (catalogue + tarifs habituels) | — |
 
 Il n'existe plus d'API gratuite de prix en direct : l'offre gratuite d'Amadeus a fermé en juillet 2026.
@@ -69,7 +68,6 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GROQ_API_KEY=
-OPENTRIPMAP_API_KEY=     # facultatif
 ```
 
 ### Supabase

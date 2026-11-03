@@ -16,9 +16,8 @@ interface Activity {
   title: string;
   city: string;
   category: string;
-  price: number;
-  duration: string;
-  rating: number | null;
+  price: number | null; // null = lieu réel (Wikipédia), pas de prix connu
+  duration: string | null;
   description: string;
   booking_url: string;
   source?: string;
@@ -63,8 +62,9 @@ function ActivitiesContent() {
     const p = await addItem({
       key, type: "activity",
       title: a.title,
-      subtitle: `${a.category} · ${a.duration} · ${pax} pers.`,
-      price: a.price * pax, estimated: true, provider: "GetYourGuide", url: a.booking_url,
+      subtitle: [a.category, a.duration, `${pax} pers.`].filter(Boolean).join(" · "),
+      price: a.price != null ? a.price * pax : null, estimated: true,
+      provider: a.source === "wikipedia" ? "Wikipédia" : "GetYourGuide", url: a.booking_url,
     }, planInputFrom(searched));
     toast(`Activité ajoutée au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
   };
@@ -88,7 +88,7 @@ function ActivitiesContent() {
 
       <div className="flex flex-wrap justify-between gap-3 border-b border-line pb-3.5 text-sm text-muted-2">
         <span>{searched ? `${rows.length} activité${rows.length > 1 ? "s" : ""} à ${searched.dest}` : "Recherche en cours…"}</span>
-        <span className="text-muted">Prix indicatifs par personne · réservation chez GetYourGuide</span>
+        <span className="text-muted">« À voir » : lieux réels (Wikipédia) · activités : prix indicatifs, réservation chez GetYourGuide</span>
       </div>
 
       {error && <p className="rounded-2xl border border-danger/40 bg-danger/[0.08] px-4 py-3 text-sm text-danger">{error}</p>}
@@ -112,11 +112,11 @@ function ActivitiesContent() {
               <p className="m-0 line-clamp-2 text-[13px] leading-normal text-muted-2">{a.description}</p>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
-                  <span className="text-[13px] text-muted">{a.duration}</span>
-                  <span className="tabular whitespace-nowrap text-sm font-semibold">{eur(a.price)} / pers.</span>
+                  <span className="text-[13px] text-muted">{a.duration || "Lieu réel · Wikipédia"}</span>
+                  <span className="tabular whitespace-nowrap text-sm font-semibold">{a.price != null ? `${eur(a.price)} / pers. · estimé` : "Prix à vérifier sur place"}</span>
                 </div>
                 <span className="flex items-center gap-3">
-                  <a href={a.booking_url} target="_blank" rel="noopener noreferrer" title="Voir chez le partenaire" aria-label={`Voir ${a.title} chez le partenaire`} className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
+                  <a href={a.booking_url} target="_blank" rel="noopener noreferrer" title={a.source === "wikipedia" ? "Voir sur Wikipédia" : "Voir chez le partenaire"} aria-label={a.source === "wikipedia" ? `Voir ${a.title} sur Wikipédia` : `Voir ${a.title} chez le partenaire`} className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
                   <button onClick={() => toggle(a)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[13px] font-semibold ${added ? "border-gold-deep text-gold-deep" : "border-line-2 text-ink hover:border-gold-deep"}`}>
                     {added ? "Ajouté ✓" : `Ajouter à ${tripName}`}
                   </button>

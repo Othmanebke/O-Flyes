@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { gygActivityUrl, viatorActivityUrl } from '@/lib/iata';
+import { gygActivityUrl } from '@/lib/iata';
+import { sightsForCity } from '@/lib/travel/wikipedia';
 
 // [title, category, price, duration, rating, reviews, description, unsplash_id]
 type ActivityTemplate = [string, string, number, string, number, number, string, string];
@@ -86,86 +87,43 @@ function generateGenericActivities(city: string): ActivityTemplate[] {
     ];
 }
 
-async function fetchOpenTripMap(city: string): Promise<any[] | null> {
-    const apiKey = process.env.OPENTRIPMAP_API_KEY;
-    if (!apiKey) return null;
-
-    try {
-        const geoRes = await fetch(
-            `https://api.opentripmap.com/0.1/fr/places/geoname?name=${encodeURIComponent(city)}&apikey=${apiKey}`,
-            { signal: AbortSignal.timeout(5000) }
-        );
-        if (!geoRes.ok) return null;
-        const geo = await geoRes.json();
-        const { lon, lat } = geo;
-
-        const placesRes = await fetch(
-            `https://api.opentripmap.com/0.1/fr/places/radius?radius=5000&lon=${lon}&lat=${lat}&kinds=interesting_places,tourist_facilities,cultural,natural&format=json&limit=12&apikey=${apiKey}`,
-            { signal: AbortSignal.timeout(5000) }
-        );
-        if (!placesRes.ok) return null;
-        const places = await placesRes.json();
-
-        return places
-            .filter((p: any) => p.name && p.rate > 2)
-            .slice(0, 8)
-            .map((p: any, i: number) => ({
-                id: `otm-${p.xid}`,
-                title: p.name,
-                city,
-                category: p.kinds?.split(',')[0] || 'Attraction',
-                price: [20, 30, 45, 60, 75, 90][i % 6],
-                duration: ['2h', '3h', '4h', '2h30', '5h', '3h30'][i % 6],
-                currency: 'EUR',
-                // OpenTripMap donne le lieu, pas de note ni de prix : on n'en invente pas
-                rating: null,
-                reviews: null,
-                source: 'estimate',
-                image_url: `https://images.unsplash.com/photo-${['1533105079780-92b9be482077', '1499678783-d2352b98df87'][i % 2]}?w=600&q=80`,
-                description: `Visitez ${p.name}, une attraction incontournable de ${city}.`,
-                booking_url: gygActivityUrl(city),
-                viator_url: viatorActivityUrl(city),
-            }));
-    } catch {
-        return null;
-    }
-}
-
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
 
-    // Try OpenTripMap first
-    const otmActivities = await fetchOpenTripMap(city);
-    if (otmActivities && otmActivities.length > 0) {
-        return NextResponse.json(otmActivities);
-    }
+    // 1. Lieux réels autour de la ville (Wikipédia, gratuit, sans clé) : pas de prix inventé
+    const sights = (await sightsForCity(city, 6)).map(s => ({
+        id: `wiki-${s.id}`,
+        title: s.title,
+        city,
+        category: 'À voir',
+        price: null,
+        duration: null,
+        currency: 'EUR',
+        rating: null,
+        description: `Lieu réel à ${s.km.toLocaleString('fr-FR')} km du centre. Horaires et tarif sur sa page Wikipédia ou sur place.`,
+        booking_url: s.url,
+        source: 'wikipedia',
+    }));
 
-    // Curated static fallback
+    // 2. Idées d'activités avec une fourchette de prix indicative, réservables chez GetYourGuide
     const cityKey = Object.keys(ACTIVITIES_BY_CITY).find(k =>
         city.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(city.toLowerCase())
     );
     const templates: ActivityTemplate[] = cityKey ? ACTIVITIES_BY_CITY[cityKey] : generateGenericActivities(city);
-
-    const seed = city.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-    const activities = templates.map(([title, category, price, duration, rating, reviews, description, photoId], i) => ({
+    const activities = templates.map(([title, category, price, duration, , , description], i) => ({
         id: `activity-${city}-${i}`,
         title,
         city,
-        country: '',
         category,
         price,
         duration,
-        currency: "EUR",
-        rating,
-        reviews: reviews + ((seed * (i + 1)) % 500),
-        image_url: `https://images.unsplash.com/photo-${photoId}?w=600&q=80`,
+        currency: 'EUR',
+        rating: null,
         description,
         booking_url: gygActivityUrl(city),
-        viator_url: viatorActivityUrl(city),
         source: 'estimate',
     }));
 
-    return NextResponse.json(activities);
+    return NextResponse.json([...sights, ...activities]);
 }
