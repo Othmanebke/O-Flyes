@@ -1,5 +1,5 @@
 import { getGroqChatCompletion } from '../ai/groq';
-import { extractJsonFromText } from '../ai/recommendations';
+import { extractJsonFromText } from '../ai/json';
 import type { TripContext } from './types';
 import type { RoadtripProposal } from '@/types/roadtrip';
 

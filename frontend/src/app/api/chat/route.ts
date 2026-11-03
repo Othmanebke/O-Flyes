@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getGroqChatCompletion } from '@/lib/ai/groq';
-import { extractJsonFromText } from '@/lib/ai/recommendations';
+import { extractJsonFromText } from '@/lib/ai/json';
 import { z } from 'zod';
 import { FREE_SEARCHES_PER_MONTH } from '@/lib/limits';
 import { getIATA, bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
