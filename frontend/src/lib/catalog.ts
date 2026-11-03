@@ -139,3 +139,9 @@ export const GEO: Record<string, { lat: number; lon: number; currency: string; c
     l2: { lat: -17.54, lon: -149.57, currency: "XPF", currencyName: "franc Pacifique" },
     l3: { lat: 25.2, lon: 55.27, currency: "AED", currencyName: "dirham des Émirats" },
 };
+
+// Coût de la vie sur place selon le niveau de la destination (1 = Europe de l'Ouest)
+export function costFactor(name: string | null | undefined): number {
+    const tier = findDestination(name)?.tier;
+    return tier === "Essentiel" ? 0.6 : tier === "Premium" ? 1.3 : tier === "Prestige" ? 1.5 : 1;
+}

@@ -8,6 +8,7 @@ import axios from "axios";
 import { findDestination } from "@/lib/catalog";
 
 export type ItemType = "flight" | "hotel" | "activity";
+export type FlightLeg = "roundtrip" | "outbound" | "return";
 
 export interface PlanItem {
     key: string; // identifiant stable, sert à savoir si un résultat est déjà ajouté
@@ -19,6 +20,7 @@ export interface PlanItem {
     provider?: string;
     url?: string;
     date?: string; // AAAA-MM-JJ, pour l'itinéraire
+    leg?: FlightLeg; // vols : aller-retour, aller seul ou retour seul
     serverId?: string;
 }
 
@@ -157,7 +159,7 @@ function toServerPayload(i: PlanItem) {
         price_estimate: i.price,
         provider: i.provider || null,
         external_url: url,
-        metadata: { key: i.key, subtitle: i.subtitle, date: i.date, estimated: !!i.estimated },
+        metadata: { key: i.key, subtitle: i.subtitle, date: i.date, estimated: !!i.estimated, leg: i.leg },
     };
 }
 
@@ -265,4 +267,13 @@ export interface ToastDetail { message: string; action?: { label: string; href: 
 
 export function toast(message: string, action?: ToastDetail["action"]) {
     window.dispatchEvent(new CustomEvent<ToastDetail>("aivana-toast", { detail: { message, action } }));
+}
+
+/* ── vols : quels trajets sont couverts ? ──────────────────────────── */
+export function flightCoverage(p: Plan | null) {
+    const legs = (p?.items || []).filter(i => i.type === "flight").map(i => i.leg || "roundtrip");
+    return {
+        outbound: legs.includes("roundtrip") || legs.includes("outbound"),
+        return: legs.includes("roundtrip") || legs.includes("return"),
+    };
 }

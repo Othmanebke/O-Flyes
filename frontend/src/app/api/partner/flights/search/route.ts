@@ -112,24 +112,27 @@ export async function GET(request: Request) {
     const origin = searchParams.get('origin') || 'Paris';
     const destination = searchParams.get('destination') || 'New York';
     const depart = searchParams.get('depart') || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    // on impose toujours un retour, pas de one-way sur le site
-    const returnDate = searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0];
+    // trip=oneway : aller simple (ou vol retour cherché séparément) ; sinon aller-retour
+    const oneWay = searchParams.get('trip') === 'oneway';
+    const returnDate = oneWay ? null : (searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0]);
     const adults = parseInt(searchParams.get('adults') || '1', 10);
 
     const originCode = getIATA(origin);
     const destCode = getIATA(destination);
 
     // Plus d'API gratuite de prix en direct (offre gratuite Amadeus fermée en juillet 2026) :
-    // on calcule une estimation à partir des tarifs habituels de la ligne.
-    const routeInfo = ROUTE_PRICES[destCode] || { base: 200, range: 400, duration: "05:00" };
+    // on calcule une estimation à partir des tarifs habituels de la ligne. Les tarifs sont
+    // indexés au départ de Paris : pour un vol retour (X → Paris), on lit la ligne Paris → X.
+    const routeKey = ROUTE_PRICES[destCode] ? destCode : originCode;
+    const routeInfo = ROUTE_PRICES[routeKey] || { base: 200, range: 400, duration: "05:00" };
     const durationH = parseDuration(routeInfo.duration);
 
-    // Use destCode as seed for deterministic pseudo-random
-    const seed = destCode.charCodeAt(0) + destCode.charCodeAt(1) * 3 + (destCode.charCodeAt(2) || 0) * 7;
+    // Graine déterministe : mêmes résultats pour la même ligne
+    const seed = routeKey.charCodeAt(0) + routeKey.charCodeAt(1) * 3 + (routeKey.charCodeAt(2) || 0) * 7;
     const airlines = pickAirlines(4, seed);
 
     const departDate = new Date(depart + 'T08:00:00Z');
-    const returnDeptDate = new Date(returnDate + 'T08:00:00Z');
+    const returnDeptDate = returnDate ? new Date(returnDate + 'T08:00:00Z') : null;
 
     // Estimation : données cohérentes entre elles (durée = arrivée - départ, classe
     // économique partout) et marquées `source: 'estimate'` pour que l'interface ne les
@@ -140,16 +143,17 @@ export async function GET(request: Request) {
         const legH = durationH + (isStop ? 1.5 : 0);
         const dep = addHours(departDate, depOffset);
         const arr = addHours(dep, legH);
-        const retDep = addHours(returnDeptDate, depOffset + 1);
-        const retArr = addHours(retDep, legH);
+        const retDep = returnDeptDate ? addHours(returnDeptDate, depOffset + 1) : null;
+        const retArr = retDep ? addHours(retDep, legH) : null;
 
-        // prix = total ALLER-RETOUR pour tous les voyageurs
+        // prix = total pour tous les voyageurs (un trajet, ou les deux en aller-retour)
         const priceMultiplier = [0.85, 1.0, 1.2, 0.95][i];
         const basePrice = routeInfo.base + Math.floor((seed * (i + 1) * 13) % routeInfo.range);
-        const price = Math.round(basePrice * priceMultiplier * adults * 2);
+        const price = Math.round(basePrice * priceMultiplier * adults * (oneWay ? 1 : 2));
+        const link = googleFlightsUrl({ origin, destination, depart, return: returnDate || undefined, airline: airline.name });
 
         return {
-            id: `${originCode}-${destCode}-${i}`,
+            id: `${originCode}-${destCode}-${oneWay ? 'ow' : 'rt'}-${i}`,
             airline: airline.name,
             airlineCode: airline.logo,
             origin,
@@ -159,16 +163,16 @@ export async function GET(request: Request) {
             departure: wallClock(dep),
             arrival: wallClock(arr),
             duration: formatHours(legH),
-            returnDeparture: wallClock(retDep),
-            returnArrival: wallClock(retArr),
-            returnDuration: formatHours(legH),
+            returnDeparture: retDep ? wallClock(retDep) : null,
+            returnArrival: retArr ? wallClock(retArr) : null,
+            returnDuration: retDep ? formatHours(legH) : null,
             price,
             currency: "EUR",
             type: isStop ? "1 escale" : "Direct",
             class: "Economy",
             baggage: "Bagage cabine",
-            booking_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
-            google_flights_url: googleFlightsUrl({ origin, destination, depart, return: returnDate, airline: airline.name }),
+            booking_url: link,
+            google_flights_url: link,
             source: 'estimate',
         };
     });

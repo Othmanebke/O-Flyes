@@ -1,13 +1,16 @@
 "use client";
+import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import PageBanner from "@/components/layout/PageBanner";
 import TripBar from "@/components/trip/TripBar";
+import { Chip } from "@/components/ui/Pill";
 import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
 import { planInputFrom, syncPlanWithSearch, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
-import { addItem, removeItem, toast, usePlan } from "@/lib/plan";
+import { addItem, flightCoverage, removeItem, toast, usePlan, type FlightLeg } from "@/lib/plan";
 
 interface Flight {
   id: string;
@@ -19,7 +22,7 @@ interface Flight {
   duration: string;
   returnDeparture: string | null;
   returnArrival: string | null;
-  price: number; // total A/R tous voyageurs
+  price: number; // total pour tous les voyageurs
   type: string;
   baggage: string;
   booking_url: string;
@@ -28,8 +31,24 @@ interface Flight {
 const time = (iso?: string | null) => (iso ? iso.slice(11, 16) : "—");
 const day = (iso?: string | null) => (iso ? new Date(iso.slice(0, 10) + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) : "");
 const minutes = (d: string) => { const m = d.match(/(\d+)\s*h\s*(\d+)?/i); return m ? Number(m[1]) * 60 + Number(m[2] || 0) : 9999; };
+const hours = (d: string) => d.replace("h", " h ").replace("m", "");
+
+/* Une ligne de trajet : « Aller · sam. 12 déc. · 08:00 CDG ─ 10:20 LIS » */
+function LegLine({ label, dep, arr, from, to }: { label: string; dep: string | null; arr: string | null; from: string; to: string }) {
+  return (
+    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3">
+      <span className="flex flex-col"><span className="text-xs font-semibold text-gold-deep">{label}</span><span className="text-xs text-muted">{day(dep)}</span></span>
+      <div className="tabular flex items-center gap-2.5 whitespace-nowrap text-[15px] font-semibold">
+        <span className="flex flex-col"><span>{time(dep)}</span><span className="text-xs font-normal text-muted">{from}</span></span>
+        <span className="h-px min-w-6 flex-1 bg-line-2" />
+        <span className="flex flex-col"><span>{time(arr)}</span><span className="text-xs font-normal text-muted">{to}</span></span>
+      </div>
+    </div>
+  );
+}
 
 function FlightsContent() {
+  const router = useRouter();
   const { ctx, setCtx, ready } = useTripContext();
   const plan = usePlan();
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -41,11 +60,13 @@ function FlightsContent() {
   const [sort, setSort] = useState<"best" | "cheap" | "fast">("best");
 
   const search = useCallback(async (c: SearchContext) => {
-    if (!c.dest.trim()) return;
+    if (!c.dest.trim() || !c.origin.trim()) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get<Flight[]>("/api/partner/flights/search", { params: { origin: c.origin, destination: c.dest, depart: c.depart, return: c.ret, adults: c.pax } });
+      const res = await axios.get<Flight[]>("/api/partner/flights/search", {
+        params: { origin: c.origin, destination: c.dest, depart: c.depart, adults: c.pax, ...(c.trip === "oneway" ? { trip: "oneway" } : { return: c.ret }) },
+      });
       setFlights(res.data || []);
       setSearched(c);
       setOff({});
@@ -57,7 +78,7 @@ function FlightsContent() {
     }
   }, []);
 
-  useEffect(() => { if (ready) void search(ctx); }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ready) void search(ctx); }, [ready, ctx.leg, ctx.trip]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const airlines = useMemo(() => Array.from(new Set(flights.map(f => f.airline))), [flights]);
   const rows = useMemo(() => {
@@ -68,32 +89,77 @@ function FlightsContent() {
     return [...r].sort((a, b) => sort === "cheap" ? a.price - b.price : sort === "fast" ? minutes(a.duration) - minutes(b.duration) : score(a) - score(b));
   }, [flights, off, stops, sort]);
 
-  const tripName = plan?.destination || findDestination(searched?.dest)?.name || searched?.dest || ctx.dest;
   const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: k === "pax" ? Number(v) : v }));
+  const setTrip = (trip: SearchContext["trip"]) => setCtx(c => ({ ...c, trip, leg: "outbound" }));
+  const isReturn = ctx.leg === "return";
+  const tripName = plan?.destination || findDestination(isReturn ? ctx.origin : ctx.dest)?.name || (isReturn ? ctx.origin : ctx.dest);
+  const cover = flightCoverage(plan);
+
+  const legOf = (s: SearchContext): FlightLeg => (s.trip === "roundtrip" ? "roundtrip" : s.leg === "return" ? "return" : "outbound");
+  const keyOf = (f: Flight, s: SearchContext) => `flight:${f.id}:${s.depart}`;
 
   const toggle = async (f: Flight) => {
     if (!searched) return;
-    const key = `flight:${f.id}:${searched.depart}`;
+    const key = keyOf(f, searched);
     if (plan?.items.some(i => i.key === key)) { await removeItem(key); return; }
+    const leg = legOf(searched);
+    const title = leg === "roundtrip"
+      ? `Vol aller-retour ${f.airline} · ${f.originCode} ⇄ ${f.destinationCode}`
+      : `Vol ${leg === "return" ? "retour" : "aller"} ${f.airline} · ${f.originCode} → ${f.destinationCode}`;
+    const when = leg === "roundtrip"
+      ? `${day(f.departure)} ${time(f.departure)} · retour ${day(f.returnDeparture)} ${time(f.returnDeparture)}`
+      : `${day(f.departure)} ${time(f.departure)} → ${time(f.arrival)}`;
     const p = await addItem({
-      key, type: "flight",
-      title: `Vol ${f.airline} · ${f.originCode} → ${f.destinationCode}`,
-      subtitle: `Aller-retour · ${day(f.departure)} ${time(f.departure)} – retour ${day(f.returnDeparture)} · ${searched.pax} pers. · ${f.type}`,
+      key, type: "flight", leg, title,
+      subtitle: `${when} · ${searched.pax} pers. · ${f.type}`,
       price: f.price, estimated: true, provider: f.airline, url: f.booking_url, date: searched.depart,
     }, planInputFrom(searched));
-    toast(`Vol ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
+    if (leg === "outbound" && !flightCoverage(p).return) {
+      toast(`Vol aller ajouté au voyage ${p.destination}`, { label: "Chercher le retour", href: "/explore/flights?leg=retour" });
+    } else {
+      toast(`Vol ${leg === "return" ? "retour" : "aller-retour"} ajouté au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
+    }
   };
+
+  const priceLabel = searched?.trip === "roundtrip" ? "A/R par pers. · estimé" : "trajet par pers. · estimé";
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-12">
-      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">Trouver <em className="accent">votre vol</em></h1>
+      <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">
+        {isReturn ? <>Votre <em className="accent">vol retour</em></> : <>Trouver <em className="accent">votre vol</em></>}
+      </h1>
       <TripBar />
+
+      {/* Rappel : l'aller est choisi mais pas le retour */}
+      {plan && cover.outbound && !cover.return && !isReturn && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-gold-deep/40 bg-gold-deep/[0.06] px-4 py-3">
+          <span className="text-sm">Votre vol aller est choisi. Il reste le vol retour.</span>
+          <Link href="/explore/flights?leg=retour" className="text-sm font-semibold">Chercher le retour <ArrowRight className="inline h-[1em] w-[1em]" aria-hidden /></Link>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        {isReturn ? (
+          <>
+            <span className="text-sm text-muted-2">Aller simple, de {ctx.origin} vers {ctx.dest}.</span>
+            <button onClick={() => router.push("/explore/flights")} className="text-sm font-semibold text-gold-deep hover:text-[#6E5323]">Revenir à la recherche aller</button>
+          </>
+        ) : (
+          <>
+            <Chip active={ctx.trip === "roundtrip"} onClick={() => setTrip("roundtrip")}>Aller-retour</Chip>
+            <Chip active={ctx.trip === "oneway"} onClick={() => setTrip("oneway")}>Aller simple</Chip>
+            {ctx.trip === "oneway" && <span className="text-[13px] text-muted">Vous pourrez chercher le retour juste après.</span>}
+          </>
+        )}
+      </div>
 
       <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="grid gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <CityInput id="origin" label="Départ" value={ctx.origin} onChange={set("origin")} />
         <CityInput id="dest" label="Destination" value={ctx.dest} onChange={set("dest")} />
-        <Field id="out" label="Aller"><input id="out" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
-        <Field id="back" label="Retour"><input id="back" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
+        <Field id="out" label={isReturn ? "Date du retour" : "Aller"}><input id="out" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
+        {ctx.trip === "roundtrip" && (
+          <Field id="back" label="Retour"><input id="back" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
+        )}
         <Field id="pax" label="Voyageurs">
           <select id="pax" value={ctx.pax} onChange={e => set("pax")(e.target.value)} className={fieldInput}>
             {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} adulte{n > 1 ? "s" : ""}</option>)}
@@ -129,7 +195,9 @@ function FlightsContent() {
         <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm text-muted-2">
-              {searched ? `${rows.length} vol${rows.length > 1 ? "s" : ""} · ${searched.origin} → ${searched.dest} · ${day(searched.depart)} – ${day(searched.ret)}` : "Recherche en cours…"}
+              {searched
+                ? `${rows.length} vol${rows.length > 1 ? "s" : ""} · ${searched.origin} → ${searched.dest} · ${searched.trip === "roundtrip" ? `${day(searched.depart)} – ${day(searched.ret)}` : `aller simple, ${day(searched.depart)}`}`
+                : "Recherche en cours…"}
             </span>
             <div className="flex gap-1 rounded-full border border-line bg-cream p-[3px]">
               {([["best", "Recommandé"], ["cheap", "Moins cher"], ["fast", "Plus rapide"]] as const).map(([v, label]) => (
@@ -142,32 +210,28 @@ function FlightsContent() {
 
           <div className="flex flex-col border-t border-line">
             {loading && !flights.length && <p className="py-6 text-sm text-muted">Comparaison des vols…</p>}
-            {rows.map(f => {
-              const added = !!plan?.items.some(i => i.key === `flight:${f.id}:${searched?.depart}`);
+            {searched && rows.map(f => {
+              const added = !!plan?.items.some(i => i.key === keyOf(f, searched));
               return (
-                <div key={f.id} className="grid items-center gap-x-5 gap-y-3 border-b border-line py-[18px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+                <div key={f.id} className="grid items-center gap-x-6 gap-y-3 border-b border-line py-[18px] [grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))]">
                   <div className="flex flex-col gap-[3px]">
                     <span className="text-[15px] font-semibold">{f.airline}</span>
+                    <span className="text-[13px] text-muted">{hours(f.duration)} · <span className={f.type === "Direct" ? "text-ok" : ""}>{f.type}</span></span>
                     <span className="text-[13px] text-muted">{f.baggage}</span>
                   </div>
-                  <div className="tabular flex items-center gap-2.5 whitespace-nowrap text-[15px] font-semibold">
-                    <span className="flex flex-col"><span>{time(f.departure)}</span><span className="text-xs font-normal text-muted">{f.originCode}</span></span>
-                    <span className="h-px min-w-6 flex-1 bg-line-2" />
-                    <span className="flex flex-col"><span>{time(f.arrival)}</span><span className="text-xs font-normal text-muted">{f.destinationCode}</span></span>
-                  </div>
-                  <div className="flex flex-col gap-[3px]">
-                    <span className="text-sm">{f.duration.replace("h", " h ").replace("m", "")}</span>
-                    <span className={`text-[13px] ${f.type === "Direct" ? "text-ok" : "text-muted-2"}`}>{f.type}</span>
+                  <div className="flex flex-col gap-2.5">
+                    <LegLine label={searched.leg === "return" ? "Retour" : "Aller"} dep={f.departure} arr={f.arrival} from={f.originCode} to={f.destinationCode} />
+                    {f.returnDeparture && <LegLine label="Retour" dep={f.returnDeparture} arr={f.returnArrival} from={f.destinationCode} to={f.originCode} />}
                   </div>
                   <div className="flex items-center justify-end gap-3.5">
                     <span className="flex flex-col items-end">
-                      <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price / (searched?.pax || 1))}</span>
-                      <span className="whitespace-nowrap text-xs text-muted">A/R par pers. · estimé</span>
+                      <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price / searched.pax)}</span>
+                      <span className="whitespace-nowrap text-xs text-muted">{priceLabel}</span>
                     </span>
                     <button onClick={() => toggle(f)} className={`whitespace-nowrap rounded-full border border-ink px-3 py-[9px] text-[13px] font-semibold ${added ? "bg-transparent text-ink" : "bg-ink text-paper hover:bg-ink-2"}`}>
                       {added ? "Ajouté ✓" : `Ajouter à ${tripName}`}
                     </button>
-                    <a href={f.booking_url} target="_blank" rel="noopener noreferrer" aria-label={`Voir ce vol ${f.airline} chez le partenaire`} title="Vérifier et réserver chez le partenaire" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
+                    <a href={f.booking_url} target="_blank" rel="noopener noreferrer" aria-label={`Voir ce vol ${f.airline} sur Google Flights`} title="Voir le prix du jour sur Google Flights" className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>
                   </div>
                 </div>
               );

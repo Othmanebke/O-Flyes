@@ -29,7 +29,7 @@ function PlanCounter({ overlay }: { overlay: boolean }) {
   return (
     <Link
       href="/dashboard"
-      title="Voir mon voyage en cours"
+      title="Mon voyage en cours : ce que vous ajoutez y est rangé. Cliquez pour ouvrir le carnet."
       className={clsx(
         "plain-link flex h-[46px] items-center gap-2 whitespace-nowrap rounded-full border pl-1.5 pr-3.5 text-sm font-semibold transition-colors sm:h-[52px]",
         overlay ? "border-white/55 text-white hover:bg-white/10" : "border-line-2 bg-white text-ink hover:border-ink",
@@ -38,7 +38,7 @@ function PlanCounter({ overlay }: { overlay: boolean }) {
       <span className={clsx("flex h-8 w-8 items-center justify-center rounded-full sm:h-9 sm:w-9", overlay ? "bg-white/15" : "bg-gold-soft")}>
         <Plane className="h-4 w-4 -rotate-45" aria-hidden />
       </span>
-      <span className="max-w-[120px] truncate sm:max-w-[160px]">{plan.destination}</span>
+      <span className="max-w-[140px] truncate sm:max-w-[200px]"><span className="hidden font-normal opacity-70 lg:inline">Mon voyage · </span>{plan.destination}</span>
       <span className={clsx("tabular rounded-full px-2 py-0.5 text-xs", overlay ? "bg-white text-ink" : "bg-ink text-white")}>
         {n}<span className="hidden sm:inline"> élément{n > 1 ? "s" : ""}</span>
       </span>

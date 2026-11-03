@@ -9,7 +9,7 @@ import TripProposal from "@/components/trip/TripProposal";
 import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import {
-  clearPlan, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
+  clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
   type Plan, type PlanItem,
 } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
@@ -29,6 +29,7 @@ const toPlanItem = (b: Booking): PlanItem => ({
   provider: b.provider,
   url: b.external_url,
   date: b.metadata?.date as string | undefined,
+  leg: b.metadata?.leg as PlanItem["leg"],
   serverId: b.id,
 });
 
@@ -222,7 +223,9 @@ function TripView({ plan, tab, setTab, editing, setEditing, saving, onSave, onRe
   const cat = findDestination(plan.destination);
   const city = cat ? searchCity(cat) : plan.destination;
   const ctx = `dest=${encodeURIComponent(city)}&depart=${plan.depart}&return=${plan.ret}&pax=${plan.travelers}`;
-  const alert = !has("flight") ? { t: "Aucun vol n'est encore ajouté à ce voyage.", cta: "Chercher un vol", href: `/explore/flights?${ctx}` }
+  const cover = flightCoverage(plan);
+  const alert = !cover.outbound ? { t: "Aucun vol aller n'est encore ajouté à ce voyage.", cta: "Chercher un vol", href: `/explore/flights?${ctx}` }
+    : !cover.return ? { t: "Le vol retour n'est pas encore choisi.", cta: "Chercher le retour", href: "/explore/flights?leg=retour" }
     : !has("hotel") ? { t: "L'hébergement n'est pas encore choisi.", cta: "Trouver un hôtel", href: `/explore/hotels?${ctx}` }
     : !has("activity") ? { t: "Aucune activité prévue sur place.", cta: "Ajouter des activités", href: `/explore/activities?${ctx}` }
     : null;

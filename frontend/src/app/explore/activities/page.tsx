@@ -9,17 +9,19 @@ import { Chip } from "@/components/ui/Pill";
 import { planInputFrom, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
 import { addItem, removeItem, toast, usePlan } from "@/lib/plan";
-import { photoFor } from "@/lib/photos";
+import { isPhotoKey, photoFor } from "@/lib/photos";
 
 interface Activity {
   id: string;
   title: string;
   city: string;
   category: string;
-  price: number | null; // null = lieu réel (Wikipédia), pas de prix connu
+  price: number | null; // estimé, 0 = gratuit en général
   duration: string | null;
   description: string;
   booking_url: string;
+  image: string | null; // vraie photo du lieu (Wikipédia)
+  photo: string | null; // sinon : photo de la ville (code du catalogue)
   source?: string;
 }
 
@@ -88,7 +90,7 @@ function ActivitiesContent() {
 
       <div className="flex flex-wrap justify-between gap-3 border-b border-line pb-3.5 text-sm text-muted-2">
         <span>{searched ? `${rows.length} activité${rows.length > 1 ? "s" : ""} à ${searched.dest}` : "Recherche en cours…"}</span>
-        <span className="text-muted">« À voir » : lieux réels (Wikipédia) · activités : prix indicatifs, réservation chez GetYourGuide</span>
+        <span className="text-muted">« À voir » : lieux réels et leur photo (Wikipédia) · prix estimés selon le pays</span>
       </div>
 
       {error && <p className="rounded-2xl border border-danger/40 bg-danger/[0.08] px-4 py-3 text-sm text-danger">{error}</p>}
@@ -99,7 +101,12 @@ function ActivitiesContent() {
           return (
             <div key={a.id} className="flex flex-col gap-3">
               <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] border border-line">
-                <Photo k={photoFor(`${a.category} ${a.title}`, "activity")} alt="" sizes="(max-width: 700px) 100vw, 380px" className="h-full w-full" />
+                {a.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.image} alt="" loading="lazy" className="h-full w-full bg-placeholder object-cover" />
+                ) : (
+                  <Photo k={isPhotoKey(a.photo) ? a.photo : photoFor(`${a.category} ${a.title}`, "activity")} alt="" sizes="(max-width: 700px) 100vw, 380px" className="h-full w-full" />
+                )}
                 <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to top, rgba(18,16,12,0.72) 0%, rgba(18,16,12,0.2) 45%, rgba(18,16,12,0) 70%)" }} />
                 <div className="pointer-events-none absolute inset-0 flex flex-col justify-between px-4 py-3.5">
                   <span className="self-start rounded-full bg-cream/90 px-2.5 py-1 text-xs font-semibold text-ink">{a.category}</span>
@@ -113,7 +120,7 @@ function ActivitiesContent() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                   <span className="text-[13px] text-muted">{a.duration || "Lieu réel · Wikipédia"}</span>
-                  <span className="tabular whitespace-nowrap text-sm font-semibold">{a.price != null ? `${eur(a.price)} / pers. · estimé` : "Prix à vérifier sur place"}</span>
+                  <span className="tabular whitespace-nowrap text-sm font-semibold">{a.price === 0 ? "Gratuit en général" : a.price != null ? `${eur(a.price)} / pers. · estimé` : "Prix à vérifier sur place"}</span>
                 </div>
                 <span className="flex items-center gap-3">
                   <a href={a.booking_url} target="_blank" rel="noopener noreferrer" title={a.source === "wikipedia" ? "Voir sur Wikipédia" : "Voir chez le partenaire"} aria-label={a.source === "wikipedia" ? `Voir ${a.title} sur Wikipédia` : `Voir ${a.title} chez le partenaire`} className="text-muted hover:text-ink"><ExternalLink className="h-4 w-4" aria-hidden /></a>

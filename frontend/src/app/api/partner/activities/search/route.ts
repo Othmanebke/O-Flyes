@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { gygActivityUrl } from '@/lib/iata';
-import { sightsForCity } from '@/lib/travel/wikipedia';
+import { sightPrice, sightsForCity } from '@/lib/travel/wikipedia';
+import { costFactor, findDestination } from '@/lib/catalog';
 
 // [title, category, price, duration, rating, reviews, description, unsplash_id]
 type ActivityTemplate = [string, string, number, string, number, number, string, string];
@@ -90,23 +91,32 @@ function generateGenericActivities(city: string): ActivityTemplate[] {
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
+    const cat = findDestination(city);
+    const factor = costFactor(city);
+    // Photo de la ville elle-même quand elle est dans le catalogue (code aéroport)
+    const cityPhoto = cat?.code || null;
 
-    // 1. Lieux réels autour de la ville (Wikipédia, gratuit, sans clé) : pas de prix inventé
-    const sights = (await sightsForCity(city, 6)).map(s => ({
-        id: `wiki-${s.id}`,
-        title: s.title,
-        city,
-        category: 'À voir',
-        price: null,
-        duration: null,
-        currency: 'EUR',
-        rating: null,
-        description: `Lieu réel à ${s.km.toLocaleString('fr-FR')} km du centre. Horaires et tarif sur sa page Wikipédia ou sur place.`,
-        booking_url: s.url,
-        source: 'wikipedia',
-    }));
+    // 1. Lieux réels autour de la ville (Wikipédia, gratuit, sans clé), avec leur vraie photo
+    //    et un prix d'entrée estimé selon le type de lieu et le coût de la vie du pays.
+    const sights = (await sightsForCity(city, 6)).map(s => {
+        const base = sightPrice(s.title);
+        return {
+            id: `wiki-${s.id}`,
+            title: s.title,
+            city,
+            category: 'À voir',
+            price: base === 0 ? 0 : Math.round((base ?? 10) * factor),
+            duration: null,
+            currency: 'EUR',
+            description: `Lieu réel à ${s.km.toLocaleString('fr-FR')} km du centre. Horaires et tarifs exacts sur sa page Wikipédia ou sur place.`,
+            booking_url: s.url,
+            image: s.image,
+            photo: cityPhoto,
+            source: 'wikipedia',
+        };
+    });
 
-    // 2. Idées d'activités avec une fourchette de prix indicative, réservables chez GetYourGuide
+    // 2. Idées d'activités avec un prix indicatif, réservables chez GetYourGuide
     const cityKey = Object.keys(ACTIVITIES_BY_CITY).find(k =>
         city.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(city.toLowerCase())
     );
@@ -116,12 +126,14 @@ export async function GET(request: Request) {
         title,
         city,
         category,
-        price,
+        // Les listes par ville sont déjà aux prix locaux ; les idées génériques sont ajustées au pays
+        price: cityKey ? price : Math.round(price * factor),
         duration,
         currency: 'EUR',
-        rating: null,
         description,
         booking_url: gygActivityUrl(city),
+        image: null,
+        photo: cityPhoto,
         source: 'estimate',
     }));
 
