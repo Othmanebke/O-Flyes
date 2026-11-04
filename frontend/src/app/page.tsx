@@ -19,10 +19,10 @@ const STYLES: { label: string; k: PhotoKey; d: string }[] = [
 ];
 
 const STEPS: { t: string; d: string; k: PhotoKey; th: PhotoKey }[] = [
-  { t: "Vous décrivez", d: "Une phrase suffit : budget, dates, voyageurs, envies. Le copilote pose les questions qui manquent.", k: "map", th: "notebook" },
-  { t: "On compare", d: "Vols, hôtels et activités chiffrés pour vos dates. Vous voyez le coût total, pas un prix d'appel.", k: "plane", th: "clouds" },
-  { t: "Vous choisissez", d: "Ajoutez au carnet ce qui vous plaît. Le budget se met à jour à chaque ajout.", k: "market", th: "food" },
-  { t: "Vous partez", d: "Vols, hôtels et activités rangés dans votre carnet, exportables dans votre agenda.", k: "friends", th: "backpack" },
+  { t: "Vous décrivez", d: "Une phrase suffit : budget, dates, voyageurs, envies. Le copilote pose les questions qui manquent.", k: "notebook", th: "notes" },
+  { t: "On compare", d: "Vols, hôtels et activités chiffrés pour vos dates. Vous voyez le coût total, pas un prix d'appel.", k: "laptop", th: "plane" },
+  { t: "Vous choisissez", d: "Ajoutez au carnet ce qui vous plaît. Le budget se met à jour à chaque ajout.", k: "map", th: "hotel1" },
+  { t: "Vous partez", d: "Vols, hôtels et activités rangés dans votre carnet, exportables dans votre agenda.", k: "gate", th: "tarmac" },
 ];
 
 const BAND: [string, PhotoKey][] = [["Kyoto", "NRT"], ["Islande", "KEF"], ["Marrakech", "RAK"], ["Bali", "DPS"], ["Lisbonne", "LIS"], ["Maldives", "MLE"], ["Istanbul", "IST"], ["Sydney", "SYD"]];
@@ -109,7 +109,7 @@ export default function HomePage() {
         <div className="relative z-[2] flex flex-1 flex-col items-center gap-6 px-6 pb-[260px] pt-[calc(clamp(40px,9vh,110px)+116px)] text-center">
           <span data-reveal className="flex items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] border-dashed border-gold bg-gold-soft px-4 py-[7px] text-sm font-semibold text-ink">Votre copilote de voyage IA</span>
           <h1 data-reveal className="m-0 max-w-[1000px] text-balance text-[clamp(52px,7.4vw,112px)] font-bold leading-[0.98] tracking-[-0.045em] text-white">
-            Voyagez au-delà<br />de <em className="accent">l&apos;ordinaire</em>
+            Voyagez <span className="whitespace-nowrap">au-delà</span><br />de <em className="accent">l&apos;ordinaire</em>
           </h1>
           <p data-reveal className="m-0 max-w-[620px] text-pretty text-[clamp(16px,1.4vw,21px)] font-medium leading-[1.45] text-white/85">
             Décrivez votre budget, vos dates et vos envies. Le copilote propose des destinations avec un coût total estimé, puis vous composez votre voyage étape par étape.
@@ -300,13 +300,15 @@ export default function HomePage() {
       </section>
 
       {/* 07 — Méthode */}
-      <section className="mx-auto grid max-w-[1400px] overflow-hidden rounded-[32px] bg-ink text-white [grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))] max-[1432px]:mx-4">
-        <div className="relative min-h-[560px] overflow-hidden bg-[#2A2620]">
+      <section className="mx-auto grid max-w-[1400px] overflow-hidden rounded-[32px] bg-ink text-white grid-cols-1 min-[880px]:grid-cols-2 max-[1432px]:mx-4">
+        <div className="relative min-h-[420px] overflow-hidden bg-ink min-[880px]:min-h-[560px]">
           {STEPS.map((s, i) => (
             <div key={s.t} className="absolute inset-0 transition-opacity duration-[800ms]" style={{ opacity: i === step ? 1 : 0 }}>
-              <Photo k={s.k} sizes="50vw" className="h-full w-full" />
+              <Photo k={s.k} sizes="(min-width: 880px) 50vw, 100vw" className="h-full w-full" />
             </div>
           ))}
+          {/* Fondu vers le bloc encre : à droite côte à côte, en bas quand empilé */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent via-ink/45 to-ink min-[880px]:inset-x-auto min-[880px]:inset-y-0 min-[880px]:right-0 min-[880px]:h-auto min-[880px]:w-[28%] min-[880px]:bg-gradient-to-r" />
         </div>
         <div className="flex flex-col items-center justify-center gap-7 p-[clamp(32px,6vw,80px)] text-center">
           <h2 data-reveal className="m-0 text-[clamp(34px,4.2vw,56px)] leading-[1.02]">Comment on <em className="accent">planifie</em><br />votre voyage</h2>

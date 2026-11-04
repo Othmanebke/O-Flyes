@@ -26,8 +26,34 @@ const LINKS = [
   { label: "Aide", href: "/aide", note: "Questions fréquentes" },
 ];
 
+/* Liens visibles dans la barre sur grand écran (le menu burger les reprend tous) */
+const NAV = [
+  { label: "Destinations", href: "/explore" },
+  { label: "Vols", href: "/explore/flights" },
+  { label: "Hôtels", href: "/explore/hotels" },
+  { label: "Activités", href: "/explore/activities" },
+  { label: "Journal", href: "/blog" },
+];
+
+const SEG_H = 52;
+// Capsule de la barre : même hauteur et même bleu nuit partout, pour que les ponts se raccordent
+const SEG = "pointer-events-auto relative z-[1] flex h-[52px] shrink-0 items-center rounded-full bg-ink";
+// Élément texte dans une capsule
+const PILL_ITEM = "flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[14px] font-semibold !text-white/80 transition-colors hover:bg-white/10 hover:!text-white";
+
+/* Pont concave entre deux capsules (effet « goutte ») : il déborde sous les bouts
+   arrondis de chaque capsule et se resserre au milieu. */
+function Bridge() {
+  const w = 30, h = SEG_H, waist = 15;
+  return (
+    <svg aria-hidden width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="-mx-[10px] block shrink-0 text-ink" style={{ zIndex: 0 }}>
+      <path fill="currentColor" d={`M0 6 C${w * 0.32} 6 ${w * 0.38} ${waist} ${w / 2} ${waist} C${w * 0.62} ${waist} ${w * 0.68} 6 ${w} 6 L${w} ${h - 6} C${w * 0.68} ${h - 6} ${w * 0.62} ${h - waist} ${w / 2} ${h - waist} C${w * 0.38} ${h - waist} ${w * 0.32} ${h - 6} 0 ${h - 6} Z`} />
+    </svg>
+  );
+}
+
 /* Menu « Mes voyages » : accès au carnet, voyage en cours et voyages sauvegardés. */
-function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean }) {
+function TripsMenu({ loggedIn }: { loggedIn: boolean }) {
   const plan = usePlan();
   const [open, setOpen] = useState(false);
   const [trips, setTrips] = useState<Trip[] | null>(null);
@@ -54,16 +80,13 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={clsx(
-          "flex items-center gap-2 whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors",
-          overlay ? "h-[60px] border-white/55 text-white hover:bg-white/10" : "h-[44px] border-line-2 text-ink hover:bg-white",
-        )}
+        className={clsx(PILL_ITEM, open && "bg-white/10 text-white")}
       >
-        Mes voyages <ChevronDown className={clsx("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden />
+        Mes voyages <ChevronDown className={clsx("h-3.5 w-3.5 transition-transform", open && "rotate-180")} aria-hidden />
       </button>
 
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="absolute right-0 top-[calc(100%+18px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
           <Link href="/dashboard" onClick={close} className="plain-link flex items-center justify-between gap-3 rounded-[18px] bg-ink px-4 py-3 text-sm font-bold !text-white hover:bg-ink-2">
             Voir mon carnet <ArrowUpRight className="h-4 w-4 text-gold" aria-hidden />
           </Link>
@@ -112,7 +135,7 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
 }
 
 /* Menu du compte : carnet, paramètres, déconnexion */
-function AccountMenu({ overlay, name, email }: { overlay: boolean; name: string; email: string }) {
+function AccountMenu({ name, email }: { name: string; email: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -138,15 +161,12 @@ function AccountMenu({ overlay, name, email }: { overlay: boolean; name: string;
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Mon compte"
-        className={clsx(
-          "flex items-center justify-center rounded-full text-[15px] font-bold transition-colors",
-          overlay ? "h-[60px] w-[60px] border border-white/55 text-white hover:bg-white/10" : "h-[44px] w-[44px] bg-ink text-white hover:bg-ink-2",
-        )}
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-soft text-[15px] font-bold text-ink ring-gold/60 transition-shadow hover:ring-2 aria-expanded:ring-2"
       >
         {name.charAt(0).toUpperCase()}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="absolute right-0 top-[calc(100%+18px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
           <div className="flex flex-col px-3 pb-2 pt-1.5">
             <span className="truncate text-sm font-bold">{name}</span>
             <span className="truncate text-xs text-muted">{email}</span>
@@ -175,68 +195,51 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
   }, [open]);
 
   const plan = () => { setOpen(false); ask(""); };
-  const fg = overlay ? "text-white" : "text-ink";
   const draft = usePlan();
+  const isActive = (href: string) => {
+    const p = pathname || "";
+    if (href !== "/explore") return p.startsWith(href);
+    return p.startsWith("/explore") && !NAV.some(l => l.href !== "/explore" && p.startsWith(l.href));
+  };
 
   return (
     <>
-      <nav
-        className={clsx(
-          "font-sans",
-          overlay
-            ? "px-4 py-4 sm:px-9 sm:py-7"
-            : "border-b border-line-2/60 bg-paper/95 px-4 py-2 sm:px-8",
-        )}
-      >
-        <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <button onClick={() => setOpen(true)} className={clsx("flex items-center gap-3 justify-self-start text-[15px] font-bold", fg)} aria-label="Ouvrir le menu">
-            <span className={clsx(
-              "flex h-[46px] w-[46px] items-center justify-center rounded-full bg-white text-xl text-ink",
-              overlay ? "sm:h-[60px] sm:w-[60px]" : "shadow-[0_0_0_1px_#E4DFD5] sm:h-[42px] sm:w-[42px]",
-            )}>
-              <Menu className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="hidden sm:inline">Menu</span>
+      {/* Capsules bleu nuit reliées : menu (rond) · logo + liens · actions.
+          Le conteneur laisse passer les clics hors des capsules. */}
+      <nav aria-label="Navigation principale" className={clsx("pointer-events-none font-sans", overlay ? "px-3 pt-4 sm:pt-6" : "px-3 py-3")}>
+        <div className="mx-auto flex w-fit max-w-full items-center text-white drop-shadow-[0_10px_24px_rgba(15,27,45,0.22)]">
+          <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu" className={clsx(SEG, "w-[52px] justify-center")}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/10"><Menu className="h-[19px] w-[19px]" aria-hidden /></span>
           </button>
+          <Bridge />
 
-          <Link href="/" aria-label="Accueil Aivana" className={clsx("plain-link", fg)}>
-            <span className="sm:hidden"><Logo size={30} /></span>
-            <span className="hidden sm:inline"><Logo size={overlay ? 44 : 30} /></span>
-          </Link>
+          <div className={clsx(SEG, "min-w-0 gap-1 px-2")}>
+            <Link href="/" aria-label="Accueil Aivana" className="plain-link flex h-10 items-center px-3 !text-white"><Logo size={26} /></Link>
+            <span className="hidden items-center gap-0.5 min-[1100px]:flex">
+              {NAV.map(l => (
+                <span key={l.href} className="flex items-center">
+                  <span aria-hidden className="mx-0.5 h-4 w-px bg-white/15" />
+                  <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}
+                    className={clsx("plain-link", PILL_ITEM, isActive(l.href) && "!text-gold")}>
+                    {l.label}
+                  </Link>
+                </span>
+              ))}
+            </span>
+          </div>
+          <Bridge />
 
-          <div className="flex items-center gap-2.5 justify-self-end">
-            {/* Menu « Mes voyages » (compte ou voyage en cours), puis compte ou Connexion */}
-            {user || draft ? (
-              <TripsMenu overlay={overlay} loggedIn={!!user} />
-            ) : null}
+          <div className={clsx(SEG, "gap-1 px-1.5 min-[860px]:pl-2")}>
+            {(user || draft) && <span className="hidden min-[860px]:block"><TripsMenu loggedIn={!!user} /></span>}
             {user ? (
-              <AccountMenu overlay={overlay} name={user.name} email={user.email} />
+              <span className="hidden min-[860px]:block"><AccountMenu name={user.name} email={user.email} /></span>
             ) : (
-              <Link
-                href="/auth/login"
-                className={clsx(
-                  "plain-link hidden items-center whitespace-nowrap rounded-full border px-[18px] text-[15px] font-bold transition-colors min-[860px]:flex",
-                  overlay ? "h-[60px] border-white/55 !text-white hover:bg-white/10" : "h-[44px] border-line-2 !text-ink hover:bg-white",
-                )}
-              >
-                Connexion
-              </Link>
+              <Link href="/auth/login" className={clsx("plain-link hidden min-[860px]:flex", PILL_ITEM)}>Connexion</Link>
             )}
-            <button
-              onClick={plan}
-              className={clsx(
-                "flex items-center gap-3.5 rounded-full bg-white p-[5px] text-[15px] font-bold tracking-[-0.01em] text-ink transition-colors hover:bg-[#FBF6EA] min-[860px]:pl-[26px]",
-                !overlay && "shadow-[0_0_0_1px_#E4DFD5]",
-              )}
-              aria-label="Planifier un voyage avec le copilote"
-            >
+            <button onClick={plan} aria-label="Planifier un voyage avec le copilote"
+              className="flex h-10 items-center gap-2.5 rounded-full bg-gold p-1 text-[14px] font-bold tracking-[-0.01em] text-ink transition-colors hover:bg-[#D6B261] min-[860px]:pl-4">
               <span className="hidden whitespace-nowrap min-[860px]:inline">Planifier un voyage</span>
-              <span className={clsx(
-                "flex h-[38px] w-[38px] items-center justify-center rounded-full bg-ink text-gold",
-                overlay ? "sm:h-[50px] sm:w-[50px]" : "sm:h-[34px] sm:w-[34px]",
-              )}>
-                <ArrowUpRight className="h-[18px] w-[18px]" aria-hidden />
-              </span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full text-ink min-[860px]:bg-ink min-[860px]:text-gold"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
             </button>
           </div>
         </div>

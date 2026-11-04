@@ -131,13 +131,13 @@ export default function ChatDock() {
 
       <button
         onClick={() => setChatOpen(!open)}
-        className={`pointer-events-auto items-center gap-3 rounded-full border border-white/20 bg-ink p-1.5 text-white shadow-[0_16px_40px_rgba(15,27,45,0.3)] transition-colors hover:bg-ink-2 min-[1100px]:pr-5 ${open ? "hidden sm:flex" : "flex"}`}
+        className={`group pointer-events-auto items-center gap-3 rounded-full bg-ink p-0 text-white shadow-[0_0_0_1px_rgba(201,162,75,0.28),0_12px_32px_-8px_rgba(15,27,45,0.45),0_2px_6px_rgba(15,27,45,0.18)] transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-ink-2 active:translate-y-0 min-[1100px]:p-1 min-[1100px]:pr-5 ${open ? "hidden sm:flex" : "flex"}`}
         aria-label={open ? "Réduire le copilote" : "Planifier avec l'IA"}
       >
-        <CopilotMark size={44} tone="glass" ring="#0F1B2D" />
+        <CopilotMark size={48} shape="circle" ring="#0F1B2D" />
         <span className="hidden flex-col items-start gap-px min-[1100px]:flex">
-          <span className="text-[15px] font-medium">{open ? "Réduire" : "Planifier avec l'IA"}</span>
-          {!open && <span className="text-xs text-white/70">Décrivez votre voyage, je m&apos;occupe du reste</span>}
+          <span className="text-[15px] font-semibold leading-tight tracking-[-0.01em]">{open ? "Réduire" : "Planifier avec l'IA"}</span>
+          {!open && <span className="text-xs leading-tight text-white/65">Décrivez votre voyage, je m&apos;occupe du reste</span>}
         </span>
       </button>
     </div>

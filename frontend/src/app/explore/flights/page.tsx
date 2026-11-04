@@ -127,7 +127,8 @@ function FlightsContent() {
     }
   };
 
-  const priceLabel = searched ? `${searched.trip === "roundtrip" ? "A/R" : "trajet"} · ${who(searched)} · estimé` : "";
+  const priceLabel = searched ? `${searched.trip === "roundtrip" ? "A/R" : "Aller simple"} · estimé` : "";
+  const paxLabel = searched ? who(searched) : "";
 
   return (
     <>
@@ -237,14 +238,15 @@ function FlightsContent() {
                     <span className="text-[13px] text-muted">{hours(f.duration)} · <span className={f.type === "Direct" ? "text-ok" : ""}>{f.type}</span></span>
                     <span className="text-[13px] text-muted">{f.baggage}</span>
                   </div>
-                  <div className="flex flex-col gap-2.5">
+                  <div className="flex min-w-0 flex-col gap-2.5">
                     <LegLine label={searched.leg === "return" ? "Retour" : "Aller"} dep={f.departure} arr={f.arrival} from={f.originCode} to={f.destinationCode} />
                     {f.returnDeparture && <LegLine label="Retour" dep={f.returnDeparture} arr={f.returnArrival} from={f.destinationCode} to={f.originCode} />}
                   </div>
-                  <div className="flex items-center justify-end gap-3.5">
-                    <span className="flex flex-col items-end">
+                  <div className="flex min-w-0 items-center justify-end gap-3.5">
+                    <span className="flex min-w-0 flex-col items-end text-right">
                       <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price)}</span>
-                      <span className="whitespace-nowrap text-xs text-muted">{priceLabel}</span>
+                      <span className="whitespace-nowrap text-xs leading-snug text-muted">{priceLabel}</span>
+                      <span className="text-xs leading-snug text-muted">{paxLabel}</span>
                     </span>
                     <button onClick={() => toggle(f)} className={`whitespace-nowrap rounded-full border border-ink px-3 py-[9px] text-[13px] font-semibold ${added ? "bg-transparent text-ink" : "bg-ink text-paper hover:bg-ink-2"}`}>
                       {added ? "Ajouté ✓" : `Ajouter à ${tripName}`}

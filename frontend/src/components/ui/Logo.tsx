@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { clsx } from "clsx";
 
 /* Logo « Aivana » : écriture Kaushan Script et trait doré légèrement penché sous le mot. */
@@ -13,21 +14,31 @@ export default function Logo({ size = 36, className }: { size?: number; classNam
     );
 }
 
-/* Pastille du copilote : carré arrondi bleu nuit, « A » doré en forme de sommet et
-   arc d'horizon, avec un point vert « en ligne ». */
-export function CopilotMark({ size = 40, tone = "solid", ring = "#FFFDF9" }: { size?: number; tone?: "solid" | "glass"; ring?: string }) {
+/* Pastille du copilote, dessinée en un seul SVG (net à toutes les tailles) :
+   fond bleu nuit en dégradé, liseré doré très fin, « A » doré en forme de sommet
+   avec son arc d'horizon, et point vert « en ligne » détouré.
+   shape="circle" pour le bouton flottant, "square" (coins arrondis) ailleurs. */
+export function CopilotMark({ size = 40, shape = "square", ring = "#FFFDF9" }: { size?: number; shape?: "square" | "circle"; ring?: string }) {
+    const id = useId().replace(/:/g, "");
+    const r = shape === "circle" ? 24 : 14;
     return (
-        <span className="relative flex shrink-0" style={{ width: size, height: size }}>
-            <span
-                className="flex items-center justify-center"
-                style={{ width: size, height: size, borderRadius: "30%", background: tone === "solid" ? "#0F1B2D" : "rgba(255,255,255,0.1)" }}
-            >
-                <svg width="62%" height="62%" viewBox="0 0 24 24" fill="none" stroke="#C9A24B" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M4 20 12 4l8 16" />
-                    <path d="M7.5 14c3-1.6 6-1.6 9 0" />
-                </svg>
-            </span>
-            <span className="absolute h-[9px] w-[9px] rounded-full" style={{ right: 2, bottom: 2, background: "#3F8F5A", border: `2px solid ${ring}` }} />
-        </span>
+        <svg width={size} height={size} viewBox="0 0 48 48" className="block shrink-0" aria-hidden>
+            <defs>
+                <linearGradient id={`bg${id}`} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stopColor="#1C2C44" />
+                    <stop offset="1" stopColor="#0F1B2D" />
+                </linearGradient>
+                <linearGradient id={`au${id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#E2C27A" />
+                    <stop offset="1" stopColor="#C9A24B" />
+                </linearGradient>
+            </defs>
+            <rect x="0.5" y="0.5" width="47" height="47" rx={r - 0.5} fill={`url(#bg${id})`} stroke="#C9A24B" strokeOpacity="0.35" />
+            <g fill="none" stroke={`url(#au${id})`} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 34 24 13l10 21" />
+                <path d="M17.5 27.5c4.4-2.2 8.6-2.2 13 0" />
+            </g>
+            <circle cx={shape === "circle" ? 38.5 : 40} cy={shape === "circle" ? 38.5 : 40} r="5" fill="#3F8F5A" stroke={ring} strokeWidth="2.5" />
+        </svg>
     );
 }
