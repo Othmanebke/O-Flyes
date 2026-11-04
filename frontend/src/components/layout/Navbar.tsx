@@ -35,25 +35,18 @@ const NAV = [
   { label: "Journal", href: "/blog" },
 ];
 
-const SEG_H = 52;
-// Capsule de la barre : même hauteur et même bleu nuit partout, pour que les ponts se raccordent
-const SEG = "pointer-events-auto relative z-[1] flex h-[52px] shrink-0 items-center rounded-full bg-ink";
-// Élément texte dans une capsule
-const PILL_ITEM = "flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[14px] font-semibold !text-white/80 transition-colors hover:bg-white/10 hover:!text-white";
-
-/* Pont concave entre deux capsules (effet « goutte ») : il déborde sous les bouts
-   arrondis de chaque capsule et se resserre au milieu. */
-function Bridge() {
-  const w = 30, h = SEG_H, waist = 15;
-  return (
-    <svg aria-hidden width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="-mx-[10px] block shrink-0 text-ink" style={{ zIndex: 0 }}>
-      <path fill="currentColor" d={`M0 6 C${w * 0.32} 6 ${w * 0.38} ${waist} ${w / 2} ${waist} C${w * 0.62} ${waist} ${w * 0.68} 6 ${w} 6 L${w} ${h - 6} C${w * 0.68} ${h - 6} ${w * 0.62} ${h - waist} ${w / 2} ${h - waist} C${w * 0.38} ${h - waist} ${w * 0.32} ${h - 6} 0 ${h - 6} Z`} />
-    </svg>
-  );
-}
+/* Pastilles de la barre, chacune séparée : verre dépoli sur la photo de l'accueil,
+   blanc cassé sur les autres pages (même famille que les cartes du site). */
+const pill = (glass: boolean) => clsx(
+  "pointer-events-auto flex h-12 shrink-0 items-center rounded-full border backdrop-blur-md transition-colors",
+  glass
+    ? "border-white/25 bg-white/[0.12] text-white shadow-[0_8px_24px_rgba(15,27,45,0.18)]"
+    : "border-line bg-white/85 text-ink shadow-[0_6px_20px_rgba(15,27,45,0.06)]",
+);
+const pillHover = (glass: boolean) => (glass ? "hover:bg-white/[0.2]" : "hover:bg-white");
 
 /* Menu « Mes voyages » : accès au carnet, voyage en cours et voyages sauvegardés. */
-function TripsMenu({ loggedIn }: { loggedIn: boolean }) {
+function TripsMenu({ loggedIn, glass }: { loggedIn: boolean; glass: boolean }) {
   const plan = usePlan();
   const [open, setOpen] = useState(false);
   const [trips, setTrips] = useState<Trip[] | null>(null);
@@ -80,13 +73,13 @@ function TripsMenu({ loggedIn }: { loggedIn: boolean }) {
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={clsx(PILL_ITEM, open && "bg-white/10 text-white")}
+        className={clsx(pill(glass), pillHover(glass), "gap-1.5 whitespace-nowrap px-5 text-[14px] font-semibold")}
       >
-        Mes voyages <ChevronDown className={clsx("h-3.5 w-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+        Mes voyages <ChevronDown className={clsx("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden />
       </button>
 
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+18px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
           <Link href="/dashboard" onClick={close} className="plain-link flex items-center justify-between gap-3 rounded-[18px] bg-ink px-4 py-3 text-sm font-bold !text-white hover:bg-ink-2">
             Voir mon carnet <ArrowUpRight className="h-4 w-4 text-gold" aria-hidden />
           </Link>
@@ -161,12 +154,12 @@ function AccountMenu({ name, email }: { name: string; email: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Mon compte"
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-soft text-[15px] font-bold text-ink ring-gold/60 transition-shadow hover:ring-2 aria-expanded:ring-2"
+        className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-gold-soft text-[16px] font-bold text-ink shadow-[0_6px_20px_rgba(15,27,45,0.12)] ring-gold/60 ring-offset-2 ring-offset-transparent transition-shadow hover:ring-2 aria-expanded:ring-2"
       >
         {name.charAt(0).toUpperCase()}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+18px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
           <div className="flex flex-col px-3 pb-2 pt-1.5">
             <span className="truncate text-sm font-bold">{name}</span>
             <span className="truncate text-xs text-muted">{email}</span>
@@ -196,6 +189,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
 
   const plan = () => { setOpen(false); ask(""); };
   const draft = usePlan();
+  const glass = overlay;
   const isActive = (href: string) => {
     const p = pathname || "";
     if (href !== "/explore") return p.startsWith(href);
@@ -204,42 +198,48 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
 
   return (
     <>
-      {/* Capsules bleu nuit reliées : menu (rond) · logo + liens · actions.
-          Le conteneur laisse passer les clics hors des capsules. */}
-      <nav aria-label="Navigation principale" className={clsx("pointer-events-none font-sans", overlay ? "px-3 pt-4 sm:pt-6" : "px-3 py-3")}>
-        <div className="mx-auto flex w-fit max-w-full items-center text-white drop-shadow-[0_10px_24px_rgba(15,27,45,0.22)]">
-          <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu" className={clsx(SEG, "w-[52px] justify-center")}>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/10"><Menu className="h-[19px] w-[19px]" aria-hidden /></span>
-          </button>
-          <Bridge />
-
-          <div className={clsx(SEG, "min-w-0 gap-1 px-2")}>
-            <Link href="/" aria-label="Accueil Aivana" className="plain-link flex h-10 items-center px-3 !text-white"><Logo size={26} /></Link>
-            <span className="hidden items-center gap-0.5 min-[1100px]:flex">
-              {NAV.map(l => (
-                <span key={l.href} className="flex items-center">
-                  <span aria-hidden className="mx-0.5 h-4 w-px bg-white/15" />
-                  <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}
-                    className={clsx("plain-link", PILL_ITEM, isActive(l.href) && "!text-gold")}>
-                    {l.label}
-                  </Link>
-                </span>
-              ))}
-            </span>
+      {/* Trois groupes séparés : menu + logo à gauche, liens au centre, actions à droite.
+          Chaque élément est sa propre pastille arrondie ; le conteneur laisse passer les clics. */}
+      <nav aria-label="Navigation principale" className={clsx("pointer-events-none font-sans", overlay ? "px-4 pt-4 sm:px-8 sm:pt-6" : "px-4 py-3 sm:px-8")}>
+        <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center gap-3 justify-self-start">
+            <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu" className={clsx(pill(glass), pillHover(glass), "w-12 justify-center")}>
+              <Menu className="h-5 w-5" aria-hidden />
+            </button>
+            <Link href="/" aria-label="Accueil Aivana" className={clsx("plain-link pointer-events-auto", glass ? "!text-white" : "!text-ink")}><Logo size={30} /></Link>
           </div>
-          <Bridge />
 
-          <div className={clsx(SEG, "gap-1 px-1.5 min-[860px]:pl-2")}>
-            {(user || draft) && <span className="hidden min-[860px]:block"><TripsMenu loggedIn={!!user} /></span>}
+          <div className={clsx(pill(glass), "hidden gap-0.5 px-1.5 min-[1100px]:flex")}>
+            {NAV.map(l => {
+              const on = isActive(l.href);
+              return (
+                <Link key={l.href} href={l.href} aria-current={on ? "page" : undefined}
+                  className={clsx(
+                    "plain-link flex h-9 items-center whitespace-nowrap rounded-full px-4 text-[14px] font-semibold transition-colors",
+                    on
+                      ? glass ? "bg-white !text-ink" : "bg-ink !text-white"
+                      : glass ? "!text-white/85 hover:bg-white/15 hover:!text-white" : "!text-ink/75 hover:bg-ink/[0.06] hover:!text-ink",
+                  )}>
+                  {l.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="col-start-3 flex items-center gap-2 justify-self-end">
+            {(user || draft) && <span className="hidden min-[860px]:block"><TripsMenu loggedIn={!!user} glass={glass} /></span>}
             {user ? (
               <span className="hidden min-[860px]:block"><AccountMenu name={user.name} email={user.email} /></span>
             ) : (
-              <Link href="/auth/login" className={clsx("plain-link hidden min-[860px]:flex", PILL_ITEM)}>Connexion</Link>
+              <Link href="/auth/login" className={clsx("plain-link hidden whitespace-nowrap px-5 text-[14px] font-semibold min-[860px]:flex", pill(glass), pillHover(glass), glass ? "!text-white" : "!text-ink")}>Connexion</Link>
             )}
             <button onClick={plan} aria-label="Planifier un voyage avec le copilote"
-              className="flex h-10 items-center gap-2.5 rounded-full bg-gold p-1 text-[14px] font-bold tracking-[-0.01em] text-ink transition-colors hover:bg-[#D6B261] min-[860px]:pl-4">
+              className={clsx(
+                "pointer-events-auto flex h-12 items-center gap-3 rounded-full p-0 text-[14px] font-bold tracking-[-0.01em] transition-colors min-[860px]:p-1.5 min-[860px]:pl-5",
+                glass ? "bg-white text-ink shadow-[0_8px_24px_rgba(15,27,45,0.18)] hover:bg-[#FBF6EA]" : "bg-ink text-white shadow-[0_6px_20px_rgba(15,27,45,0.16)] hover:bg-ink-2",
+              )}>
               <span className="hidden whitespace-nowrap min-[860px]:inline">Planifier un voyage</span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full text-ink min-[860px]:bg-ink min-[860px]:text-gold"><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
+              <span className={clsx("flex h-12 w-12 items-center justify-center rounded-full min-[860px]:h-9 min-[860px]:w-9", glass ? "bg-ink text-gold" : "bg-gold text-ink")}><ArrowUpRight className="h-4 w-4" aria-hidden /></span>
             </button>
           </div>
         </div>
