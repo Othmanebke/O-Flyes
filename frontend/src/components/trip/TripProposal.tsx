@@ -4,24 +4,31 @@ import axios from "axios";
 import { Loader2 } from "lucide-react";
 import type { RoadtripProposal } from "@/types/roadtrip";
 
-/* Onglet « Proposition IA » du carnet : itinéraire étape par étape généré par l'agent. */
-export default function TripProposal({ tripId, destinationName }: { tripId: string; destinationName?: string }) {
+export interface ProposalContext { originCity?: string; travelers?: number; budgetEur?: number | null; booked?: string[] }
+
+/* Itinéraire jour par jour généré par le copilote pour un voyage sauvegardé. */
+export default function TripProposal({ tripId, destinationName, context }: { tripId: string; destinationName?: string; context?: ProposalContext }) {
   const [proposal, setProposal] = useState<RoadtripProposal | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Itinéraire enregistré avec le voyage ; à défaut, la copie locale
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem(`roadtrip_${tripId}`);
-      setProposal(cached ? JSON.parse(cached) : null);
-    } catch { setProposal(null); }
+    let cancelled = false;
+    let local: RoadtripProposal | null = null;
+    try { local = JSON.parse(localStorage.getItem(`roadtrip_${tripId}`) || "null"); } catch { /* ignoré */ }
+    setProposal(local?.steps?.length ? local : null);
+    axios.get(`/api/trips/${tripId}/proposal`)
+      .then(r => { if (!cancelled && r.data?.proposal?.steps?.length) setProposal(r.data.proposal); })
+      .catch(() => { /* hors ligne : on garde la copie locale */ });
+    return () => { cancelled = true; };
   }, [tripId]);
 
   const generate = async () => {
     setGenerating(true);
     setError(null);
     try {
-      const res = await axios.post(`/api/trips/${tripId}/proposal`, {});
+      const res = await axios.post(`/api/trips/${tripId}/proposal`, context || {}, { timeout: 90000 });
       if (res.data?.proposal) {
         setProposal(res.data.proposal);
         localStorage.setItem(`roadtrip_${tripId}`, JSON.stringify(res.data.proposal));
@@ -71,7 +78,7 @@ export default function TripProposal({ tripId, destinationName }: { tripId: stri
             </div>
             <div className="flex flex-col gap-2 text-sm">
               <p className="m-0 leading-relaxed text-muted-2">{s.description}</p>
-              {!!s.activities.length && (
+              {!!s.activities?.length && (
                 <ul className="m-0 flex flex-col gap-1 pl-0">
                   {s.activities.map((a, j) => <li key={j} className="flex gap-3"><span className="text-gold-deep">—</span>{a}</li>)}
                 </ul>

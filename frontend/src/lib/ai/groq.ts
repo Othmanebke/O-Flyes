@@ -14,7 +14,7 @@ interface GroqRequestBody {
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-async function callGroq(apiKey: string, body: GroqRequestBody) {
+async function callGroq(apiKey: string, body: GroqRequestBody, timeoutMs: number) {
     const response = await fetch(GROQ_URL, {
         method: "POST",
         headers: {
@@ -22,14 +22,15 @@ async function callGroq(apiKey: string, body: GroqRequestBody) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (response.ok) return { ok: true as const, data: await response.json() };
     return { ok: false as const, status: response.status, errorText: await response.text() };
 }
 
-export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "openai/gpt-oss-20b", maxTokens: number = 2000, jsonMode: boolean = false) {
+// timeoutMs : les réponses longues (itinéraire complet) dépassent souvent 15 s
+export async function getGroqChatCompletion(messages: GroqMessage[], model: string = "openai/gpt-oss-20b", maxTokens: number = 2000, jsonMode: boolean = false, timeoutMs: number = 15000) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         throw new Error("GROQ_API_KEY is not set in the environment variables.");
@@ -46,7 +47,7 @@ export async function getGroqChatCompletion(messages: GroqMessage[], model: stri
         body.response_format = { type: "json_object" };
     }
 
-    let result = await callGroq(apiKey, body);
+    let result = await callGroq(apiKey, body, timeoutMs);
 
     // Tous les modèles Groq n'acceptent pas response_format: json_object (ils répondent
     // alors 400). Plutôt que de casser le chat, on réessaie sans ce paramètre : les
@@ -54,7 +55,7 @@ export async function getGroqChatCompletion(messages: GroqMessage[], model: stri
     if (!result.ok && result.status === 400 && jsonMode) {
         console.error("Groq API Error (json_object mode):", result.errorText);
         delete body.response_format;
-        result = await callGroq(apiKey, body);
+        result = await callGroq(apiKey, body, timeoutMs);
     }
 
     if (!result.ok) {

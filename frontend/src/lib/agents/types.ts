@@ -9,6 +9,7 @@ export interface TripContext {
     travelers: number;
     budgetEur: number | null;
     preferences: string;
+    booked?: string[]; // éléments déjà dans le carnet (vols, hôtel, activités)
 }
 
 export interface DestinationBrief {

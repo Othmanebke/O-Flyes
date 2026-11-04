@@ -478,7 +478,7 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
       {/* Proposition IA */}
       <Panel title="Itinéraire proposé par le copilote" action={<CopilotMark size={28} />}>
         {plan.tripId
-          ? <TripProposal tripId={plan.tripId} destinationName={plan.destination} />
+          ? <TripProposal tripId={plan.tripId} destinationName={plan.destination} context={{ originCity: plan.origin, travelers: plan.travelers, budgetEur: plan.budget ?? null, booked: plan.items.map(shortTitle) }} />
           : (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="m-0 text-sm text-muted-2">Sauvegardez ce voyage pour recevoir un itinéraire jour par jour : où aller, quoi ne pas manquer, comment se déplacer.</p>
