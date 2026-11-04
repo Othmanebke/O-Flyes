@@ -206,7 +206,8 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
             <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu" className={clsx(pill(glass), pillHover(glass), "w-12 justify-center")}>
               <Menu className="h-5 w-5" aria-hidden />
             </button>
-            <Link href="/" aria-label="Accueil Aivana" className={clsx("plain-link pointer-events-auto", glass ? "!text-white" : "!text-ink")}><Logo size={30} /></Link>
+            {/* Sur l'accueil, le logo est dans le hero (au-dessus du titre) */}
+            {!overlay && <Link href="/" aria-label="Accueil Aivana" className="plain-link pointer-events-auto !text-ink"><Logo size={30} /></Link>}
           </div>
 
           <div className={clsx(pill(glass), "hidden gap-0.5 px-1.5 min-[1100px]:flex")}>

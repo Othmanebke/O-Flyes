@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Flag, Globe, MapPin, MessageSquare, Plane, Search } from "lucide-react";
 import Photo from "@/components/ui/Photo";
+import Logo from "@/components/ui/Logo";
 import ArrowPill from "@/components/ui/Pill";
 import { useMotionLoop, useReveal } from "@/components/ui/motion";
 import { ask } from "@/lib/chat";
@@ -107,7 +108,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[rgba(10,16,26,0.28)]" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(10,14,20,0.5) 0%, rgba(10,14,20,0.18) 40%, rgba(10,14,20,0.05) 70%)" }} />
         <div className="relative z-[2] flex flex-1 flex-col items-center gap-6 px-6 pb-[260px] pt-[calc(clamp(40px,9vh,110px)+116px)] text-center">
-          <span data-reveal className="flex items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] border-dashed border-gold bg-gold-soft px-4 py-[7px] text-sm font-semibold text-ink">Votre copilote de voyage IA</span>
+          <span data-reveal className="text-white"><Logo size={64} /></span>
           <h1 data-reveal className="m-0 max-w-[1000px] text-balance text-[clamp(52px,7.4vw,112px)] font-bold leading-[0.98] tracking-[-0.045em] text-white">
             Voyagez <span className="whitespace-nowrap">au-delà</span><br />de <em className="accent">l&apos;ordinaire</em>
           </h1>

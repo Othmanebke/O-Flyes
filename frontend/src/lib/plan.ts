@@ -21,6 +21,7 @@ export interface PlanItem {
     url?: string;
     date?: string; // AAAA-MM-JJ, pour l'itinéraire
     leg?: FlightLeg; // vols : aller-retour, aller seul ou retour seul
+    booked?: boolean; // l'utilisateur a indiqué l'avoir réservé chez le partenaire
     serverId?: string;
 }
 
@@ -161,7 +162,7 @@ function toServerPayload(i: PlanItem) {
         price_estimate: i.price,
         provider: i.provider || null,
         external_url: url,
-        metadata: { key: i.key, subtitle: i.subtitle, date: i.date, estimated: !!i.estimated, leg: i.leg },
+        metadata: { key: i.key, subtitle: i.subtitle, date: i.date, estimated: !!i.estimated, leg: i.leg, booked: !!i.booked },
     };
 }
 
@@ -292,6 +293,18 @@ export async function setItemDate(key: string, date: string | null) {
     write({ ...plan, items: plan.items.map(i => (i.key === key ? { ...i, date: date || undefined } : i)) });
     if (plan.tripId && item?.serverId) {
         try { await axios.patch(`/api/trips/${plan.tripId}/items/${item.serverId}`, { date }); } catch { /* reste modifié localement */ }
+    }
+}
+
+/* Marque un élément comme réservé (ou non) : AIVANA ne réserve pas lui-même,
+   c'est l'utilisateur qui le confirme après être passé chez le partenaire. */
+export async function setItemBooked(key: string, booked: boolean) {
+    const plan = read();
+    if (!plan) return;
+    const item = plan.items.find(i => i.key === key);
+    write({ ...plan, items: plan.items.map(i => (i.key === key ? { ...i, booked } : i)) });
+    if (plan.tripId && item?.serverId) {
+        try { await axios.patch(`/api/trips/${plan.tripId}/items/${item.serverId}`, { booked }); } catch { /* reste modifié localement */ }
     }
 }
 

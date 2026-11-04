@@ -28,10 +28,12 @@ export async function DELETE(
 
 const patchSchema = z.object({
     // date de l'élément dans le séjour (AAAA-MM-JJ), null pour « à placer »
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-});
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    // réservé chez le partenaire (déclaré par l'utilisateur)
+    booked: z.boolean().optional(),
+}).refine(v => v.date !== undefined || v.booked !== undefined);
 
-// Change le jour d'un élément (activité, hôtel…) dans l'itinéraire
+// Change le jour d'un élément dans l'itinéraire, ou le marque comme réservé
 export async function PATCH(
     request: Request,
     { params }: { params: { tripId: string; itemId: string } }
@@ -41,7 +43,7 @@ export async function PATCH(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const parsed = patchSchema.safeParse(await request.json().catch(() => null));
-    if (!parsed.success) return NextResponse.json({ error: 'Date invalide' }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: 'Modification invalide' }, { status: 400 });
 
     // La RLS limite la lecture et l'écriture aux éléments des voyages de l'utilisateur
     const { data: item } = await supabase
@@ -54,7 +56,7 @@ export async function PATCH(
 
     const { error } = await supabase
         .from('trip_items')
-        .update({ metadata: { ...(item.metadata || {}), date: parsed.data.date } })
+        .update({ metadata: { ...(item.metadata || {}), ...parsed.data } })
         .eq('id', params.itemId)
         .eq('trip_id', params.tripId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
