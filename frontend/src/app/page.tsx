@@ -38,7 +38,7 @@ const STICKERS = [
     clip: "polygon(50.0% 0.0%,60.4% 11.4%,75.0% 6.7%,78.3% 21.7%,93.3% 25.0%,88.6% 39.6%,100.0% 50.0%,88.6% 60.4%,93.3% 75.0%,78.3% 78.3%,75.0% 93.3%,60.4% 88.6%,50.0% 100.0%,39.6% 88.6%,25.0% 93.3%,21.7% 78.3%,6.7% 75.0%,11.4% 60.4%,0.0% 50.0%,11.4% 39.6%,6.7% 25.0%,21.7% 21.7%,25.0% 6.7%,39.6% 11.4%)" },
   { t: "Itinéraires sur mesure", Icon: Plane, bg: "#E6DCCB", x: "12%", y: "400px", size: 300, f: 3, radius: 60,
     clip: "polygon(30% 0%,70% 0%,70% 30%,100% 30%,100% 70%,70% 70%,70% 100%,30% 100%,30% 70%,0% 70%,0% 30%,30% 30%)" },
-  { t: "22 destinations", Icon: Globe, bg: "#DCE6EF", x: "min(70%, calc(100% - 320px))", y: "440px", size: 290, f: 4, radius: 70, clip: "none", rotate: 45 },
+  { t: `${DESTINATIONS.length} destinations`, Icon: Globe, bg: "#DCE6EF", x: "min(70%, calc(100% - 320px))", y: "440px", size: 290, f: 4, radius: 70, clip: "none", rotate: 45 },
 ];
 
 const STATS = [
@@ -93,7 +93,8 @@ export default function HomePage() {
   const pickStyle = (i: number) => { setStyleAuto(false); setStyle(i); };
   const pickStep = (i: number) => { setStepAuto(false); setStep(i); };
 
-  const seasonal = month == null ? [] : DESTINATIONS.filter(d => d.months.includes(currentMonthShort(new Date(2000, month, 1))));
+  // Les 10 destinations les mieux notées pour ce mois (la liste complète est dans Destinations)
+  const seasonal = month == null ? [] : DESTINATIONS.filter(d => d.months.includes(currentMonthShort(new Date(2000, month, 1)))).sort((a, b) => b.rating - a.rating).slice(0, 10);
   const sd = seasonal.length ? seasonal[season % seasonal.length] : null;
   const cur = STYLES[style];
   const trips = ["c1", "t1", "l1"].map(id => byId(id)!);

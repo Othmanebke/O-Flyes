@@ -15,7 +15,7 @@ const CHIPS: [string, PhotoKey, string][] = [
 const COLS = [
   { t: "Pages", links: [["Accueil", "/"], ["Destinations", "/explore"], ["Journal", "/blog"], ["Mes voyages", "/dashboard"]] },
   { t: "Planifier", links: [["Copilote IA", "/assistant"], ["Vols", "/explore/flights"], ["Hôtels", "/explore/hotels"], ["Activités", "/explore/activities"]] },
-  { t: "Aide", links: [["Questions fréquentes", "/aide"], ["Contact", "/contact"], ["Mentions légales", "/legal"], ["Confidentialité", "/legal#confidentialite"]] },
+  { t: "Aide", links: [["Questions fréquentes", "/aide"], ["Contact", "/contact"], ["Mentions légales", "/legal"], ["Confidentialité", "/legal#confidentialite"], ["Crédits photo", "/credits"]] },
 ];
 
 // Brume blanche qui fond le haut du footer dans la page

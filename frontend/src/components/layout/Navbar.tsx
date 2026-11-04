@@ -10,14 +10,14 @@ import Photo from "@/components/ui/Photo";
 import { ask } from "@/lib/chat";
 import { clearPlan, formatRange, tripName, usePlan } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
-import { findDestination } from "@/lib/catalog";
+import { DESTINATIONS, eur, findDestination } from "@/lib/catalog";
 import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
 import type { Trip } from "@/types/trip";
 import { useSession } from "@/lib/session";
 
 const LINKS = [
   { label: "Accueil", href: "/", note: "Le point de départ" },
-  { label: "Destinations", href: "/explore", note: "22 idées" },
+  { label: "Destinations", href: "/explore", note: `${DESTINATIONS.length} idées` },
   { label: "Vols", href: "/explore/flights", note: "Depuis Paris" },
   { label: "Hôtels", href: "/explore/hotels", note: "Prix par nuit" },
   { label: "Activités", href: "/explore/activities", note: "Sur place" },
@@ -276,7 +276,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
             <Photo k="balloons" sizes="40vw" className="absolute inset-0" />
             <div className="absolute inset-x-6 bottom-6 flex flex-col gap-1.5 text-white">
               <span className="font-serif text-[26px] italic">Où partez-vous ensuite ?</span>
-              <span className="text-[15px] text-white/85">22 destinations, de 650 € à deux.</span>
+              <span className="text-[15px] text-white/85">{DESTINATIONS.length} destinations, de {eur(Math.min(...DESTINATIONS.map(d => d.budgetMin)))} à deux.</span>
             </div>
           </div>
         </div>

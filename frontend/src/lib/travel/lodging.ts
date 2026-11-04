@@ -3,6 +3,8 @@
 // du catalogue. On ne présente pas de faux noms d'hôtels : le lien Booking cherche ce
 // type d'hébergement dans la ville, avec les dates du voyage.
 import type { PhotoKey } from '@/lib/photos';
+import { PLACES } from '@/lib/world/places';
+import { lodgingFor } from '@/lib/world/lodging';
 
 export interface Lodging {
     label: string; // ce que l'on réserve
@@ -136,6 +138,9 @@ export const LODGING: Record<string, Lodging[]> = {
         l('Camp dans le désert', 'Désert · une nuit sous les étoiles', 4, 1.5, ['Dîner', 'Balade à dos de chameau'], 'pyr', 'desert camp Dubai'),
     ],
 };
+
+// Villes ajoutées : types d'hébergement de leur pays
+for (const c of PLACES) LODGING[c.id] = lodgingFor(c);
 
 // Hors catalogue : types génériques, sans prétendre connaître la ville
 export const GENERIC: Lodging[] = [

@@ -11,7 +11,7 @@ describe('airportCode', () => {
     });
 
     it("n'invente pas de code pour une ville inconnue", () => {
-        expect(airportCode('Séville')).toBeNull();
+        expect(airportCode('Ljubljana')).toBeNull();
     });
 });
 

@@ -16,7 +16,7 @@ export const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Les compagnies et hébergements affichés sont-ils réels ?",
-    a: "Oui pour les 22 destinations du catalogue : ce sont les compagnies qui desservent habituellement la ligne depuis Paris, et les types de logement typiques du pays (riad à Marrakech, ryokan au Japon…). Les horaires sont indicatifs, le programme des compagnies variant selon la saison.",
+    a: "Oui pour toutes les destinations du catalogue : ce sont les compagnies qui desservent habituellement la ligne depuis Paris, et les types de logement typiques du pays (riad à Marrakech, ryokan au Japon…). Les horaires sont indicatifs, le programme des compagnies variant selon la saison.",
   },
   {
     q: "Faut-il un compte ?",

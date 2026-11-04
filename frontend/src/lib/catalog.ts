@@ -1,5 +1,7 @@
-// Catalogue des 22 destinations AIVANA (source unique pour toutes les pages).
+// Catalogue des destinations AIVANA (source unique pour toutes les pages) :
+// 22 destinations d'origine + les villes de lib/world/places.ts.
 // Budgets estimés pour deux voyageurs, vols depuis Paris compris.
+import { PLACES, CURRENCY } from "@/lib/world/places";
 
 export type Tier = "Essentiel" | "Confort" | "Premium" | "Prestige";
 export type Continent = "Europe" | "Afrique" | "Asie" | "Amérique" | "Océanie";
@@ -49,6 +51,14 @@ const ROWS: Row[] = [
     ["l3", "Dubaï", "Émirats arabes unis", "Asie", "DXB", "Prestige", 4500, 8000, 200, 250, ["Oct", "Nov", "Déc", "Jan"], "7 – 10 jours", 4.6, ["Luxe", "Shopping", "Gastronomie"], "Burj Khalifa, désert et gastronomie internationale."],
 ];
 
+// Budget « dès » pour deux (vols A/R + nuits + 60 € d'activités par personne) et niveau
+const round50 = (n: number) => Math.round(n / 50) * 50;
+const tierOf = (min: number): Tier => (min < 1500 ? "Essentiel" : min < 3500 ? "Confort" : min < 6000 ? "Premium" : "Prestige");
+for (const c of PLACES) {
+    const min = round50(c.flightFrom * 2 * 2 + c.hotelFrom * c.nights + 120);
+    ROWS.push([c.id, c.name, c.country, c.continent, c.code, tierOf(min), min, round50(min * 1.45), c.flightFrom, c.hotelFrom, c.months, c.duration, c.rating, c.styles, c.desc]);
+}
+
 export const DESTINATIONS: CatalogDestination[] = ROWS.map(r => ({
     id: r[0], name: r[1], country: r[2], continent: r[3], code: r[4], tier: r[5],
     budgetMin: r[6], budgetMax: r[7], flightFrom: r[8], hotelFrom: r[9], months: r[10],
@@ -75,11 +85,18 @@ const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,
 
 // Villes ou régions que le copilote cite et qui correspondent à une destination du catalogue
 const ALIASES: Record<string, string> = {
-    reykjavik: "c2", islande: "c2", iceland: "c2", tokyo: "c1", kyoto: "c1", osaka: "c1", japon: "c1",
-    athenes: "m1", santorin: "m1", santorini: "m1", phuket: "m3", krabi: "m3", "ko phi phi": "m3",
+    reykjavik: "c2", islande: "c2", iceland: "c2", tokyo: "c1", kyoto: "c1", japon: "c1",
+    athenes: "m1", santorin: "m1", santorini: "m1", phuket: "m3", "ko phi phi": "m3",
     nairobi: "m5", "masai mara": "m5", kenya: "m5", male: "l1", "bora bora": "l2", papeete: "l2", tahiti: "l2", moorea: "l2",
     lisbon: "t2", ubud: "t3", "chiang mai": "b3", hanoi: "b4", "baie d'halong": "b4", krakow: "b5", tbilisi: "b2", dubai: "l3",
 };
+for (const c of PLACES) for (const a of c.aliases || []) ALIASES[norm(a)] = c.id;
+
+// Texte de recherche d'une destination : nom, pays, continent et autres noms (Tulum → Cancún)
+export function searchText(d: CatalogDestination): string {
+    const alias = Object.entries(ALIASES).filter(([, id]) => id === d.id).map(([a]) => a);
+    return norm([d.name, d.country, d.continent, ...alias].join(" "));
+}
 
 // Retrouve une destination du catalogue à partir d'un nom libre ("Kyoto", "lisbon", "Reykjavik"…)
 export function findDestination(name: string | null | undefined): CatalogDestination | undefined {
@@ -98,7 +115,7 @@ export function searchCity(d: CatalogDestination): string {
     const special: Record<string, string> = {
         m1: "Athènes", m3: "Phuket", m5: "Nairobi", c1: "Tokyo", c2: "Reykjavik", l1: "Malé", l2: "Papeete",
     };
-    return special[d.id] || d.name;
+    return special[d.id] || PLACES.find(c => c.id === d.id)?.searchCity || d.name;
 }
 
 // Estimation simple : vols A/R + hôtel + 60 € d'activités par personne
@@ -139,6 +156,7 @@ export const GEO: Record<string, { lat: number; lon: number; currency: string; c
     l2: { lat: -17.54, lon: -149.57, currency: "XPF", currencyName: "franc Pacifique" },
     l3: { lat: 25.2, lon: 55.27, currency: "AED", currencyName: "dirham des Émirats" },
 };
+for (const c of PLACES) GEO[c.id] = { lat: c.lat, lon: c.lon, ...(CURRENCY[c.country] || { currency: "EUR", currencyName: "euro" }) };
 
 // Coût de la vie sur place selon le niveau de la destination (1 = Europe de l'Ouest)
 export function costFactor(name: string | null | undefined): number {

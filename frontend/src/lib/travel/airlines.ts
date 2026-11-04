@@ -4,6 +4,7 @@
 // Google Flights (lien sur chaque vol). Les programmes changent selon la saison.
 import { findDestination } from '@/lib/catalog';
 import { IATA } from '@/lib/iata';
+import { PLACES } from '@/lib/world/places';
 
 export type FareKind = 'low' | 'legacy' | 'gulf';
 
@@ -45,6 +46,9 @@ export const ROUTES: Record<string, RouteOption[]> = {
     PPT: [o('Air Tahiti Nui', 'CDG', 22, 'legacy', 'Los Angeles'), o('Air France', 'CDG', 22, 'legacy', 'Los Angeles'), o('French bee', 'ORY', 22.5, 'low', 'San Francisco')],
     DXB: [o('Emirates', 'CDG', 6.75, 'gulf'), o('Air France', 'CDG', 6.75, 'legacy')],
 };
+
+// Villes ajoutées (lib/world/places.ts)
+for (const c of PLACES) ROUTES[c.code] = c.routes;
 
 // Multiplicateur de prix selon le type de compagnie (base = tarif « dès » du catalogue)
 export const FARE: Record<FareKind, number> = { low: 1, gulf: 1.15, legacy: 1.3 };

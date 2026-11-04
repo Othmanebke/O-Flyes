@@ -200,9 +200,135 @@ const COUNTRIES: Record<string, CountryAdvice> = {
     "France": {
         slug: "",
         tips: [
-            A("Formalités", "La Polynésie française est un territoire français : carte d'identité ou passeport valide."),
-            A("Santé", "Protection contre les moustiques (dengue) et le soleil. Crème respectueuse des coraux pour le lagon."),
-            A("Usages", "Ne marchez pas sur le corail et ne nourrissez pas les poissons."),
+            A("Formalités", "Territoire français (La Réunion, Antilles, Polynésie) : carte d'identité ou passeport valide, pas de formalité."),
+            A("Sécurité", "À La Réunion, ne vous baignez que dans le lagon et les zones surveillées : la baignade est interdite ailleurs à cause du risque de requins."),
+            A("Sécurité", "Aux Antilles, la saison cyclonique va de juin à novembre. Des algues sargasses s'échouent certains mois sur quelques plages : renseignez-vous sur place."),
+            A("Santé", "Protection contre les moustiques (dengue) et le soleil. Crème respectueuse des coraux pour les lagons."),
+        ],
+    },
+    "Espagne": {
+        slug: "espagne",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité."),
+            A("Sécurité", "Pickpockets très actifs à Barcelone (Rambla, métro, plage) et à Madrid : sac fermé devant vous, téléphone jamais posé sur la table d'une terrasse."),
+            A("Usages", "On déjeune vers 14 h et on dîne rarement avant 21 h. Une taxe de séjour s'ajoute à l'hôtel dans plusieurs régions (Catalogne, Baléares)."),
+            A("Santé", "Emportez votre carte européenne d'assurance maladie (CEAM). En été, l'Andalousie dépasse souvent 40 °C."),
+        ],
+    },
+    "Italie": {
+        slug: "italie",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité."),
+            A("Transports", "En voiture, n'entrez pas dans les zones à trafic limité (ZTL) des centres historiques : les caméras envoient l'amende des mois plus tard. Compostez les billets de train régionaux et de bus."),
+            A("Usages", "Venise fait payer une taxe d'accès aux visiteurs à la journée certains jours de forte affluence (ceux qui y dorment paient la taxe de séjour à la place)."),
+            A("Sécurité", "Pickpockets dans le métro de Rome et autour des grands monuments."),
+        ],
+    },
+    "Croatie": {
+        slug: "croatie",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité. La monnaie est l'euro."),
+            A("Usages", "À Split, Dubrovnik ou Hvar, se promener en maillot de bain dans la vieille ville peut être sanctionné d'une amende."),
+            A("Santé", "Beaucoup de plages sont en galets avec des oursins : des chaussures d'eau sont utiles. CEAM à emporter."),
+        ],
+    },
+    "Royaume-Uni": {
+        slug: "royaume-uni",
+        tips: [
+            A("Formalités", "Passeport obligatoire (la carte d'identité n'est plus acceptée). Autorisation électronique de voyage (ETA) payante à demander en ligne avant le départ, sur le site officiel du gouvernement britannique."),
+            A("Transports", "Conduite à gauche. L'Eurostar relie Paris à Londres en 2 h 20, souvent plus simple que l'avion."),
+            A("Usages", "Prises électriques de type G : prévoyez un adaptateur. Le paiement sans contact est accepté presque partout, y compris dans les bus."),
+        ],
+    },
+    "Irlande": {
+        slug: "irlande",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité."),
+            A("Transports", "Conduite à gauche et routes de campagne étroites. Prises électriques de type G."),
+            A("Usages", "La météo change plusieurs fois par jour : une veste imperméable est indispensable, même en été."),
+        ],
+    },
+    "Pays-Bas": {
+        slug: "pays-bas",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité."),
+            A("Transports", "Ne marchez jamais sur les pistes cyclables (souvent rouges) : les vélos arrivent vite. Le train depuis Paris met environ 3 h 20."),
+            A("Usages", "Certaines boutiques n'acceptent que la carte, d'autres seulement les cartes de débit : gardez un peu d'espèces."),
+        ],
+    },
+    "Allemagne": {
+        slug: "allemagne",
+        tips: [
+            A("Formalités", "Carte d'identité ou passeport en cours de validité."),
+            A("Transports", "Validez votre ticket avant de monter dans les transports à Berlin : les contrôles sont fréquents et l'amende immédiate."),
+            A("Usages", "Beaucoup de bars et petits restaurants n'acceptent que les espèces. Les magasins sont fermés le dimanche."),
+        ],
+    },
+    "Tunisie": {
+        slug: "tunisie",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour de moins de 3 mois : passeport valide (la carte d'identité n'est acceptée que pour les voyages organisés par une agence)."),
+            A("Transports", "Taxis jaunes : demandez que le compteur soit allumé."),
+            A("Sécurité", "Certaines zones frontalières (Libye, Algérie) sont formellement déconseillées. Les zones touristiques du littoral sont fréquentées sans difficulté."),
+            A("Usages", "Pendant le ramadan, évitez de manger et boire en public la journée. Tenue couvrante dans les médinas et les mosquées."),
+        ],
+    },
+    "Égypte": {
+        slug: "egypte",
+        tips: [
+            A("Formalités", "Visa obligatoire : e-visa sur le site officiel du gouvernement égyptien ou visa à l'arrivée. Passeport valide au moins 6 mois."),
+            A("Sécurité", "Aux pyramides et dans les sites, les sollicitations sont insistantes : fixez le prix d'une balade à dos de chameau avant de monter. Le nord du Sinaï et les zones frontalières sont formellement déconseillés."),
+            A("Santé", "Eau en bouteille uniquement, évitez les crudités. Très fortes chaleurs de mai à septembre."),
+            A("Usages", "Le pourboire (bakchich) est attendu pour la plupart des petits services."),
+        ],
+    },
+    "Canada": {
+        slug: "canada",
+        tips: [
+            A("Formalités", "Autorisation de voyage électronique (AVE) obligatoire en avion, à demander en ligne uniquement sur le site officiel du gouvernement canadien (des sites intermédiaires la facturent bien plus cher)."),
+            A("Usages", "Les taxes s'ajoutent au prix affiché à la caisse, et le pourboire est attendu (15 à 20 %)."),
+            A("Sécurité", "Dans les parcs, suivez les consignes face aux ours (nourriture rangée, randonnée en groupe)."),
+        ],
+    },
+    "Mexique": {
+        slug: "mexique",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour touristique : passeport valide pour toute la durée du séjour."),
+            A("Sécurité", "Plusieurs États sont formellement déconseillés : consultez la carte de France Diplomatie. Dans les grandes villes, préférez les taxis de station (sitio) ou une application."),
+            A("Santé", "Eau en bouteille uniquement. Sur la côte caraïbe, des sargasses s'échouent souvent l'été."),
+        ],
+    },
+    "Brésil": {
+        slug: "bresil",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour touristique de moins de 90 jours : passeport valide."),
+            A("Sécurité", "À Rio et São Paulo, ne sortez pas votre téléphone dans la rue ni sur la plage, et prenez un taxi par application le soir. N'entrez dans une favela qu'avec un guide local reconnu."),
+            A("Santé", "Protection contre les moustiques (dengue). Vaccin contre la fièvre jaune recommandé selon les régions visitées."),
+        ],
+    },
+    "Maurice": {
+        slug: "maurice",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour touristique : passeport valide, billet retour et adresse d'hébergement demandés à l'arrivée."),
+            A("Sécurité", "Saison des cyclones de janvier à mars. Méfiez-vous des courants hors du lagon."),
+            A("Santé", "Soleil très fort, oursins et poissons-pierres dans le lagon : chaussures d'eau conseillées."),
+        ],
+    },
+    "Sénégal": {
+        slug: "senegal",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour de moins de 90 jours : passeport valide au moins 6 mois."),
+            A("Santé", "Traitement antipaludique à voir avec votre médecin ; vaccin contre la fièvre jaune recommandé (obligatoire si vous arrivez d'un pays où elle est présente)."),
+            A("Transports", "Taxis sans compteur : fixez le prix avant de monter."),
+            A("Sécurité", "La région de Casamance et certaines zones frontalières demandent des précautions : vérifiez la carte de France Diplomatie."),
+        ],
+    },
+    "République dominicaine": {
+        slug: "republique-dominicaine",
+        tips: [
+            A("Formalités", "Pas de visa pour un séjour touristique : passeport valide. Formulaire électronique d'entrée et de sortie (e-ticket) à remplir en ligne avant le vol."),
+            A("Santé", "Eau en bouteille uniquement. Protection contre les moustiques (dengue)."),
+            A("Sécurité", "Courants forts sur certaines plages : respectez les drapeaux. Hors des resorts, évitez de montrer objets de valeur et téléphone."),
         ],
     },
 };

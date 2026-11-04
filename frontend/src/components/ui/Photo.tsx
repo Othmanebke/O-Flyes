@@ -3,10 +3,10 @@ import Image, { type ImageLoaderProps } from "next/image";
 import { useState, type CSSProperties } from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { photoBase, type PhotoKey } from "@/lib/photos";
+import { commonsUrl, isCommons, photoBase, type PhotoKey } from "@/lib/photos";
 
-// Unsplash redimensionne lui-même : on lui demande la bonne largeur au lieu de
-// faire passer l'image par l'optimiseur Next.
+// Unsplash et Wikimedia Commons redimensionnent eux-mêmes : on leur demande la bonne
+// largeur au lieu de faire passer l'image par l'optimiseur Next.
 const unsplashLoader = ({ src, width }: ImageLoaderProps) => `${src}&w=${width}`;
 
 interface Props {
@@ -29,8 +29,8 @@ export default function Photo({ k, alt = "", sizes = "100vw", priority, classNam
         <div className={twMerge("relative overflow-hidden bg-placeholder", className)} style={style}>
             {!failed && (
                 <Image
-                    loader={unsplashLoader}
-                    src={photoBase(k)}
+                    loader={isCommons(k) ? ({ width }) => commonsUrl(k, width) : unsplashLoader}
+                    src={isCommons(k) ? commonsUrl(k, 960) : photoBase(k)}
                     alt={alt}
                     fill
                     sizes={sizes}

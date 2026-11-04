@@ -5,9 +5,12 @@ import { useSearchParams } from "next/navigation";
 import PageBanner from "@/components/layout/PageBanner";
 import Photo from "@/components/ui/Photo";
 import { Chip } from "@/components/ui/Pill";
-import { CONTINENTS, DESTINATIONS, MONTHS_SHORT, TIERS, eur } from "@/lib/catalog";
+import { CONTINENTS, DESTINATIONS, MONTHS_SHORT, TIERS, eur, searchText } from "@/lib/catalog";
 import type { PhotoKey } from "@/lib/photos";
 import { getPrefs } from "@/lib/plan";
+
+// Pays du catalogue, par ordre alphabétique
+const COUNTRIES = [...new Set(DESTINATIONS.map(d => d.country))].sort((a, b) => a.localeCompare(b, "fr"));
 
 const STYLES = ["Nature", "Aventure", "Plage", "Culture", "Gastronomie", "Bien-être"];
 
@@ -16,6 +19,7 @@ function DestinationsContent() {
   const [tier, setTier] = useState("Tous");
   const [cont, setCont] = useState("Toutes");
   const [month, setMonth] = useState("");
+  const [country, setCountry] = useState("");
   const [style, setStyle] = useState("");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<"best" | "cheap" | "dear" | "rating">("best");
@@ -35,9 +39,10 @@ function DestinationsContent() {
     .filter(d => tier === "Tous" || d.tier === tier)
     .filter(d => cont === "Toutes" || d.continent === cont)
     .filter(d => !month || d.months.includes(month))
+    .filter(d => !country || d.country === country)
     .filter(d => !style || d.styles.includes(style))
     // ce qui correspond à vos envies en premier
-    .filter(d => !q.trim() || norm(`${d.name} ${d.country} ${d.continent}`).includes(norm(q.trim())))
+    .filter(d => !q.trim() || searchText(d).includes(norm(q.trim())))
     .sort((a, b) =>
       sort === "cheap" ? a.budgetMin - b.budgetMin
         : sort === "dear" ? b.budgetMin - a.budgetMin
@@ -45,7 +50,7 @@ function DestinationsContent() {
         // recommandé : ce qui correspond à vos envies en premier
         : b.styles.filter(x => liked.includes(x)).length - a.styles.filter(x => liked.includes(x)).length);
 
-  const clear = () => { setTier("Tous"); setCont("Toutes"); setMonth(""); setStyle(""); setQ(""); };
+  const clear = () => { setTier("Tous"); setCont("Toutes"); setMonth(""); setCountry(""); setStyle(""); setQ(""); };
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 pb-24 pt-12">
@@ -87,6 +92,11 @@ function DestinationsContent() {
           <select id="month" value={month} onChange={e => setMonth(e.target.value)} className="h-[34px] rounded-full border border-line-2 bg-cream px-2.5 text-[13px] text-ink">
             <option value="">N&apos;importe quand</option>
             {MONTHS_SHORT.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <label htmlFor="country" className="ml-2 text-[13px] text-muted">Pays</label>
+          <select id="country" value={country} onChange={e => setCountry(e.target.value)} className="h-[34px] rounded-full border border-line-2 bg-cream px-2.5 text-[13px] text-ink">
+            <option value="">Tous les pays</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <div className="flex-1" />
           <span className="text-[13px] text-muted">{results.length} destination{results.length > 1 ? "s" : ""}</span>

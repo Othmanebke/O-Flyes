@@ -18,6 +18,6 @@ describe('findDestination', () => {
 
     it("ne rattache pas une ville hors catalogue", () => {
         expect(findDestination('Tromsø')).toBeUndefined();
-        expect(findDestination('Séville')).toBeUndefined();
+        expect(findDestination('Ljubljana')).toBeUndefined();
     });
 });

@@ -14,13 +14,23 @@ export const PHOTOS = {
     dive: "1544551763-46a013bb70d5", boat: "1476514525535-07fb3b4ae5f1", meadow: "1501555088652-021faa106b9b", alley: "1527631746610-bca00a040d60",
 } as const;
 
-export type PhotoKey = keyof typeof PHOTOS;
+import { CITY_PHOTOS } from "@/lib/world/cityPhotos";
 
-export const isPhotoKey = (k: string | null | undefined): k is PhotoKey => !!k && k in PHOTOS;
+// Clé de photo : thème ou destination d'origine (Unsplash), ou ville ajoutée (Wikimedia Commons)
+export type PhotoKey = keyof typeof PHOTOS | keyof typeof CITY_PHOTOS;
+export const isCommons = (k: PhotoKey): k is keyof typeof CITY_PHOTOS => k in CITY_PHOTOS;
 
-export const photoBase = (k: PhotoKey) => `https://images.unsplash.com/photo-${PHOTOS[k]}?auto=format&fit=crop&q=75`;
+// Commons ne sert que certaines largeurs de miniature : on prend la plus proche au-dessus
+const COMMONS_WIDTHS = [330, 500, 960, 1280, 1920];
+export const commonsUrl = (k: keyof typeof CITY_PHOTOS, width: number) =>
+    CITY_PHOTOS[k].src.replace("{w}", String(COMMONS_WIDTHS.find(x => x >= width) ?? 1920));
 
-export const photo = (k: PhotoKey, w = 1200) => `${photoBase(k)}&w=${w}`;
+export const isPhotoKey = (k: string | null | undefined): k is PhotoKey => !!k && (k in PHOTOS || k in CITY_PHOTOS);
+
+export const photoBase = (k: keyof typeof PHOTOS) => `https://images.unsplash.com/photo-${PHOTOS[k]}?auto=format&fit=crop&q=75`;
+
+// URL d'une photo à une largeur donnée, quelle que soit sa source
+export const photo = (k: PhotoKey, w = 1200) => (isCommons(k) ? commonsUrl(k, w) : `${photoBase(k)}&w=${w}`);
 
 // Choisit une photo cohérente pour une carte (hôtel, activité, ville hors catalogue)
 // à partir de son libellé, de façon stable (même texte → même photo).

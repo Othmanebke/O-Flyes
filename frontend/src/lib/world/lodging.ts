@@ -1,0 +1,176 @@
+/* Types d'hébergement typiques de chaque pays ajouté, déclinés pour chaque ville.
+   Comme pour les destinations d'origine : pas de faux noms d'hôtels, un type de
+   logement réel, le quartier où le chercher et un prix estimé à partir du prix
+   « dès » de la ville. Le lien Booking cherche ce type de logement dans la ville. */
+import type { Lodging } from "@/lib/travel/lodging";
+import type { PhotoKey } from "@/lib/photos";
+import type { Place } from "@/lib/world/places";
+
+type T = [label: string, area: string, stars: number, factor: number, amenities: string[], photo: PhotoKey | "city", query: string];
+
+const BY_COUNTRY: Record<string, T[]> = {
+    "Espagne": [
+        ["Appartement dans le centre historique", "Vieille ville · tout à pied", 3, 1, ["Cuisine équipée", "WiFi"], "city", "appartement centre"],
+        ["Hostal, pension familiale", "Centre · simple et bien placé", 2, 0.7, ["Climatisation", "WiFi"], "alley", "hostal"],
+        ["Hôtel boutique", "Quartier animé · terrasse ou rooftop", 4, 1.7, ["Rooftop", "Petit-déjeuner"], "hotel2", "hôtel boutique"],
+        ["Hôtel avec piscine", "Un peu à l'écart · idéal en été", 4, 2.2, ["Piscine", "Restaurant"], "hotel4", "hôtel piscine"],
+    ],
+    "Italie": [
+        ["B&B dans le centre historique", "Centro storico · accueil par les propriétaires", 3, 1, ["Petit-déjeuner", "WiFi"], "alley", "B&B centro storico"],
+        ["Appartement", "Quartier résidentiel · vivre comme sur place", 3, 1.1, ["Cuisine équipée", "WiFi"], "city", "appartement"],
+        ["Hôtel boutique", "Palais rénové · centre", 4, 1.9, ["Petit-déjeuner", "Bar"], "hotel2", "hôtel boutique"],
+        ["Agriturismo", "Campagne alentour · ferme avec table d'hôtes", 3, 1.2, ["Piscine", "Produits de la ferme"], "meadow", "agriturismo"],
+    ],
+    "Portugal": [
+        ["Appartement", "Centre historique · cuisine et balcon", 3, 1, ["Cuisine équipée", "WiFi"], "city", "appartement"],
+        ["Guesthouse", "Accueil familial · bon rapport qualité-prix", 3, 0.9, ["Petit-déjeuner", "WiFi"], "alley", "guesthouse"],
+        ["Hôtel boutique", "Bâtiment ancien rénové", 4, 1.8, ["Petit-déjeuner", "Rooftop"], "hotel2", "hôtel boutique"],
+        ["Quinta, domaine rural", "Campagne · calme et piscine", 4, 1.6, ["Piscine", "Jardin"], "meadow", "quinta"],
+    ],
+    "Grèce": [
+        ["Studio avec vue mer", "Village côtier · terrasse", 3, 1, ["Kitchenette", "Terrasse"], "city", "studio vue mer"],
+        ["Hôtel familial", "Près du port · accueil grec", 3, 1.1, ["Petit-déjeuner", "Climatisation"], "hotel3", "hôtel"],
+        ["Hôtel avec piscine", "Bord de mer", 4, 2, ["Piscine", "Restaurant"], "hotel4", "hôtel piscine"],
+        ["Villa", "Collines · pour une famille ou des amis", 4, 3, ["Piscine privée", "Vue mer"], "paddle", "villa"],
+    ],
+    "Croatie": [
+        ["Appartement chez l'habitant (sobe)", "Vieille ville ou bord de mer · la formule locale", 3, 0.9, ["Kitchenette", "Climatisation"], "city", "appartement"],
+        ["Chambre dans la vieille ville", "Intra-muros · tout à pied", 3, 1.2, ["Climatisation", "WiFi"], "alley", "chambre vieille ville"],
+        ["Hôtel avec vue mer", "Bord de mer · plage à côté", 4, 2, ["Piscine", "Vue mer"], "hotel4", "hôtel vue mer"],
+    ],
+    "Maroc": [
+        ["Riad dans la médina", "Médina · patio et terrasse sur les toits", 3, 1.4, ["Petit-déjeuner marocain", "Terrasse", "Patio"], "city", "riad"],
+        ["Dar, maison d'hôtes", "Médina · quelques chambres, accueil familial", 2, 1, ["Petit-déjeuner", "Terrasse"], "market", "dar"],
+        ["Hôtel avec piscine", "Ville nouvelle ou bord de mer", 4, 2.2, ["Piscine", "Restaurant", "Climatisation"], "hotel4", "hôtel"],
+        ["Villa avec piscine", "Hors de la ville · au calme", 5, 4, ["Piscine privée", "Jardin"], "paddle", "villa"],
+    ],
+    "Tunisie": [
+        ["Hôtel en bord de mer", "Zone touristique · plage", 4, 1.6, ["Piscine", "Plage", "Demi-pension"], "hotel4", "hôtel plage"],
+        ["Dar ou maison d'hôtes", "Médina ou village · patio", 3, 1, ["Petit-déjeuner", "Patio"], "city", "dar"],
+        ["Club tout compris", "Bord de mer · familles", 4, 2.2, ["Tout compris", "Animations"], "paddle", "all inclusive"],
+    ],
+    "Égypte": [
+        ["Hôtel avec vue", "Vue sur les pyramides ou le Nil selon la ville", 3, 1.2, ["Petit-déjeuner", "Rooftop"], "city", "hôtel vue"],
+        ["Resort en bord de mer", "Mer Rouge · récif accessible depuis la plage", 4, 1.8, ["Plage", "Piscine", "Plongée"], "dive", "resort"],
+        ["Croisière sur le Nil", "Entre Louxor et Assouan · 3 à 4 nuits", 4, 2.5, ["Pension complète", "Visites"], "boat", "croisière Nil"],
+        ["Guesthouse", "Accueil local · petit budget", 2, 0.6, ["Petit-déjeuner"], "alley", "guesthouse"],
+        ["Hôtel au bord du Nil", "Corniche · vue sur le fleuve", 4, 1.8, ["Vue Nil", "Piscine"], "hotel1", "hôtel Nil"],
+    ],
+    "Turquie": [
+        ["Hôtel troglodyte (cave hotel)", "Cappadoce · chambres creusées dans la roche", 4, 1.5, ["Terrasse", "Petit-déjeuner"], "city", "cave hotel"],
+        ["Pension familiale", "Vieille ville · accueil turc", 3, 0.9, ["Petit-déjeuner", "Terrasse"], "alley", "pension"],
+        ["Hôtel boutique", "Centre ou vieille ville · à taille humaine", 4, 1.5, ["Petit-déjeuner", "Terrasse"], "hotel2", "hôtel boutique"],
+        ["Resort en bord de mer", "Côte · tout compris possible", 5, 2.2, ["Plage", "Piscine", "Spa"], "hotel4", "resort"],
+    ],
+    "Thaïlande": [
+        ["Bungalow près de la plage", "À quelques pas du sable", 3, 1, ["Climatisation", "Terrasse"], "city", "bungalow plage"],
+        ["Hôtel avec piscine", "Quartier pratique · bon rapport qualité-prix", 4, 1.6, ["Piscine", "Petit-déjeuner"], "hotel4", "hôtel piscine"],
+        ["Villa avec piscine privée", "Au calme · pour se faire plaisir", 5, 4, ["Piscine privée", "Vue mer"], "paddle", "villa piscine"],
+        ["Guesthouse", "Petit budget · accueil thaï", 2, 0.5, ["Ventilateur ou clim", "WiFi"], "backpack", "guesthouse"],
+        ["Hôtel au bord du fleuve", "Rive de la Chao Phraya · navettes vers les temples", 4, 1.8, ["Piscine", "Vue fleuve"], "city", "hôtel riverside"],
+    ],
+    "Vietnam": [
+        ["Homestay", "Chez l'habitant · dîner en famille", 2, 0.6, ["Petit-déjeuner", "Vélos"], "meadow", "homestay"],
+        ["Hôtel de charme", "Vieille ville ou centre", 3, 1.2, ["Petit-déjeuner", "Piscine"], "city", "hôtel"],
+        ["Resort", "Bord de mer ou rizières", 5, 2.8, ["Piscine", "Spa", "Plage"], "hotel4", "resort"],
+    ],
+    "Japon": [
+        ["Hôtel d'affaires", "Près d'une gare · petit mais impeccable", 3, 1, ["Bain", "Laverie"], "hotel3", "business hotel"],
+        ["Ryokan", "Auberge traditionnelle · futons et bains", 4, 2.6, ["Onsen", "Dîner kaiseki"], "city", "ryokan"],
+        ["Hôtel avec vue", "Étages élevés · centre", 4, 2, ["Vue", "Restaurant"], "hotel1", "hôtel"],
+    ],
+    "États-Unis": [
+        ["Hôtel en centre-ville", "Quartier central", 3, 1, ["WiFi", "Salle de sport"], "city", "hôtel downtown"],
+        ["Motel", "Pratique en road trip · parking", 2, 0.6, ["Parking", "WiFi"], "road", "motel"],
+        ["Hôtel boutique", "Quartier tendance", 4, 1.7, ["Rooftop", "Bar"], "hotel2", "boutique hotel"],
+    ],
+    "Canada": [
+        ["Hôtel en centre-ville", "Centre · tout à pied", 3, 1, ["WiFi", "Petit-déjeuner"], "city", "hôtel centre-ville"],
+        ["Gîte (B&B)", "Maison ancienne · accueil québécois", 3, 0.9, ["Petit-déjeuner", "Salon"], "alley", "gîte"],
+        ["Chalet", "En pleine nature · pour les parcs", 3, 1.4, ["Cuisine", "Cheminée"], "lake", "chalet"],
+        ["Appartement", "Centre · cuisine équipée", 3, 1.1, ["Cuisine équipée", "WiFi"], "hotel2", "appartement"],
+    ],
+    "Mexique": [
+        ["Hôtel tout compris", "Zone hôtelière · plage", 4, 2, ["Tout compris", "Piscine", "Plage"], "hotel4", "all inclusive"],
+        ["Hôtel boutique", "Centre ou plage · à taille humaine", 4, 1.4, ["Piscine", "Petit-déjeuner"], "city", "hôtel boutique"],
+        ["Posada", "Maison coloniale · patio", 3, 0.8, ["Patio", "Petit-déjeuner"], "alley", "posada"],
+        ["Appartement", "Quartier agréable · cuisine équipée", 3, 0.9, ["Cuisine équipée", "WiFi"], "hotel2", "appartement"],
+    ],
+    "Brésil": [
+        ["Pousada", "Auberge brésilienne · souvent près de la plage", 3, 0.9, ["Petit-déjeuner", "Hamac"], "city", "pousada"],
+        ["Hôtel en bord de plage", "Front de mer", 4, 1.8, ["Piscine", "Vue mer"], "hotel4", "hôtel plage"],
+        ["Appartement", "Quartier sûr · cuisine équipée", 3, 1, ["Cuisine équipée", "WiFi"], "hotel2", "appartement"],
+        ["Hôtel boutique", "Quartier animé · à taille humaine", 4, 1.5, ["Petit-déjeuner", "Piscine"], "hotel1", "hôtel boutique"],
+    ],
+    "Royaume-Uni": [
+        ["Hôtel en centre", "Quartier central · près du métro", 3, 1, ["WiFi"], "city", "hôtel"],
+        ["Bed & breakfast", "Maison victorienne · petit-déjeuner anglais", 3, 0.9, ["Petit-déjeuner"], "alley", "bed and breakfast"],
+        ["Hôtel boutique", "Quartier tendance", 4, 1.8, ["Bar", "Restaurant"], "hotel2", "boutique hotel"],
+    ],
+    "Irlande": [
+        ["Bed & breakfast", "Maison familiale · petit-déjeuner irlandais", 3, 0.8, ["Petit-déjeuner"], "alley", "bed and breakfast"],
+        ["Hôtel en centre", "Près de Temple Bar", 3, 1.1, ["WiFi", "Bar"], "city", "hôtel"],
+        ["Cottage", "Campagne · pour le road trip", 3, 1, ["Cuisine", "Cheminée"], "meadow", "cottage"],
+    ],
+    "Pays-Bas": [
+        ["Hôtel sur un canal", "Grachtengordel · maison de canal", 3, 1.2, ["Vue canal", "Petit-déjeuner"], "city", "hôtel canal"],
+        ["Péniche-hôtel", "Sur l'eau · original", 3, 1.1, ["Vue canal"], "boat", "houseboat"],
+        ["Hôtel design", "Quartier De Pijp ou Noord", 4, 1.6, ["Bar", "Vélos"], "hotel2", "design hotel"],
+    ],
+    "Allemagne": [
+        ["Hôtel à Mitte", "Centre · musées à pied", 3, 1, ["WiFi"], "city", "hôtel Mitte"],
+        ["Appartement", "Kreuzberg ou Prenzlauer Berg", 3, 1, ["Cuisine équipée"], "hotel2", "appartement"],
+        ["Hôtel design", "Quartier animé", 4, 1.6, ["Bar", "Rooftop"], "hotel1", "design hotel"],
+    ],
+    "France": [
+        ["Gîte", "Location chez l'habitant · cuisine équipée", 3, 0.9, ["Cuisine équipée", "Jardin"], "meadow", "gîte"],
+        ["Hôtel en bord de mer", "Lagon ou plage", 4, 1.8, ["Piscine", "Plage"], "city", "hôtel plage"],
+        ["Bungalow créole", "Végétation tropicale · terrasse", 3, 1.1, ["Terrasse", "Climatisation"], "paddle", "bungalow"],
+    ],
+    "Maurice": [
+        ["Hôtel en bord de lagon", "Côte ouest ou est · plage", 4, 1.6, ["Plage", "Piscine", "Demi-pension"], "city", "hôtel plage"],
+        ["Villa ou appartement", "Village côtier · cuisine", 3, 0.9, ["Cuisine", "Piscine"], "paddle", "villa"],
+        ["Resort", "Lagon · tout compris possible", 5, 3, ["Spa", "Plage privée"], "hotel4", "resort"],
+    ],
+    "Sénégal": [
+        ["Hôtel à Dakar", "Almadies ou Plateau", 3, 1, ["Piscine", "WiFi"], "city", "hôtel"],
+        ["Écolodge", "Sine-Saloum · en bord de bolong", 3, 1.1, ["Demi-pension", "Pirogue"], "lake", "écolodge Sine Saloum"],
+        ["Hôtel en bord de mer", "Petite-Côte (Saly)", 4, 1.4, ["Plage", "Piscine"], "hotel4", "hôtel Saly"],
+    ],
+    "République dominicaine": [
+        ["Hôtel tout compris", "Bávaro · plage", 4, 1.6, ["Tout compris", "Plage", "Piscine"], "city", "all inclusive"],
+        ["Appartement", "Résidence avec piscine", 3, 0.7, ["Cuisine", "Piscine"], "hotel2", "appartement"],
+        ["Hôtel de charme", "Samaná ou Las Terrenas", 3, 1, ["Plage", "Petit-déjeuner"], "paddle", "hôtel Las Terrenas"],
+    ],
+};
+
+/* Types qui n'existent que dans certaines villes du pays (clé « pays|libellé » → ids) */
+const ONLY: Record<string, string[]> = {
+    "Turquie|Hôtel troglodyte (cave hotel)": ["tr-nav"],
+    "Turquie|Resort en bord de mer": ["tr-ayt"],
+    "Égypte|Resort en bord de mer": ["eg-hrg"],
+    "Égypte|Croisière sur le Nil": ["eg-lxr"],
+    "Égypte|Hôtel au bord du Nil": ["eg-cai", "eg-lxr"],
+    "Mexique|Hôtel tout compris": ["mx-cun"],
+    "Maroc|Riad dans la médina": ["ma-fez", "ma-esu", "ma-tng"],
+    "Brésil|Hôtel en bord de plage": ["br-gig", "br-ssa"],
+    "Thaïlande|Bungalow près de la plage": ["th-kbv", "th-usm"],
+    "Thaïlande|Villa avec piscine privée": ["th-kbv", "th-usm"],
+    "Thaïlande|Hôtel au bord du fleuve": ["th-bkk"],
+    "Canada|Chalet": ["ca-yqb", "ca-yvr"],
+    "France|Hôtel en bord de mer": ["fr-run", "fr-ptp", "fr-fdf"],
+};
+
+/* Hébergements d'une ville ajoutée (« city » = la photo de la ville) */
+export function lodgingFor(p: Place): Lodging[] {
+    const rows = (BY_COUNTRY[p.country] || []).filter(([label]) => {
+        const only = ONLY[`${p.country}|${label}`];
+        return !only || only.includes(p.id);
+    });
+    const city = p.searchCity || p.name;
+    return rows.map(([label, area, stars, factor, amenities, photo, query]) => ({
+        label, area, stars, factor, amenities,
+        photo: (photo === "city" ? p.code : photo) as PhotoKey,
+        query: `${query} ${city}`,
+    }));
+}

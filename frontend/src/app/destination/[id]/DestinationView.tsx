@@ -12,7 +12,8 @@ import TravelAdvice from "@/components/trip/TravelAdvice";
 import { byId, eur, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import { addDays, defaultDepart, startPlan, toast, usePlan } from "@/lib/plan";
-import type { PhotoKey } from "@/lib/photos";
+import { isCommons, type PhotoKey } from "@/lib/photos";
+import { CITY_PHOTOS } from "@/lib/world/cityPhotos";
 
 const ACT: Record<string, [string, string][]> = {
   Culture: [["Visite guidée de la vieille ville", "3 h · 15 – 35 €"], ["Musée national", "2 – 3 h · 10 – 20 €"]],
@@ -95,6 +96,8 @@ function View({ id }: { id: string }) {
     router.push("/explore/flights");
   };
 
+  const credit = isCommons(d.code as PhotoKey) ? CITY_PHOTOS[d.code as keyof typeof CITY_PHOTOS] : null;
+
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-7">
       <nav aria-label="Fil d'Ariane" className="flex gap-2 text-[13px] text-muted">
@@ -103,7 +106,10 @@ function View({ id }: { id: string }) {
 
       {plan && <TripBar />}
 
-      <Photo k={d.code as PhotoKey} alt={d.name} priority sizes="(max-width: 1200px) 100vw, 1200px" className="h-[clamp(200px,30vw,340px)] rounded-3xl border border-line" />
+      <figure className="m-0 flex flex-col gap-1.5">
+        <Photo k={d.code as PhotoKey} alt={d.name} priority sizes="(max-width: 1200px) 100vw, 1200px" className="h-[clamp(200px,30vw,340px)] rounded-3xl border border-line" />
+        {credit && <figcaption className="text-right text-[11px] text-muted">Photo : {credit.author} · <a href={credit.page} target="_blank" rel="noopener noreferrer" className="!text-muted underline">{credit.license}</a>, Wikimedia Commons</figcaption>}
+      </figure>
 
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div className="flex max-w-[640px] flex-col gap-2.5">
