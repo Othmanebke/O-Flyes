@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Photo from "@/components/ui/Photo";
-import { MessageBubble, QuotaLine, TypingDots } from "@/components/chat/ChatDock";
+import { MessageBubble, TypingDots } from "@/components/chat/ChatDock";
 import { SUGGESTIONS, optionHref, resetChat, selectOption, send, setChatOpen, useChat, type ChatOption } from "@/lib/chat";
 import { byId, eur } from "@/lib/catalog";
 import { isPhotoKey, photoFor } from "@/lib/photos";
@@ -93,7 +93,6 @@ function AssistantContent() {
             <input id="assistant-input" value={input} onChange={e => setInput(e.target.value)} disabled={loading} placeholder="Décrivez votre voyage idéal : budget, dates, envies…" className="h-11 min-w-0 flex-1 border-none bg-transparent px-2.5 text-[15px] text-ink outline-none" />
             <button type="submit" disabled={loading || !input.trim()} className="rounded-full bg-ink px-[18px] text-sm font-semibold text-paper hover:bg-ink-2 disabled:opacity-40">Envoyer</button>
           </form>
-          <QuotaLine />
         </div>
       </div>
 

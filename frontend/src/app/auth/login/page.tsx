@@ -71,8 +71,8 @@ function LoginContent() {
             <h1 className="m-0 text-4xl">{saving ? "Sauvegarder votre voyage" : "Se connecter"}</h1>
             <p className="m-0 text-[15px] text-muted-2">
               {saving
-                ? `Connectez-vous pour garder « ${plan!.destination} » et ses ${plan!.items.length} élément${plan!.items.length > 1 ? "s" : ""}. Le compte est gratuit et créé automatiquement à la première connexion.`
-                : "Pas encore de compte ? Il est créé automatiquement à la première connexion. C'est gratuit."}
+                ? `Connectez-vous pour garder « ${plan!.destination} » et ses ${plan!.items.length} élément${plan!.items.length > 1 ? "s" : ""}. Le compte est créé automatiquement à la première connexion.`
+                : "Pas encore de compte ? Il est créé automatiquement à la première connexion."}
             </p>
           </div>
 

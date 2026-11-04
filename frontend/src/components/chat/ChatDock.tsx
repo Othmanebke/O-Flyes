@@ -61,20 +61,6 @@ export function TypingDots() {
   );
 }
 
-/* Ligne d'offre gratuite : visible tant qu'on n'est pas connecté */
-export function QuotaLine({ className = "" }: { className?: string }) {
-  const { remaining } = useChat();
-  const { user, ready } = useSession();
-  if (!ready || user || remaining == null) return null;
-  return (
-    <p className={`m-0 text-xs text-muted ${className}`}>
-      {remaining > 0
-        ? <>{remaining} recherche{remaining > 1 ? "s" : ""} gratuite{remaining > 1 ? "s" : ""} ce mois-ci · </>
-        : <>Recherches gratuites épuisées ce mois-ci · </>}
-      <Link href="/auth/login?next=/assistant" className="font-semibold">compte gratuit = illimité</Link>
-    </p>
-  );
-}
 
 export default function ChatDock() {
   const router = useRouter();
@@ -129,7 +115,6 @@ export default function ChatDock() {
             )}
           </div>
 
-          <QuotaLine className="px-5 pb-1.5" />
           <form onSubmit={submit} className="mx-3 mb-3 flex items-center gap-2 rounded-full border border-line bg-white py-[5px] pl-4 pr-[5px]">
             <label htmlFor="dock-input" className="sr-only">Votre message</label>
             <input

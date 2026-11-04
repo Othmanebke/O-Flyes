@@ -7,13 +7,14 @@ Copilote de voyage. On décrit son budget, ses dates et ses envies ; AIVANA prop
 ```
 Accueil ou copilote IA  →  fiche destination  →  « Créer ce voyage »
    →  Vols, Hôtels, Activités (préremplis pour ce voyage, bandeau en haut)
-   →  chaque ajout apparaît dans le compteur de la navbar
+   →  chaque ajout est rangé dans le voyage (menu « Mes voyages »)
    →  carnet (/dashboard)  →  création de compte au moment de sauvegarder
 ```
 
 - **Voyage en cours** : stocké dans le navigateur (`src/lib/plan.ts`), on peut tout préparer sans compte. À la sauvegarde il devient un voyage Supabase.
 - **Copilote** : une seule conversation (`src/lib/chat.ts`), affichée en bulle sur toutes les pages et en plein écran sur `/assistant`.
-- **Offre gratuite** : 5 recherches par mois sans compte, illimité avec un compte gratuit (bêta). La formule Pro est annoncée « bientôt ».
+- **Itinéraire IA** : pour un voyage sauvegardé, le copilote propose un programme jour par jour ; ses activités peuvent être ajoutées au voyage, en entier ou en restant dans le budget.
+- **Projet pédagogique** (YNOV CAMPUS) : gratuit, sans offre payante ni publicité.
 - **Réservation** : AIVANA ne vend rien ; chaque élément renvoie vers la compagnie, Booking.com ou GetYourGuide.
 
 ## Ce qui est réel, ce qui est estimé
@@ -45,7 +46,7 @@ frontend/src/
 │   ├── assistant/             Copilote en plein écran
 │   ├── dashboard/             Carnet de voyage
 │   ├── auth/                  Connexion (lien par email, Google)
-│   ├── onboarding/ pricing/ blog/ legal/
+│   ├── onboarding/ blog/ aide/ contact/ legal/ newsletter/
 │   └── api/                   chat, partner/*, trips/*, destination-info, newsletter
 ├── components/                layout, chat, trip, ui
 └── lib/                       catalog, photos, plan, chat, session, articles, supabase, travel, ai

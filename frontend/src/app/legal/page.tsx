@@ -1,6 +1,5 @@
 import Link from "next/link";
 import PageBanner from "@/components/layout/PageBanner";
-import { FREE_SEARCHES_PER_MONTH } from "@/lib/limits";
 import { CONTACT_EMAIL, EDITOR, SCHOOL } from "@/lib/site";
 
 export const metadata = { title: "Mentions légales et confidentialité" };
@@ -42,11 +41,11 @@ export default function LegalPage() {
         </Section>
 
         <Section title="Conditions d'utilisation">
-          <p className="m-0">Le copilote est gratuit, dans la limite de {FREE_SEARCHES_PER_MONTH} recherches par mois sans compte. Les propositions de l&apos;IA peuvent contenir des erreurs : elles servent de point de départ, pas de conseil garanti.</p>
+          <p className="m-0">Le site est un projet pédagogique, gratuit et sans publicité. Les propositions de l&apos;IA peuvent contenir des erreurs : elles servent de point de départ, pas de conseil garanti.</p>
         </Section>
 
         <Section id="confidentialite" title="Confidentialité">
-          <p className="m-0">Sans compte, votre voyage en cours et la conversation avec le copilote restent dans votre navigateur (stockage local). Un cookie technique compte vos recherches gratuites du mois.</p>
+          <p className="m-0">Sans compte, votre voyage en cours et la conversation avec le copilote restent dans votre navigateur (stockage local).</p>
           <p className="m-0">Avec un compte (connexion par email ou Google), nous conservons votre email, votre nom, vos préférences de voyage et vos voyages sauvegardés. Les messages envoyés au copilote sont transmis au fournisseur d&apos;IA (Groq) pour générer la réponse.</p>
           <p className="m-0">Inscription à la lettre mensuelle : seule l&apos;adresse email est conservée ; vous pouvez <Link href="/newsletter">vous désinscrire</Link> à tout moment.</p>
           <p className="m-0">Vos droits (accès, rectification, suppression) : supprimez vos voyages depuis le carnet, ou écrivez à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> pour la suppression complète de votre compte.</p>

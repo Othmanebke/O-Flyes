@@ -1,6 +1,5 @@
 import Link from "next/link";
 import PageBanner from "@/components/layout/PageBanner";
-import { FREE_SEARCHES_PER_MONTH } from "@/lib/limits";
 
 export const metadata = { title: "Aide et questions fréquentes" };
 
@@ -23,11 +22,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Faut-il un compte ?",
-    a: <>Non pour découvrir et composer un voyage : il est gardé dans votre navigateur. Un compte gratuit (lien par email ou Google) sert à le sauvegarder, à le retrouver sur tous vos appareils et à recevoir un itinéraire jour par jour. <Link href="/auth/login">Créer un compte</Link></>,
-  },
-  {
-    q: "Le copilote est-il gratuit ?",
-    a: <>Oui. Sans compte, vous avez {FREE_SEARCHES_PER_MONTH} recherches par mois ; avec un compte gratuit, il n&apos;y a pas de limite pendant la bêta. La formule Pro n&apos;est pas encore ouverte. <Link href="/pricing">Voir les formules</Link></>,
+    a: <>Non pour découvrir et composer un voyage : il est gardé dans votre navigateur. Un compte (lien par email ou Google) sert à le sauvegarder, à le retrouver sur tous vos appareils et à recevoir un itinéraire jour par jour. <Link href="/auth/login">Créer un compte</Link></>,
   },
   {
     q: "D'où viennent la météo, le change et les lieux à voir ?",

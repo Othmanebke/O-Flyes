@@ -22,7 +22,6 @@ const LINKS = [
   { label: "Activités", href: "/explore/activities", note: "Sur place" },
   { label: "Journal", href: "/blog", note: "Récits" },
   { label: "Mes voyages", href: "/dashboard", note: "Votre carnet" },
-  { label: "Tarifs", href: "/pricing", note: "Gratuit ou Pro" },
   { label: "Aide", href: "/aide", note: "Questions fréquentes" },
 ];
 

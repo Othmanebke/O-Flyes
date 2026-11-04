@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { getGroqChatCompletion } from '@/lib/ai/groq';
 import { extractJsonFromText } from '@/lib/ai/json';
 import { z } from 'zod';
-import { FREE_SEARCHES_PER_MONTH } from '@/lib/limits';
 import { bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
 import { estimate, findDestination } from '@/lib/catalog';
 import type { DraftDestination, EnrichedDestination } from '@/types/chat';
@@ -76,39 +75,8 @@ function buildBudgetNote(budgetEur: number | null, grounded: EnrichedDestination
     return `\n\n**À noter sur le budget** : d'après nos estimations, ${budgetEur.toLocaleString('fr-FR')} € risque d'être juste pour :\n${lines.join('\n')}`;
 }
 
-// Sans compte : 5 recherches par mois, comptées dans un cookie (c'est l'offre affichée
-// sur /pricing). Avec un compte gratuit : pas de limite pendant la bêta.
-
-const QUOTA_COOKIE = 'aivana_q';
-
-function readQuota(request: Request): { month: string; used: number } {
-    const month = new Date().toISOString().slice(0, 7);
-    const raw = request.headers.get('cookie')?.match(new RegExp(`${QUOTA_COOKIE}=([^;]+)`))?.[1];
-    const [m, n] = decodeURIComponent(raw || '').split(':');
-    return { month, used: m === month ? Number(n) || 0 : 0 };
-}
-
-async function getUserSafely() {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
-    try {
-        const { data: { user } } = await createClient().auth.getUser();
-        return user;
-    } catch {
-        return null;
-    }
-}
 
 export async function POST(request: Request) {
-    const user = await getUserSafely();
-    const quota = readQuota(request);
-
-    if (!user && quota.used >= FREE_SEARCHES_PER_MONTH) {
-        return NextResponse.json({
-            error: `Vous avez utilisé vos ${FREE_SEARCHES_PER_MONTH} recherches gratuites de ce mois. Créez un compte gratuit pour continuer sans limite.`,
-            limitReached: true,
-            remaining: 0,
-        }, { status: 429 });
-    }
 
     try {
         const body = await request.json();
@@ -205,14 +173,7 @@ _Totaux estimés à partir de notre catalogue : vérifiez le prix du jour chez l
             role: 'assistant',
             content: assistantMessage,
             enriched: grounded,
-            // null = illimité (compte connecté)
-            remaining: user ? null : FREE_SEARCHES_PER_MONTH - quota.used - 1,
         });
-        if (!user) {
-            res.cookies.set(QUOTA_COOKIE, `${quota.month}:${quota.used + 1}`, {
-                path: '/', maxAge: 60 * 60 * 24 * 40, sameSite: 'lax', httpOnly: true,
-            });
-        }
         return res;
     } catch (err: unknown) {
         if (err instanceof z.ZodError) {

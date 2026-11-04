@@ -6,7 +6,6 @@ import axios from "axios";
 import { DESTINATIONS, estimate, eur, findDestination, type CatalogDestination } from "@/lib/catalog";
 import { addDays, defaultDepart, getPrefs } from "@/lib/plan";
 import type { EnrichedDestination } from "@/types/chat";
-import { FREE_SEARCHES_PER_MONTH } from "@/lib/limits";
 
 export interface ChatOption {
     name: string;
@@ -37,7 +36,6 @@ interface ChatState {
     messages: ChatMsg[];
     loading: boolean;
     open: boolean;
-    remaining: number | null; // null = illimité (connecté)
     selected: ChatOption | null; // proposition affichée en détail sur /assistant
 }
 
@@ -65,20 +63,19 @@ function load(): ChatState {
         messages: saved.messages?.length ? saved.messages : [GREETING],
         loading: false,
         open: !!saved.open,
-        remaining: saved.remaining === undefined ? FREE_SEARCHES_PER_MONTH : saved.remaining,
         selected: saved.selected || null,
     };
     return state;
 }
 
-const SERVER_STATE: ChatState = { messages: [GREETING], loading: false, open: false, remaining: FREE_SEARCHES_PER_MONTH, selected: null };
+const SERVER_STATE: ChatState = { messages: [GREETING], loading: false, open: false, selected: null };
 
 function set(patch: Partial<ChatState> | ((s: ChatState) => Partial<ChatState>)) {
     const prev = load();
     state = { ...prev, ...(typeof patch === "function" ? patch(prev) : patch) };
     try {
-        const { messages, open, remaining, selected } = state;
-        localStorage.setItem(KEY, JSON.stringify({ messages: messages.slice(-30), open, remaining, selected }));
+        const { messages, open, selected } = state;
+        localStorage.setItem(KEY, JSON.stringify({ messages: messages.slice(-30), open, selected }));
     } catch { /* ignoré */ }
     listeners.forEach(l => l());
 }
@@ -178,19 +175,9 @@ export async function send(text: string) {
         set(st => ({
             messages: [...st.messages, { role: "assistant", text: res.data.content || "Voici ce que j'ai trouvé :", options }],
             loading: false,
-            remaining: res.data.remaining === undefined ? st.remaining : res.data.remaining,
             selected: options[0] || st.selected,
         }));
     } catch (err: unknown) {
-        const r = (err as { response?: { status?: number; data?: { error?: string } } })?.response;
-        if (r?.status === 429) {
-            set(st => ({
-                messages: [...st.messages, { role: "assistant", text: r.data?.error || "Limite de recherches atteinte.", links: [{ label: "Créer un compte gratuit", href: "/auth/login?next=/assistant" }] }],
-                loading: false,
-                remaining: 0,
-            }));
-            return;
-        }
         const answer = localAnswer(text);
         set(st => ({ messages: [...st.messages, answer], loading: false, selected: answer.options?.[0] || st.selected }));
     }
