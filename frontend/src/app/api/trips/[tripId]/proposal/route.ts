@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { runRoadtripAgent } from '@/lib/agents/roadtripAgent';
 import { findDestination } from '@/lib/catalog';
 import type { TripContext } from '@/lib/agents/types';
+import { isUuid, requireUser } from '@/lib/api/guard';
+import { rateLimit, tooManyRequests } from '@/lib/api/rateLimit';
+
+type Ctx = { params: Promise<{ tripId: string }> };
 
 const generateProposalSchema = z.object({
     originCity: z.string().min(1).max(100).optional(),
@@ -14,23 +17,29 @@ const generateProposalSchema = z.object({
 });
 
 // Itinéraire déjà généré pour ce voyage (enregistré dans trips.proposal_json)
-export async function GET(_request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(_request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return NextResponse.json({ proposal: null, generatedAt: null });
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    const { data } = await supabase
+    const { data } = await g.supabase
         .from('trips')
         .select('proposal_json, proposal_generated_at')
-        .eq('id', params.tripId)
-        .single();
+        .eq('id', tripId)
+        .maybeSingle();
     return NextResponse.json({ proposal: data?.proposal_json ?? null, generatedAt: data?.proposal_generated_at ?? null });
 }
 
-export async function POST(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function POST(request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return NextResponse.json({ error: 'Voyage introuvable' }, { status: 404 });
+    const g = await requireUser();
+    if (!g.ok) return g.response;
+    const { supabase, user } = g;
+
+    // Chaque génération appelle l'IA plusieurs fois : on limite par compte
+    if (!(await rateLimit(`proposal:${user.id}`, 10, 3600))) return tooManyRequests(3600);
 
     try {
         const body = await request.json().catch(() => ({}));
@@ -40,7 +49,7 @@ export async function POST(request: Request, { params }: { params: { tripId: str
         const { data: trip, error: tripError } = await supabase
             .from('trips')
             .select('*, destinations(name, country)')
-            .eq('id', params.tripId)
+            .eq('id', tripId)
             .single();
 
         if (tripError || !trip) {
@@ -82,7 +91,7 @@ export async function POST(request: Request, { params }: { params: { tripId: str
         return NextResponse.json({
             error: message.startsWith('Groq') || message.includes('timeout') || message.includes('aborted')
                 ? "Le copilote met trop de temps à répondre. Réessayez dans un instant."
-                : message || 'La génération a échoué.',
+                : 'La génération a échoué. Réessayez dans un instant.',
         }, { status: 500 });
     }
 }

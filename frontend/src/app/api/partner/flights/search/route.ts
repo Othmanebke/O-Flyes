@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { limitPublic } from '@/lib/api/rateLimit';
 import { googleFlightsUrl } from '@/lib/iata';
 import { findDestination } from '@/lib/catalog';
 import { airportCode, fareFactor, distanceKm, routeOptions, unknownRoute } from '@/lib/travel/airlines';
@@ -86,6 +87,8 @@ function formatHours(h: number) {
 
 
 export async function GET(request: Request) {
+    const limited = limitPublic(request, 'partner-flights-search');
+    if (limited) return limited;
     const { searchParams } = new URL(request.url);
     const origin = searchParams.get('origin') || 'Paris';
     const destination = searchParams.get('destination') || 'New York';

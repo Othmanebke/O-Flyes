@@ -1,70 +1,64 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { isUuid, requireUser, serverError } from '@/lib/api/guard';
+import { rateLimit, tooManyRequests } from '@/lib/api/rateLimit';
+
+type Ctx = { params: Promise<{ tripId: string }> };
+
+// Uniquement des liens http(s) : z.string().url() accepte aussi « javascript:alert(1) »,
+// qui deviendrait une faille XSS une fois placé dans un <a href>.
+const webUrl = z.string().max(2000).url().refine(u => /^https?:\/\//i.test(u), 'Lien http(s) uniquement');
 
 const createTripItemSchema = z.object({
     type: z.enum(['flight', 'hotel', 'activity', 'transport', 'restaurant', 'note']),
-    title: z.string().min(1),
-    price_estimate: z.number().optional().nullable(),
-    provider: z.string().optional().nullable(),
-    external_url: z.string().url().optional().nullable(),
-    metadata: z.record(z.string(), z.any()).optional(),
+    title: z.string().trim().min(1).max(300),
+    price_estimate: z.number().min(0).max(1000000).optional().nullable(),
+    provider: z.string().max(100).optional().nullable(),
+    external_url: webUrl.optional().nullable(),
+    metadata: z.record(z.string().max(40), z.union([z.string().max(500), z.number(), z.boolean(), z.null()]))
+        .refine(m => Object.keys(m).length <= 30, 'Trop de champs')
+        .optional(),
 });
 
-export async function GET(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export async function GET(_request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return NextResponse.json([]);
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Pas de filtre user_id ici : la policy RLS "Users can view own trip items" vérifie déjà
-    // que trip_id appartient à un trip dont user_id = auth.uid(), donc Supabase renvoie []
-    // si on essaie de lire les items d'un voyage qui n'est pas le nôtre.
-    const { data: items, error } = await supabase
+    // La policy RLS « Users can view own trip items » vérifie que trip_id appartient à un
+    // voyage de l'utilisateur : pour le voyage de quelqu'un d'autre, Supabase renvoie [].
+    const { data: items, error } = await g.supabase
         .from('trip_items')
         .select('*')
-        .eq('trip_id', params.tripId)
+        .eq('trip_id', tripId)
         .order('created_at', { ascending: true });
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
+    if (error) return serverError('items:list', error);
     return NextResponse.json(items);
 }
 
-export async function POST(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export async function POST(request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return NextResponse.json({ error: 'Voyage introuvable' }, { status: 404 });
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!(await rateLimit(`items:create:${g.user.id}`, 200, 3600))) return tooManyRequests(600);
+
+    const parsed = createTripItemSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+        return NextResponse.json({ error: 'Validation Error', details: parsed.error.issues }, { status: 400 });
     }
 
-    try {
-        const body = await request.json();
-        const validatedData = createTripItemSchema.parse(body);
+    // La policy « Users can insert own trip items » rejette l'insertion si trip_id
+    // ne correspond pas à un voyage de l'utilisateur connecté.
+    const { data: newItem, error } = await g.supabase
+        .from('trip_items')
+        .insert({ trip_id: tripId, ...parsed.data })
+        .select()
+        .single();
 
-        // Idem côté insert : la policy "Users can insert own trip items" rejette l'insertion
-        // si trip_id ne correspond pas à un voyage de l'utilisateur connecté.
-        const { data: newItem, error } = await supabase
-            .from('trip_items')
-            .insert({
-                trip_id: params.tripId,
-                ...validatedData
-            })
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        return NextResponse.json(newItem, { status: 201 });
-    } catch (err: unknown) {
-        if (err instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Validation Error', details: err.issues }, { status: 400 });
-        }
-        return NextResponse.json({ error: (err as Error).message }, { status: 500 });
-    }
+    if (error) return serverError('items:create', error);
+    return NextResponse.json(newItem, { status: 201 });
 }

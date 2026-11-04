@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { limitPublic } from '@/lib/api/rateLimit';
 import { gygActivityUrl } from '@/lib/iata';
 import { sightPrice, sightsForCity } from '@/lib/travel/wikipedia';
 import { costFactor, findDestination } from '@/lib/catalog';
@@ -89,6 +90,8 @@ function generateGenericActivities(city: string): ActivityTemplate[] {
 }
 
 export async function GET(request: Request) {
+    const limited = limitPublic(request, 'partner-activities-search');
+    if (limited) return limited;
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
     const cat = findDestination(city);

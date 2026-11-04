@@ -5,6 +5,7 @@ import axios from "axios";
 import { ArrowUpRight } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import Photo from "@/components/ui/Photo";
+import Turnstile, { captchaOn } from "@/components/ui/Turnstile";
 import type { PhotoKey } from "@/lib/photos";
 
 const CHIPS: [string, PhotoKey, string][] = [
@@ -23,16 +24,22 @@ const MIST = "radial-gradient(ellipse 24% 50% at 15% 40%, #F9F8F6 55%, transpare
 
 export default function Footer() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "captcha" | "limit">("idle");
+  // Captcha anti-robot : chargé seulement quand le visiteur commence à saisir son email
+  const [wantsCaptcha, setWantsCaptcha] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (captchaOn() && !captcha) { setWantsCaptcha(true); setStatus("captcha"); return; }
     setStatus("sending");
     try {
-      await axios.post("/api/newsletter", { email });
+      await axios.post("/api/newsletter", { email, captchaToken: captcha });
       setStatus("sent");
-    } catch {
-      setStatus("error");
+    } catch (err) {
+      setStatus(axios.isAxiosError(err) && err.response?.status === 429 ? "limit" : "error");
+      setCaptchaReset(n => n + 1);
     }
   };
 
@@ -53,6 +60,7 @@ export default function Footer() {
             <label htmlFor="newsletter-email" className="sr-only">Votre adresse email</label>
             <input
               id="newsletter-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
+              onFocus={() => setWantsCaptcha(true)}
               placeholder="Votre adresse email"
               className="h-[58px] min-w-0 flex-1 border-none bg-transparent px-[22px] text-[17px] text-ink outline-none"
             />
@@ -61,9 +69,14 @@ export default function Footer() {
             </button>
           </form>
         )}
+        {wantsCaptcha && status !== "sent" && <Turnstile onToken={setCaptcha} theme="dark" resetKey={captchaReset} />}
         <span className="text-sm font-semibold text-white/90">
           {status === "error"
             ? "L'inscription n'a pas pu être enregistrée. Réessayez plus tard."
+            : status === "captcha"
+            ? "Cochez la vérification anti-robot ci-dessus, puis validez."
+            : status === "limit"
+            ? "Trop de tentatives depuis votre connexion. Réessayez dans une heure."
             : <>Une seule lettre par mois · <Link href="/newsletter" className="plain-link underline underline-offset-2 hover:!text-white">Se désinscrire</Link></>}
         </span>
       </div>

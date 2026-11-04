@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
+import { limitPublic } from '@/lib/api/rateLimit';
 
 export async function GET(request: Request) {
+    const limited = limitPublic(request, 'partner-locations-suggest');
+    if (limited) return limited;
     const { searchParams } = new URL(request.url);
     const q = (searchParams.get('q') || '').trim();
 

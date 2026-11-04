@@ -178,6 +178,11 @@ export async function send(text: string) {
             selected: options[0] || st.selected,
         }));
     } catch (err: unknown) {
+        // Limite de messages atteinte (anti-abus côté serveur)
+        if (axios.isAxiosError(err) && err.response?.status === 429) {
+            set(st => ({ messages: [...st.messages, { role: "assistant", text: "Vous avez envoyé beaucoup de messages en peu de temps. Patientez quelques minutes, puis reprenons." }], loading: false }));
+            return;
+        }
         const answer = localAnswer(text);
         set(st => ({ messages: [...st.messages, answer], loading: false, selected: answer.options?.[0] || st.selected }));
     }

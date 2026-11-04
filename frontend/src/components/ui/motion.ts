@@ -6,7 +6,7 @@ const reducedMotion = () =>
 
 /* Apparition au défilement des éléments [data-reveal] du conteneur :
    opacity 0 → 1 et translateY 28px → 0, décalage de 80 ms entre voisins. */
-export function useReveal(root: RefObject<HTMLElement>) {
+export function useReveal(root: RefObject<HTMLElement | null>) {
     useEffect(() => {
         const el = root.current;
         if (!el || reducedMotion()) return;
@@ -46,7 +46,7 @@ export function useReveal(root: RefObject<HTMLElement>) {
    Performance : les éléments et leurs dimensions sont lus une fois (puis au
    redimensionnement), jamais à chaque image, et seuls les éléments visibles à
    l'écran sont animés. */
-export function useMotionLoop(root: RefObject<HTMLElement>) {
+export function useMotionLoop(root: RefObject<HTMLElement | null>) {
     useEffect(() => {
         const el = root.current;
         if (!el || reducedMotion()) return;

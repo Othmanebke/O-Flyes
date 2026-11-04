@@ -11,6 +11,7 @@ import Photo from "@/components/ui/Photo";
 import { CopilotMark } from "@/components/ui/Logo";
 import TripProposal from "@/components/trip/TripProposal";
 import TravelAdvice from "@/components/trip/TravelAdvice";
+import AccountSecurity from "@/components/account/AccountSecurity";
 import { KIND, fmtDay, shortTitle } from "@/lib/trip-format";
 import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
@@ -689,7 +690,8 @@ function Settings({ name, email, onLogout, onClose }: { name: string; email: str
     setStatus(error ? "L'enregistrement a échoué." : "Profil mis à jour.");
   };
   return (
-    <div className="flex max-w-[560px] flex-col gap-5 rounded-[24px] border border-line bg-white p-6">
+    <div className="flex max-w-[640px] flex-col gap-5">
+    <div className="flex flex-col gap-5 rounded-[24px] border border-line bg-white p-6">
       <div className="flex items-center justify-between">
         <h1 className="m-0 text-[24px]">Paramètres</h1>
         <button onClick={onClose} className="text-sm text-muted-2 hover:text-ink">Retour au voyage</button>
@@ -702,6 +704,8 @@ function Settings({ name, email, onLogout, onClose }: { name: string; email: str
         {status && <span className="text-sm text-muted">{status}</span>}
       </div>
       <button onClick={onLogout} className="self-start rounded-full border border-line-2 px-5 py-2.5 text-sm hover:border-danger hover:text-danger">Se déconnecter</button>
+    </div>
+    <AccountSecurity />
     </div>
   );
 }

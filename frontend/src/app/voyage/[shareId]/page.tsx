@@ -31,8 +31,8 @@ async function load(shareId: string): Promise<SharedTrip | null> {
   return { ...trip, items: items || [] } as SharedTrip;
 }
 
-export async function generateMetadata({ params }: { params: { shareId: string } }): Promise<Metadata> {
-  const t = await load(params.shareId);
+export async function generateMetadata({ params }: { params: Promise<{ shareId: string }> }): Promise<Metadata> {
+  const t = await load((await params).shareId);
   return t ? { title: t.name || `Voyage à ${t.title}`, robots: { index: false } } : { title: "Voyage introuvable" };
 }
 
@@ -45,8 +45,8 @@ const short = (title: string, leg?: string) => {
   return `${leg === "return" ? "Vol retour" : leg === "outbound" ? "Vol aller" : "Vol aller-retour"}${route ? ` · ${route}` : ""}`;
 };
 
-export default async function SharedTripPage({ params }: { params: { shareId: string } }) {
-  const t = await load(params.shareId);
+export default async function SharedTripPage({ params }: { params: Promise<{ shareId: string }> }) {
+  const t = await load((await params).shareId);
   if (!t) notFound();
 
   const cat = findDestination(t.title);

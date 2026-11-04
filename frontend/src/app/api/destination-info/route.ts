@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { limitPublic } from '@/lib/api/rateLimit';
 import { GEO, byId } from '@/lib/catalog';
 import { nearbySights } from '@/lib/travel/wikipedia';
 
@@ -51,6 +52,8 @@ async function exchange(currency: string) {
 }
 
 export async function GET(request: Request) {
+    const limited = limitPublic(request, 'destination-info');
+    if (limited) return limited;
     const { searchParams } = new URL(request.url);
     const d = byId(searchParams.get('id'));
     const geo = d ? GEO[d.id] : undefined;

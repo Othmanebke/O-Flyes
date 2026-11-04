@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { limitPublic } from '@/lib/api/rateLimit';
 import { bookingHotelUrl } from '@/lib/iata';
 import { costFactor, findDestination } from '@/lib/catalog';
 import { GENERIC, LODGING } from '@/lib/travel/lodging';
@@ -7,6 +8,8 @@ import { GENERIC, LODGING } from '@/lib/travel/lodging';
 // typiques de la destination (riad, ryokan, lodge…) avec un prix par nuit estimé.
 // Le lien Booking cherche ce type d'hébergement dans la ville, aux dates du voyage.
 export async function GET(request: Request) {
+    const limited = limitPublic(request, 'partner-hotels-search');
+    if (limited) return limited;
     const { searchParams } = new URL(request.url);
     const city = (searchParams.get('city') || 'Paris').trim();
     const checkin = searchParams.get('checkin') || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];

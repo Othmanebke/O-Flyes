@@ -33,7 +33,7 @@ ou Booking.com avec les dates du voyage pour voir le tarif du jour et réserver.
 
 ## Stack
 
-Next.js 14 (App Router) · TypeScript · Tailwind CSS · Supabase (Postgres, Auth, RLS) · Groq · Zod
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase (Postgres, Auth, RLS) · Groq · Zod
 
 ## Structure
 
@@ -45,11 +45,11 @@ frontend/src/
 │   ├── destination/[id]/      Fiche destination + estimation
 │   ├── assistant/             Copilote en plein écran
 │   ├── dashboard/             Carnet de voyage
-│   ├── auth/                  Connexion (lien par email, Google)
+│   ├── auth/                  Connexion (lien par email, Google, GitHub) + code 2FA
 │   ├── onboarding/ blog/ aide/ contact/ legal/ newsletter/
-│   └── api/                   chat, partner/*, trips/*, destination-info, newsletter
-├── components/                layout, chat, trip, ui
-└── lib/                       catalog, photos, plan, chat, session, articles, supabase, travel, ai
+│   └── api/                   chat, partner/*, trips/*, account/*, destination-info, newsletter
+├── components/                layout, chat, trip, ui, account
+└── lib/                       catalog, photos, plan, chat, session, articles, supabase, travel, ai, api (sécurité)
 ```
 
 ## Lancer en local
@@ -69,6 +69,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GROQ_API_KEY=
+# Captcha Cloudflare Turnstile (facultatif)
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 ```
 
 ### Supabase
@@ -78,6 +81,15 @@ GROQ_API_KEY=
 3. Connexion par email : active par défaut. Connexion Google (facultatif) : créer un client OAuth « Web » dans
    Google Cloud avec l'URI de redirection `https://<projet>.supabase.co/auth/v1/callback`, puis coller
    l'ID et le secret dans **Authentication → Sign In / Providers → Google**.
+4. Connexion GitHub (facultatif) : GitHub → Settings → Developer settings → **OAuth Apps → New OAuth App**,
+   *Authorization callback URL* = `https://<projet>.supabase.co/auth/v1/callback`, puis coller le Client ID
+   et un Client secret dans **Authentication → Sign In / Providers → GitHub**.
+5. Double authentification : **Authentication → Multi-Factor** → activer **TOTP (App Authenticator)**.
+6. Associer plusieurs méthodes à un compte : **Authentication → Sign In / Providers** → activer **Allow manual linking**.
+7. Captcha (facultatif) : créer un widget sur dash.cloudflare.com → **Turnstile**, mettre les deux clés dans
+   `.env.local`, et coller la clé secrète dans **Authentication → Attack Protection → Enable Captcha (Turnstile)**.
+
+Les mesures de sécurité sont détaillées dans [SECURITE.md](SECURITE.md).
 
 ## Scripts
 

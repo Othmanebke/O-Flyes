@@ -1,89 +1,70 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { isUuid, requireUser, serverError } from '@/lib/api/guard';
+
+type Ctx = { params: Promise<{ tripId: string }> };
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const updateTripSchema = z.object({
-    title: z.string().min(1).optional(),
+    title: z.string().trim().min(1).max(200).optional(),
     destination_id: z.string().uuid().optional().nullable(),
-    start_date: z.string().optional().nullable(),
-    end_date: z.string().optional().nullable(),
-    // migration 0006
+    start_date: isoDate.optional().nullable(),
+    end_date: isoDate.optional().nullable(),
     name: z.string().trim().max(80).optional().nullable(),
     travelers: z.number().int().min(1).max(20).optional().nullable(),
     budget: z.number().min(0).max(1000000).optional().nullable(),
 });
 
-export async function GET(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+const notFound = () => NextResponse.json({ error: 'Voyage introuvable' }, { status: 404 });
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(_request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return notFound();
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    const { data: trip, error } = await supabase
+    // La RLS ne renvoie le voyage que s'il appartient à l'utilisateur
+    const { data: trip, error } = await g.supabase
         .from('trips')
         .select('*, destinations(*)')
-        .eq('id', params.tripId)
+        .eq('id', tripId)
         .single();
 
-    if (error || !trip) {
-        return NextResponse.json({ error: 'Trip not found or unauthorized' }, { status: 404 });
-    }
-
+    if (error || !trip) return notFound();
     return NextResponse.json(trip);
 }
 
-export async function PATCH(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export async function PATCH(request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return notFound();
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const parsed = updateTripSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+        return NextResponse.json({ error: 'Validation Error', details: parsed.error.issues }, { status: 400 });
     }
 
-    try {
-        const body = await request.json();
-        const validatedData = updateTripSchema.parse(body);
+    const { data: updatedTrip, error } = await g.supabase
+        .from('trips')
+        .update(parsed.data)
+        .eq('id', tripId)
+        .select()
+        .maybeSingle();
 
-        const { data: updatedTrip, error } = await supabase
-            .from('trips')
-            .update(validatedData)
-            .eq('id', params.tripId)
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        if (!updatedTrip) {
-            return NextResponse.json({ error: 'Trip not found or unauthorized' }, { status: 404 });
-        }
-
-        return NextResponse.json(updatedTrip);
-    } catch (err: unknown) {
-        if (err instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Validation Error', details: err.issues }, { status: 400 });
-        }
-        return NextResponse.json({ error: (err as Error).message }, { status: 500 });
-    }
+    if (error) return serverError('trips:update', error);
+    if (!updatedTrip) return notFound();
+    return NextResponse.json(updatedTrip);
 }
 
-export async function DELETE(request: Request, { params }: { params: { tripId: string } }) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export async function DELETE(_request: Request, { params }: Ctx) {
+    const { tripId } = await params;
+    if (!isUuid(tripId)) return notFound();
+    const g = await requireUser();
+    if (!g.ok) return g.response;
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { error } = await supabase
-        .from('trips')
-        .delete()
-        .eq('id', params.tripId);
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
+    const { error } = await g.supabase.from('trips').delete().eq('id', tripId);
+    if (error) return serverError('trips:delete', error);
     return new NextResponse(null, { status: 204 });
 }

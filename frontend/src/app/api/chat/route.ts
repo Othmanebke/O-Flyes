@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { getGroqChatCompletion } from '@/lib/ai/groq';
+import { clientIp } from '@/lib/api/guard';
+import { rateLimit, tooManyRequests } from '@/lib/api/rateLimit';
 import { extractJsonFromText } from '@/lib/ai/json';
 import { z } from 'zod';
 import { bookingHotelUrl, skyscannerFlightUrl } from '@/lib/iata';
@@ -10,10 +11,13 @@ import type { DraftDestination, EnrichedDestination } from '@/types/chat';
 const chatRequestSchema = z.object({
     messages: z.array(
         z.object({
-            role: z.enum(['user', 'assistant', 'system']),
-            content: z.string().min(1).max(50000),
+            // Pas de rôle « system » venant du navigateur : sinon n'importe qui pourrait
+            // réécrire les consignes du copilote (injection de prompt).
+            role: z.enum(['user', 'assistant']),
+            content: z.string().min(1).max(4000),
         })
-    ).min(1).max(50),
+    ).min(1).max(40)
+        .refine(ms => ms.reduce((n, m) => n + m.content.length, 0) <= 40000, 'Conversation trop longue'),
     prefs: z.object({
         city: z.string().max(80).optional(),
         budget: z.string().max(40).optional(),
@@ -77,6 +81,11 @@ function buildBudgetNote(budgetEur: number | null, grounded: EnrichedDestination
 
 
 export async function POST(request: Request) {
+    // Le copilote est ouvert aux visiteurs non connectés : on limite par adresse IP pour
+    // qu'un script ne puisse pas épuiser le quota de l'API d'IA.
+    const ip = clientIp(request);
+    if (!(await rateLimit(`chat:min:${ip}`, 15, 600))) return tooManyRequests(600);
+    if (!(await rateLimit(`chat:day:${ip}`, 150, 86400))) return tooManyRequests(3600);
 
     try {
         const body = await request.json();
@@ -180,6 +189,6 @@ _Totaux estimés à partir de notre catalogue : vérifiez le prix du jour chez l
             return NextResponse.json({ error: 'Validation Error', details: err.issues }, { status: 400 });
         }
         console.error("Chat API Error:", err);
-        return NextResponse.json({ error: (err as Error).message || 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Le copilote est indisponible pour le moment. Réessayez dans un instant.' }, { status: 500 });
     }
 }

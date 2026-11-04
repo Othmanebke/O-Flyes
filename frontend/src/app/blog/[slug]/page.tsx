@@ -6,8 +6,8 @@ import { ARTICLES, bySlug, formatDate } from "@/lib/articles";
 import { byId, eur } from "@/lib/catalog";
 import type { PhotoKey } from "@/lib/photos";
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const a = bySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const a = bySlug((await params).slug);
   return a ? { title: { absolute: `${a.title} · AIVANA` }, description: a.excerpt } : {};
 }
 
@@ -15,8 +15,8 @@ export function generateStaticParams() {
   return ARTICLES.map(a => ({ slug: a.slug }));
 }
 
-export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const a = bySlug(params.slug);
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const a = bySlug((await params).slug);
   if (!a) notFound();
   const d = byId(a.destId);
 
