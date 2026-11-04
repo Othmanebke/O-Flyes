@@ -8,7 +8,7 @@ import Toaster from "@/components/trip/Toaster";
 import RouteProgress from "@/components/layout/RouteProgress";
 
 // Pages plein écran, sans navbar ni footer du site (elles ont leur propre en-tête)
-const STANDALONE = ["/auth", "/onboarding"];
+const STANDALONE = ["/auth", "/onboarding", "/carnet"];
 
 function AutoHideNav() {
   const [hidden, setHidden] = useState(false);
@@ -53,7 +53,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
       <main className="flex-1">{children}</main>
       {!standalone && !noFooter && <Footer />}
       {/* /assistant est déjà la conversation en plein écran */}
-      {!assistant && <ChatDock />}
+      {!assistant && !standalone && <ChatDock />}
       <Toaster />
     </>
   );

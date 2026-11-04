@@ -10,6 +10,8 @@ import {
 import Photo from "@/components/ui/Photo";
 import { CopilotMark } from "@/components/ui/Logo";
 import TripProposal from "@/components/trip/TripProposal";
+import TravelAdvice from "@/components/trip/TravelAdvice";
+import { KIND, fmtDay, shortTitle } from "@/lib/trip-format";
 import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
@@ -22,7 +24,6 @@ import { useSession } from "@/lib/session";
 import type { Booking, Trip } from "@/types/trip";
 
 const ICON = { flight: Plane, hotel: BedDouble, activity: Ticket };
-const KIND: Record<string, string> = { flight: "Vol", hotel: "Hôtel", activity: "Activité" };
 const COLORS = { flight: "#0F1B2D", hotel: "#C9A24B", activity: "#2E7650" };
 
 const toPlanItem = (b: Booking): PlanItem => ({
@@ -46,16 +47,6 @@ const photoOf = (name: string): PhotoKey => {
 };
 
 const daysUntil = (iso: string) => Math.round((new Date(iso + "T12:00:00Z").getTime() - Date.now()) / 86400000);
-const fmtDay = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" }) =>
-  new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", opts);
-
-// Titre court : « Vol aller · CDG → LIS » plutôt que le nom de la compagnie
-function shortTitle(i: PlanItem) {
-  if (i.type !== "flight") return i.title;
-  const route = i.title.split(" · ")[1] || "";
-  const leg = i.leg === "return" ? "Vol retour" : i.leg === "outbound" ? "Vol aller" : "Vol aller-retour";
-  return route ? `${leg} · ${route}` : leg;
-}
 
 function downloadICS(plan: Plan) {
   const d = (iso: string) => iso.replace(/-/g, "");
@@ -332,6 +323,7 @@ function NextSteps({ plan, loggedIn, saving, onSave }: { plan: Plan; loggedIn: b
             ].map(t => <li key={t} className="flex items-start gap-2"><span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />{t}</li>)}
           </ul>
           <div className="flex flex-wrap gap-2">
+            <a href="/carnet" target="_blank" rel="noopener noreferrer" className={`plain-link !text-white ${ghost}`}><FileText className="h-4 w-4" aria-hidden /> Carnet PDF</a>
             <button onClick={() => downloadICS(plan)} className={ghost}><CalendarPlus className="h-4 w-4" aria-hidden /> Ajouter à l&apos;agenda</button>
             <button onClick={() => share(plan)} className={ghost}><Share2 className="h-4 w-4" aria-hidden /> Partager avec mes compagnons</button>
             <button onClick={() => ask(`Je pars à ${plan.destination} (${formatRange(plan.depart, plan.ret)}). Que mettre dans ma valise ?`)} className={ghost}><MessageSquare className="h-4 w-4" aria-hidden /> Conseils valise</button>
@@ -459,6 +451,7 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
           )}
           <button onClick={() => setEditing(!editing)} aria-label="Modifier les dates, voyageurs et budget" title="Modifier" className={iconBtn}><Pencil className="h-4 w-4" aria-hidden /></button>
           <button onClick={() => share(plan)} aria-label="Partager" title="Partager" className={iconBtn}><Share2 className="h-4 w-4" aria-hidden /></button>
+          <a href="/carnet" target="_blank" rel="noopener noreferrer" aria-label="Télécharger le carnet en PDF" title="Carnet PDF" className={`plain-link !text-ink ${iconBtn}`}><FileText className="h-4 w-4" aria-hidden /></a>
           <button onClick={() => downloadICS(plan)} aria-label="Exporter dans l'agenda" title="Exporter dans l'agenda (.ics)" className={iconBtn}><CalendarPlus className="h-4 w-4" aria-hidden /></button>
           <button onClick={onRemove} aria-label="Supprimer ce voyage" title="Supprimer" className={`${iconBtn} hover:!border-danger hover:text-danger`}><Trash2 className="h-4 w-4" aria-hidden /></button>
         </div>
@@ -574,6 +567,10 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
               </div>
             )}
           </Panel>
+
+          <Panel title="Bon à savoir avant de partir" action={<span className="text-[13px] text-muted">{plan.country || cat?.country || plan.destination}</span>}>
+            <TravelAdvice country={plan.country || cat?.country} />
+          </Panel>
         </div>
 
         {/* Colonne latérale */}
@@ -627,11 +624,12 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
             </button>
           </Panel>
 
-          <Panel title="Documents" action={<span className="rounded-full bg-gold-soft px-2.5 py-1 text-xs font-bold text-gold-deep">Bientôt</span>}>
-            <div className="flex items-center gap-3 rounded-[16px] border-[1.5px] border-dashed border-line-2 p-3 text-sm text-muted">
-              <FileText className="h-5 w-5 shrink-0" aria-hidden />
-              Billets et confirmations en PDF, accessibles hors ligne.
-            </div>
+          <Panel title="Carnet de voyage">
+            <p className="m-0 text-sm text-muted-2">Tout le voyage sur une page : réservations, itinéraire jour par jour, budget et conseils pratiques. À garder hors ligne ou à imprimer.</p>
+            <a href="/carnet" target="_blank" rel="noopener noreferrer" className="plain-link flex items-center justify-between gap-3 rounded-full bg-ink py-1.5 pl-4 pr-1.5 text-sm font-bold !text-white hover:bg-ink-2">
+              Télécharger le PDF
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink"><FileText className="h-4 w-4" aria-hidden /></span>
+            </a>
           </Panel>
         </div>
       </div>
