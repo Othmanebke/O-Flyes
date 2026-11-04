@@ -38,10 +38,10 @@ const NAV = [
 /* Pastilles de la barre, chacune séparée : verre dépoli sur la photo de l'accueil,
    blanc cassé sur les autres pages (même famille que les cartes du site). */
 const pill = (glass: boolean) => clsx(
-  "pointer-events-auto flex h-12 shrink-0 items-center rounded-full border backdrop-blur-md transition-colors",
+  "pointer-events-auto flex h-12 shrink-0 items-center rounded-full border transition-colors",
   glass
-    ? "border-white/25 bg-white/[0.12] text-white shadow-[0_8px_24px_rgba(15,27,45,0.18)]"
-    : "border-line bg-white/85 text-ink shadow-[0_6px_20px_rgba(15,27,45,0.06)]",
+    ? "border-white/25 bg-white/[0.12] text-white shadow-[0_8px_24px_rgba(15,27,45,0.18)] backdrop-blur-md"
+    : "border-line bg-white/95 text-ink shadow-[0_6px_20px_rgba(15,27,45,0.06)]",
 );
 const pillHover = (glass: boolean) => (glass ? "hover:bg-white/[0.2]" : "hover:bg-white");
 
@@ -79,7 +79,7 @@ function TripsMenu({ loggedIn, glass }: { loggedIn: boolean; glass: boolean }) {
       </button>
 
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="pointer-events-auto absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[320px] animate-fade-up flex-col gap-1 rounded-[24px] border border-line bg-cream p-2 text-ink shadow-panel">
           <Link href="/dashboard" onClick={close} className="plain-link flex items-center justify-between gap-3 rounded-[18px] bg-ink px-4 py-3 text-sm font-bold !text-white hover:bg-ink-2">
             Voir mon carnet <ArrowUpRight className="h-4 w-4 text-gold" aria-hidden />
           </Link>
@@ -159,7 +159,7 @@ function AccountMenu({ name, email }: { name: string; email: string }) {
         {name.charAt(0).toUpperCase()}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
+        <div role="menu" className="pointer-events-auto absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
           <div className="flex flex-col px-3 pb-2 pt-1.5">
             <span className="truncate text-sm font-bold">{name}</span>
             <span className="truncate text-xs text-muted">{email}</span>

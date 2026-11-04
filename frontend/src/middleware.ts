@@ -25,6 +25,11 @@ export async function middleware(request: NextRequest) {
         return supabaseResponse
     }
 
+    // Visiteur non connecté : pas de session à rafraîchir, on ne fait rien.
+    if (!request.cookies.getAll().some(c => c.name.startsWith('sb-'))) {
+        return supabaseResponse
+    }
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -71,7 +76,11 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    await supabase.auth.getUser()
+    // Rafraîchit le jeton s'il a expiré et réécrit les cookies. getSession() lit la session
+    // localement : pas d'appel réseau à chaque clic (getUser() en faisait un, ~150 ms par
+    // requête). Aucune décision d'accès n'est prise ici : les routes API vérifient
+    // elles-mêmes l'utilisateur avec getUser().
+    await supabase.auth.getSession()
 
     return supabaseResponse
 }
@@ -81,6 +90,6 @@ export const config = {
         /*
          * toutes les routes sauf les assets statiques
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
