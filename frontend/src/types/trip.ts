@@ -7,6 +7,10 @@ export interface Trip {
     end_date?: string;
     status?: string;
     img?: string;
+    name?: string | null;
+    travelers?: number | null;
+    budget?: number | null;
+    share_id?: string | null;
 }
 
 export interface Booking {

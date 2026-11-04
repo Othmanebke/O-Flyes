@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ArrowUpRight, ChevronDown, Loader2, Menu, Plus, X } from "lucide-react";
@@ -8,7 +8,8 @@ import { clsx } from "clsx";
 import Logo from "@/components/ui/Logo";
 import Photo from "@/components/ui/Photo";
 import { ask } from "@/lib/chat";
-import { formatRange, usePlan } from "@/lib/plan";
+import { clearPlan, formatRange, tripName, usePlan } from "@/lib/plan";
+import { createClient } from "@/lib/supabase/browser";
 import { findDestination } from "@/lib/catalog";
 import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
 import type { Trip } from "@/types/trip";
@@ -71,7 +72,7 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
             <Link href="/dashboard" onClick={close} className="plain-link flex items-center gap-3 rounded-[18px] px-2 py-2 hover:bg-white">
               <Photo k={photoOf(draft.destination)} sizes="40px" className="h-10 w-10 shrink-0 rounded-full" />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-bold">{draft.destination}</span>
+                <span className="truncate text-sm font-bold">{tripName(draft)}</span>
                 <span className="text-xs text-muted">{formatRange(draft.depart, draft.ret)} · {draft.items.length} élément{draft.items.length > 1 ? "s" : ""}</span>
               </span>
               <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-bold">Brouillon</span>
@@ -85,7 +86,7 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
             <Link key={t.id} href={`/dashboard?trip=${t.id}`} onClick={close} className="plain-link flex items-center gap-3 rounded-[18px] px-2 py-2 hover:bg-white">
               <Photo k={photoOf(t.title)} sizes="40px" className="h-10 w-10 shrink-0 rounded-full" />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-bold">{t.title}</span>
+                <span className="truncate text-sm font-bold">{t.name || t.title}</span>
                 <span className="text-xs text-muted">{formatRange(t.start_date, t.end_date)}</span>
               </span>
               {t.current && <span className="rounded-full bg-[#CFE6D6] px-2 py-0.5 text-[11px] font-bold">Ouvert</span>}
@@ -104,6 +105,56 @@ function TripsMenu({ overlay, loggedIn }: { overlay: boolean; loggedIn: boolean 
           <Link href="/assistant" onClick={close} className="plain-link mt-1 flex items-center gap-2 rounded-[18px] border-[1.5px] border-dashed border-line-2 px-3 py-2.5 text-sm font-bold !text-muted-2 hover:border-ink hover:!text-ink">
             <Plus className="h-4 w-4" aria-hidden /> Nouveau voyage
           </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Menu du compte : carnet, paramètres, déconnexion */
+function AccountMenu({ overlay, name, email }: { overlay: boolean; name: string; email: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); window.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const logout = async () => {
+    setOpen(false);
+    await createClient().auth.signOut();
+    clearPlan();
+    router.push("/");
+  };
+  const item = "plain-link block w-full rounded-[14px] px-3 py-2.5 text-left text-sm font-semibold !text-ink hover:bg-white";
+  return (
+    <div ref={ref} className="relative hidden min-[860px]:block">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Mon compte"
+        className={clsx(
+          "flex items-center justify-center rounded-full text-[15px] font-bold transition-colors",
+          overlay ? "h-[60px] w-[60px] border border-white/55 text-white hover:bg-white/10" : "h-[44px] w-[44px] bg-ink text-white hover:bg-ink-2",
+        )}
+      >
+        {name.charAt(0).toUpperCase()}
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-[calc(100%+10px)] z-[120] flex w-[260px] animate-fade-up flex-col gap-0.5 rounded-[22px] border border-line bg-cream p-2 text-ink shadow-panel">
+          <div className="flex flex-col px-3 pb-2 pt-1.5">
+            <span className="truncate text-sm font-bold">{name}</span>
+            <span className="truncate text-xs text-muted">{email}</span>
+          </div>
+          <Link href="/dashboard" onClick={() => setOpen(false)} className={item}>Mon carnet de voyage</Link>
+          <Link href="/dashboard?settings=1" onClick={() => setOpen(false)} className={item}>Paramètres du compte</Link>
+          <Link href="/onboarding" onClick={() => setOpen(false)} className={item}>Mes préférences de voyage</Link>
+          <button onClick={logout} className="mt-1 w-full rounded-[14px] border-t border-line px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-white">Se déconnecter</button>
         </div>
       )}
     </div>
@@ -154,9 +205,12 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
           </Link>
 
           <div className="flex items-center gap-2.5 justify-self-end">
-            {/* Avec un compte ou un voyage en cours : menu « Mes voyages » ; sinon lien Connexion */}
+            {/* Menu « Mes voyages » (compte ou voyage en cours), puis compte ou Connexion */}
             {user || draft ? (
               <TripsMenu overlay={overlay} loggedIn={!!user} />
+            ) : null}
+            {user ? (
+              <AccountMenu overlay={overlay} name={user.name} email={user.email} />
             ) : (
               <Link
                 href="/auth/login"

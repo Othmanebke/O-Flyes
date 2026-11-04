@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS public.trips (
   end_date date,
   proposal_json jsonb,
   proposal_generated_at timestamptz,
+  name text,
+  share_id uuid UNIQUE,
+  travelers int,
+  budget numeric,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );

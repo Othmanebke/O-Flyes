@@ -35,6 +35,8 @@ export interface Plan {
     budget?: number | null;
     items: PlanItem[];
     tripId?: string;
+    name?: string; // nom choisi par la personne (« Lisbonne en amoureux »)
+    shareId?: string; // lien public actif
     createdAt: number;
 }
 
@@ -201,6 +203,8 @@ export async function savePlan(): Promise<string> {
     if (!tripId) {
         const res = await axios.post("/api/trips", { title: plan.destination, start_date: plan.depart, end_date: plan.ret });
         tripId = res.data.id as string;
+        // colonnes de la migration 0006 : sans elles, le voyage est quand même sauvegardé
+        try { await axios.patch(`/api/trips/${tripId}`, { travelers: plan.travelers, budget: plan.budget ?? null, name: plan.name ?? null }); } catch { /* ignoré */ }
     }
     const items = [...plan.items];
     for (let n = 0; n < items.length; n++) {
@@ -232,7 +236,7 @@ export function setTripMeta(id: string, meta: TripMeta) {
 }
 
 // Reprend un voyage sauvegardé comme voyage en cours (depuis le carnet).
-export function resumeTrip(trip: { id: string; title: string; start_date?: string; end_date?: string }, items: PlanItem[]) {
+export function resumeTrip(trip: { id: string; title: string; start_date?: string; end_date?: string; name?: string | null; travelers?: number | null; budget?: number | null; share_id?: string | null }, items: PlanItem[]) {
     const meta = getTripMeta(trip.id);
     const depart = trip.start_date || defaultDepart();
     write({
@@ -242,8 +246,10 @@ export function resumeTrip(trip: { id: string; title: string; start_date?: strin
         origin: meta.origin || getPrefs().city || "Paris",
         depart,
         ret: trip.end_date || addDays(depart, 7),
-        travelers: meta.travelers || 2,
-        budget: meta.budget ?? null,
+        travelers: trip.travelers || meta.travelers || 2,
+        budget: trip.budget ?? meta.budget ?? null,
+        name: trip.name || undefined,
+        shareId: trip.share_id || undefined,
         items,
         tripId: trip.id,
         createdAt: Date.now(),
@@ -301,3 +307,6 @@ export function tripDays(p: Plan): { date: string; label: string }[] {
 
 /* Date du jour (AAAA-MM-JJ) : minimum des sélecteurs de dates */
 export const today = () => isoDate(new Date());
+
+/* Nom affiché : celui choisi par la personne, sinon la destination */
+export const tripName = (p: Pick<Plan, "name" | "destination">) => p.name?.trim() || p.destination;

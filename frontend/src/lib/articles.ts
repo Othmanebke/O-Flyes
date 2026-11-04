@@ -63,6 +63,33 @@ export const ARTICLES: Article[] = [
             { h: "Sortir de la ville", p: "Deux nuits dans la vallée de l'Ourika ou dans l'Atlas coupent agréablement un séjour de dix jours et changent complètement d'ambiance." },
         ],
     },
+    {
+        slug: "lisbonne-en-une-semaine",
+        title: "Une semaine à Lisbonne, quartier par quartier",
+        excerpt: "Alfama, Belém, Sintra : comment organiser sept jours sans passer sa vie dans les trams.",
+        tag: "Guide", date: "2026-03-04", minutes: 6, photo: "LIS", place: "Lisbonne", country: "Portugal", destId: "t2",
+        body: [
+            { p: "Lisbonne se visite à pied, mais ses sept collines fatiguent vite. Le plus simple est de consacrer chaque journée à un secteur, et de garder les transports pour les excursions." },
+            { h: "Jours 1 et 2 : Baixa, Chiado et Alfama", p: "La Baixa et le Chiado forment le centre : places, cafés historiques et librairies. L'Alfama, le plus vieux quartier, se découvre en montant vers le château Saint-Georges et ses belvédères. Le soir, c'est le quartier du fado." },
+            { h: "Jour 3 : Belém", p: "À l'ouest, le monastère des Hiéronymites et la tour de Belém se visitent dans la même matinée. On y goûte les pastéis de Belém, la version d'origine du pastel de nata." },
+            { h: "Jours 4 et 5 : Sintra et la côte", p: "Sintra, à 40 minutes en train, mérite une journée entière : palais de la Pena, Quinta da Regaleira, forêts. Le lendemain, Cascais et la plage de Guincho changent d'ambiance." },
+            { h: "Jours 6 et 7 : au rythme local", p: "LX Factory pour les boutiques et les brunchs, le marché de Campo de Ourique, et un coucher de soleil depuis le Miradouro da Senhora do Monte avant de repartir." },
+            { h: "Se déplacer", p: "La carte rechargeable des transports couvre métro, trams, bus et trains de banlieue (Sintra, Cascais). Le tram 28 est pittoresque mais souvent bondé : mieux vaut le prendre tôt le matin." },
+        ],
+    },
+    {
+        slug: "islande-en-hiver",
+        title: "L'Islande en hiver : aurores boréales et route du Sud",
+        excerpt: "Quand partir, comment conduire sur la route circulaire et où guetter les aurores.",
+        tag: "Conseil", date: "2026-03-01", minutes: 5, photo: "KEF", place: "Islande", country: "Islande", destId: "c2",
+        body: [
+            { p: "De décembre à février, les nuits sont longues : c'est la meilleure période pour les aurores boréales, avec quatre à cinq heures de jour seulement. Il faut donc organiser ses journées autour de la lumière." },
+            { h: "Les aurores boréales", p: "Elles demandent un ciel dégagé et une activité solaire suffisante. Les prévisions de l'office météorologique islandais indiquent la couverture nuageuse heure par heure. Éloignez-vous des villes et soyez patient : rien n'est garanti." },
+            { h: "La côte sud en voiture", p: "Le Cercle d'or (Þingvellir, Geysir, Gullfoss) puis la côte sud jusqu'à la lagune glaciaire de Jökulsárlón forment l'itinéraire le plus courant en hiver. Louez un véhicule adapté à la neige et consultez l'état des routes chaque matin." },
+            { h: "Le budget", p: "L'Islande est chère : hébergement, location de voiture et restaurants pèsent lourd. Les supermarchés et les guesthouses avec cuisine permettent de contenir les dépenses." },
+            { h: "Dans la valise", p: "Des couches chaudes plutôt qu'un seul gros manteau, une veste imperméable, des chaussures antidérapantes, et un maillot de bain pour les sources chaudes." },
+        ],
+    },
 ];
 
 export const bySlug = (slug: string) => ARTICLES.find(a => a.slug === slug);

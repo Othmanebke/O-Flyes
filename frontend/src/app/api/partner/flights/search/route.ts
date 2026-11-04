@@ -94,6 +94,10 @@ export async function GET(request: Request) {
     const oneWay = searchParams.get('trip') === 'oneway';
     const returnDate = oneWay ? null : (searchParams.get('return') || new Date(new Date(depart + 'T00:00:00').getTime() + 7 * 86400000).toISOString().split('T')[0]);
     const adults = parseInt(searchParams.get('adults') || '1', 10);
+    const children = Math.max(0, parseInt(searchParams.get('children') || '0', 10) || 0);
+    const infants = Math.max(0, parseInt(searchParams.get('infants') || '0', 10) || 0);
+    // équivalent « places adultes » : enfant ≈ 75 % du tarif, bébé sur les genoux ≈ 10 %
+    const seats = adults + children * 0.75 + infants * 0.1;
 
     // Compagnies réelles de la ligne quand on la connaît (voir lib/travel/airlines.ts).
     // Plus d'API gratuite de prix en direct (offre gratuite Amadeus fermée en juillet 2026) :
@@ -134,7 +138,7 @@ export async function GET(request: Request) {
 
         // prix = total pour tous les voyageurs (un trajet, ou les deux en aller-retour)
         const perPerson = base * fareFactor(opt.kind, hours) * (1 + ((seed * (i + 3)) % 14) / 100);
-        const price = Math.round(perPerson * adults * (oneWay ? 1 : 2));
+        const price = Math.round(perPerson * seats * (oneWay ? 1 : 2));
         const stopsLabel = opt.stops === 0 ? 'Direct' : `${opt.stops} escale${opt.stops > 1 ? 's' : ''} · ${opt.via}`;
         const link = googleFlightsUrl({ origin, destination, depart, return: returnDate || undefined, airline: opt.airline });
 

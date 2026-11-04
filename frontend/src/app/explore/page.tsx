@@ -17,6 +17,9 @@ function DestinationsContent() {
   const [cont, setCont] = useState("Toutes");
   const [month, setMonth] = useState("");
   const [style, setStyle] = useState("");
+  const [q, setQ] = useState("");
+  const [sort, setSort] = useState<"best" | "cheap" | "dear" | "rating">("best");
+  const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   const [liked, setLiked] = useState<string[]>([]);
   const [fromPrefs, setFromPrefs] = useState(false);
@@ -34,15 +37,31 @@ function DestinationsContent() {
     .filter(d => !month || d.months.includes(month))
     .filter(d => !style || d.styles.includes(style))
     // ce qui correspond à vos envies en premier
-    .sort((a, b) => b.styles.filter(x => liked.includes(x)).length - a.styles.filter(x => liked.includes(x)).length);
+    .filter(d => !q.trim() || norm(`${d.name} ${d.country} ${d.continent}`).includes(norm(q.trim())))
+    .sort((a, b) =>
+      sort === "cheap" ? a.budgetMin - b.budgetMin
+        : sort === "dear" ? b.budgetMin - a.budgetMin
+        : sort === "rating" ? b.rating - a.rating
+        // recommandé : ce qui correspond à vos envies en premier
+        : b.styles.filter(x => liked.includes(x)).length - a.styles.filter(x => liked.includes(x)).length);
 
-  const clear = () => { setTier("Tous"); setCont("Toutes"); setMonth(""); setStyle(""); };
+  const clear = () => { setTier("Tous"); setCont("Toutes"); setMonth(""); setStyle(""); setQ(""); };
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 pb-24 pt-12">
       <div className="flex flex-col gap-3">
         <h1 className="m-0 text-[clamp(36px,4.6vw,56px)] leading-[1.05]">Où <em className="accent">partir</em> ensuite ?</h1>
         <p className="m-0 max-w-[560px] text-base text-muted-2">Budgets estimés pour deux voyageurs, vols depuis Paris compris. Choisissez une destination pour voir le détail et créer votre voyage.</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <label htmlFor="dest-q" className="sr-only">Chercher une destination</label>
+        <input id="dest-q" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Chercher une ville ou un pays…" className="h-11 min-w-0 flex-[1_1_260px] rounded-full border border-line-2 bg-cream px-5 text-[15px] text-ink outline-none focus:border-gold-deep" />
+        <div className="flex gap-1 rounded-full border border-line bg-cream p-[3px]">
+          {([["best", "Recommandé"], ["cheap", "Prix croissant"], ["dear", "Prix décroissant"], ["rating", "Mieux notées"]] as const).map(([v, label]) => (
+            <button key={v} onClick={() => setSort(v)} aria-pressed={sort === v} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium ${sort === v ? "bg-ink text-paper" : "text-muted-2"}`}>{label}</button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3.5 border-y border-line py-[18px]">

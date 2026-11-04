@@ -7,6 +7,10 @@ const updateTripSchema = z.object({
     destination_id: z.string().uuid().optional().nullable(),
     start_date: z.string().optional().nullable(),
     end_date: z.string().optional().nullable(),
+    // migration 0006
+    name: z.string().trim().max(80).optional().nullable(),
+    travelers: z.number().int().min(1).max(20).optional().nullable(),
+    budget: z.number().min(0).max(1000000).optional().nullable(),
 });
 
 export async function GET(request: Request, { params }: { params: { tripId: string } }) {

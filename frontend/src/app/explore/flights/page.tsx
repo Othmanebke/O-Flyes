@@ -66,7 +66,7 @@ function FlightsContent() {
     setError(null);
     try {
       const res = await axios.get<Flight[]>("/api/partner/flights/search", {
-        params: { origin: c.origin, destination: c.dest, depart: c.depart, adults: c.pax, ...(c.trip === "oneway" ? { trip: "oneway" } : { return: c.ret }) },
+        params: { origin: c.origin, destination: c.dest, depart: c.depart, adults: c.pax, children: c.children, infants: c.infants, ...(c.trip === "oneway" ? { trip: "oneway" } : { return: c.ret }) },
       });
       setFlights(res.data || []);
       setSearched(c);
@@ -90,7 +90,12 @@ function FlightsContent() {
     return [...r].sort((a, b) => sort === "cheap" ? a.price - b.price : sort === "fast" ? minutes(a.duration) - minutes(b.duration) : score(a) - score(b));
   }, [flights, off, stops, sort]);
 
-  const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: k === "pax" ? Number(v) : v }));
+  const set = (k: keyof SearchContext) => (v: string) => setCtx(c => ({ ...c, [k]: ["pax", "children", "infants"].includes(k) ? Number(v) : v }));
+  const who = (c: SearchContext) => [
+    `${c.pax} adulte${c.pax > 1 ? "s" : ""}`,
+    c.children ? `${c.children} enfant${c.children > 1 ? "s" : ""}` : "",
+    c.infants ? `${c.infants} bébé${c.infants > 1 ? "s" : ""}` : "",
+  ].filter(Boolean).join(", ");
   const setTrip = (trip: SearchContext["trip"]) => setCtx(c => ({ ...c, trip, leg: "outbound" }));
   const isReturn = ctx.leg === "return";
   const tripName = plan?.destination || findDestination(isReturn ? ctx.origin : ctx.dest)?.name || (isReturn ? ctx.origin : ctx.dest);
@@ -112,7 +117,7 @@ function FlightsContent() {
       : `${day(f.departure)} ${time(f.departure)} → ${time(f.arrival)}`;
     const p = await addItem({
       key, type: "flight", leg, title,
-      subtitle: `${when} · ${searched.pax} pers. · ${f.type}`,
+      subtitle: `${when} · ${who(searched)} · ${f.type}`,
       price: f.price, estimated: true, provider: f.airline, url: f.booking_url, date: searched.depart,
     }, planInputFrom(searched));
     if (leg === "outbound" && !flightCoverage(p).return) {
@@ -122,7 +127,7 @@ function FlightsContent() {
     }
   };
 
-  const priceLabel = searched?.trip === "roundtrip" ? "A/R par pers. · estimé" : "trajet par pers. · estimé";
+  const priceLabel = searched ? `${searched.trip === "roundtrip" ? "A/R" : "trajet"} · ${who(searched)} · estimé` : "";
 
   return (
     <>
@@ -156,11 +161,19 @@ function FlightsContent() {
         {ctx.trip === "roundtrip" && (
           <Field id="back" label="Retour"><input id="back" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
         )}
-        <Field id="pax" label="Voyageurs">
-          <select id="pax" value={ctx.pax} onChange={e => set("pax")(e.target.value)} className={fieldInput}>
-            {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} adulte{n > 1 ? "s" : ""}</option>)}
-          </select>
-        </Field>
+        <div className="flex !basis-[300px] flex-col gap-0.5 bg-cream px-3.5 py-2.5">
+          <span className="text-xs text-muted">Voyageurs</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]">
+            {([["pax", "adulte", 1, 6], ["children", "enfant (2-11 ans)", 0, 4], ["infants", "bébé (-2 ans)", 0, 2]] as const).map(([k, label, min, max]) => (
+              <label key={k} className="flex items-center gap-1">
+                <select value={ctx[k]} onChange={e => set(k)(e.target.value)} aria-label={label} className={fieldInput}>
+                  {Array.from({ length: max - min + 1 }, (_, n) => n + min).map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span className="whitespace-nowrap text-xs text-muted">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
         <button type="submit" disabled={loading} className="flex min-h-[52px] !basis-full items-center justify-center gap-2 bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-70">
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} Rechercher
         </button>
@@ -230,7 +243,7 @@ function FlightsContent() {
                   </div>
                   <div className="flex items-center justify-end gap-3.5">
                     <span className="flex flex-col items-end">
-                      <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price / searched.pax)}</span>
+                      <span className="tabular whitespace-nowrap text-base font-semibold">{eur(f.price)}</span>
                       <span className="whitespace-nowrap text-xs text-muted">{priceLabel}</span>
                     </span>
                     <button onClick={() => toggle(f)} className={`whitespace-nowrap rounded-full border border-ink px-3 py-[9px] text-[13px] font-semibold ${added ? "bg-transparent text-ink" : "bg-ink text-paper hover:bg-ink-2"}`}>

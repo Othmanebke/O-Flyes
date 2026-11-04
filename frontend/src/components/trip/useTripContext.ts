@@ -12,7 +12,9 @@ export interface SearchContext {
   dest: string;
   depart: string;
   ret: string;
-  pax: number;
+  pax: number; // adultes
+  children: number; // 2 à 11 ans
+  infants: number; // moins de 2 ans, sur les genoux
   trip: TripType; // vols uniquement
   leg: Leg; // en aller simple : on cherche l'aller ou le retour
 }
@@ -25,7 +27,7 @@ export interface SearchContext {
    `ready` passe à true une fois le contexte lu côté navigateur. */
 export function useTripContext() {
   const params = useSearchParams();
-  const [ctx, setCtx] = useState<SearchContext>({ origin: "Paris", dest: "", depart: "", ret: "", pax: 2, trip: "roundtrip", leg: "outbound" });
+  const [ctx, setCtx] = useState<SearchContext>({ origin: "Paris", dest: "", depart: "", ret: "", pax: 2, children: 0, infants: 0, trip: "roundtrip", leg: "outbound" });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -40,9 +42,9 @@ export function useTripContext() {
 
     if (params.get("leg") === "retour") {
       // Vol retour : de la destination vers la maison, à la date de retour
-      setCtx({ origin: dest, dest: home, depart: ret, ret, pax, trip: "oneway", leg: "return" });
+      setCtx({ origin: dest, dest: home, depart: ret, ret, pax, children: 0, infants: 0, trip: "oneway", leg: "return" });
     } else {
-      setCtx({ origin: home, dest, depart, ret, pax, trip: params.get("trip") === "oneway" ? "oneway" : "roundtrip", leg: "outbound" });
+      setCtx({ origin: home, dest, depart, ret, pax, children: 0, infants: 0, trip: params.get("trip") === "oneway" ? "oneway" : "roundtrip", leg: "outbound" });
     }
     setReady(true);
   }, [params]);
@@ -59,8 +61,8 @@ export function syncPlanWithSearch(c: SearchContext) {
   const same = [plan.destination, cat ? searchCity(cat) : ""].some(n => n && n.toLowerCase() === c.dest.trim().toLowerCase());
   if (!same) return;
   updatePlan(c.trip === "roundtrip"
-    ? { depart: c.depart, ret: c.ret, travelers: c.pax, origin: c.origin }
-    : { depart: c.depart, travelers: c.pax, origin: c.origin });
+    ? { depart: c.depart, ret: c.ret, travelers: c.pax + c.children + c.infants, origin: c.origin }
+    : { depart: c.depart, travelers: c.pax + c.children + c.infants, origin: c.origin });
 }
 
 /* Contexte à utiliser pour créer le voyage si on ajoute un élément sans voyage en cours */
@@ -72,6 +74,6 @@ export function planInputFrom(c: SearchContext): PlanInput {
     origin: c.leg === "return" ? c.dest : c.origin,
     depart: c.leg === "return" ? undefined : c.depart,
     ret: c.trip === "roundtrip" || c.leg === "return" ? c.ret : undefined,
-    travelers: c.pax,
+    travelers: c.pax + c.children + c.infants,
   };
 }

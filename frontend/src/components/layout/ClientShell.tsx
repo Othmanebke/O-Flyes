@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ChatDock from "@/components/chat/ChatDock";
 import Toaster from "@/components/trip/Toaster";
+import RouteProgress from "@/components/layout/RouteProgress";
 
 // Pages plein écran, sans navbar ni footer du site (elles ont leur propre en-tête)
 const STANDALONE = ["/auth", "/onboarding"];
@@ -43,6 +44,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
 
   return (
     <>
+      <RouteProgress />
       {!standalone && (
         home
           ? <div className="absolute inset-x-0 top-0 z-50"><Navbar overlay /></div>

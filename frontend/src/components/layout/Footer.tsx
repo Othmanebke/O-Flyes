@@ -69,29 +69,30 @@ export default function Footer() {
       </div>
 
       <div className="relative mx-auto flex max-w-[1400px] flex-col gap-14 px-[clamp(24px,4vw,80px)] pb-14 pt-10">
-        <div className="grid gap-12 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
-          <div className="flex min-w-[min(100%,280px)] flex-col gap-[22px] md:col-span-2">
-            <span className="self-start text-white"><Logo size={48} /></span>
-            <p className="m-0 max-w-[460px] text-[17px] font-medium leading-normal text-white/85">
+        {/* Une seule ligne sur grand écran : logo, Pages, Planifier, Aide */}
+        <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]">
+          <div className="flex min-w-0 flex-col gap-[18px] sm:col-span-2 lg:col-span-1">
+            <span className="self-start text-white"><Logo size={42} /></span>
+            <p className="m-0 max-w-[420px] text-[15px] font-medium leading-normal text-white/85">
               Le copilote qui transforme une envie en itinéraire chiffré. Chaque voyage mérite d&apos;être raconté.
             </p>
-            <div className="flex max-w-[420px] flex-wrap gap-2.5">
+            <div className="flex max-w-[420px] flex-wrap gap-2">
               {CHIPS.map(([name, k, id]) => (
-                <Link key={id} href={`/destination/${id}`} className="plain-link flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] py-1 pl-1 pr-3.5 text-[15px] font-semibold !text-white transition-colors hover:bg-white/20">
+                <Link key={id} href={`/destination/${id}`} className="plain-link flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] py-1 pl-1 pr-3.5 text-[13px] font-semibold !text-white transition-colors hover:bg-white/20">
                   <Photo k={k} sizes="26px" className="h-[26px] w-[26px] rounded-full" />{name}
                 </Link>
               ))}
-              <Link href="/explore" className="plain-link flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-4 text-[15px] font-semibold !text-ink transition-colors hover:bg-gold-soft">
+              <Link href="/explore" className="plain-link flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-4 text-[13px] font-semibold !text-ink transition-colors hover:bg-gold-soft">
                 <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-ink text-white"><ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></span>
                 Toutes les destinations
               </Link>
             </div>
           </div>
           {COLS.map(c => (
-            <div key={c.t} className="flex flex-col gap-4">
-              <span className="border-b-[1.5px] border-dashed border-white/30 pb-[18px] font-serif text-[30px] font-semibold italic">{c.t}</span>
+            <div key={c.t} className="flex flex-col gap-3">
+              <span className="border-b-[1.5px] border-dashed border-white/30 pb-3 font-serif text-[24px] font-semibold italic">{c.t}</span>
               {c.links.map(([label, href]) => (
-                <Link key={href} href={href} className="plain-link text-[17px] font-medium !text-white/80 hover:!text-white">{label}</Link>
+                <Link key={href} href={href} className="plain-link text-[15px] font-medium !text-white/80 hover:!text-white">{label}</Link>
               ))}
             </div>
           ))}

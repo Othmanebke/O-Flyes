@@ -8,6 +8,7 @@ import { useMotionLoop, useReveal } from "@/components/ui/motion";
 import { ask } from "@/lib/chat";
 import { DESTINATIONS, MONTHS_LONG, byId, currentMonthShort, eur } from "@/lib/catalog";
 import type { PhotoKey } from "@/lib/photos";
+import { FAQ } from "@/lib/faq";
 
 const STYLES: { label: string; k: PhotoKey; d: string }[] = [
   { label: "Nature", k: "lake", d: "Lacs, fjords et sentiers : des voyages au grand air." },
@@ -431,6 +432,28 @@ export default function HomePage() {
                 <span className="px-1 text-[19px] font-bold tracking-[-0.02em]">{s.t}</span>
                 <span className="px-1 text-[13px] text-muted">{s.meta}</span>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+      {/* 12 — Questions fréquentes */}
+      <section className="px-6 pb-24 pt-10">
+        <div className="mx-auto grid max-w-[1240px] gap-10 [grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))]">
+          <div className="flex flex-col items-start gap-3">
+            <span className="eyebrow">Questions fréquentes</span>
+            <h2 className="m-0 text-[clamp(30px,3.6vw,46px)] leading-[1.04]">Avant de <em className="accent">partir</em></h2>
+            <p className="m-0 max-w-[360px] text-[15px] text-muted-2">Ce qu&apos;on nous demande le plus souvent sur AIVANA, les prix et les réservations.</p>
+            <ArrowPill href="/aide" className="mt-2">Toutes les questions</ArrowPill>
+          </div>
+          <div className="flex flex-col border-t border-line">
+            {FAQ.slice(0, 4).map(f => (
+              <details key={f.q} className="group border-b border-line py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-bold tracking-[-0.02em] [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line-2 text-lg transition-transform group-open:rotate-45" aria-hidden>+</span>
+                </summary>
+                <div className="pt-2.5 text-[15px] leading-relaxed text-muted-2">{f.a}</div>
+              </details>
             ))}
           </div>
         </div>

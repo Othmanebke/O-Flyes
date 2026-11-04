@@ -14,7 +14,7 @@ import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
 import {
-  addDays, clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, setItemDate, toast, today, tripDays, updatePlan, usePlan,
+  addDays, clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, setItemDate, toast, today, tripDays, tripName, updatePlan, usePlan,
   type Plan, type PlanItem,
 } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
@@ -73,18 +73,29 @@ function downloadICS(plan: Plan) {
   URL.revokeObjectURL(url);
 }
 
+const shareUrl = (id: string) => `${window.location.origin}/voyage/${id}`;
+
 async function share(plan: Plan) {
-  const text = [
-    `Mon voyage : ${plan.destination}`,
-    `${formatRange(plan.depart, plan.ret)} · ${plan.travelers} voyageur${plan.travelers > 1 ? "s" : ""}`,
-    ...plan.items.map(i => `- ${shortTitle(i)}${i.price != null ? ` (${eur(i.price)})` : ""}`),
-    `Total estimé : ${eur(planTotal(plan))}`,
-  ].join("\n");
+  if (!plan.tripId) { toast("Sauvegardez d'abord le voyage pour obtenir un lien de partage"); return; }
   try {
-    if (navigator.share) { await navigator.share({ title: `Voyage ${plan.destination}`, text }); return; }
-    await navigator.clipboard.writeText(text);
-    toast("Résumé du voyage copié");
-  } catch { /* partage annulé */ }
+    const res = await axios.post(`/api/trips/${plan.tripId}/share`, { travelers: plan.travelers, budget: plan.budget ?? null, name: plan.name ?? null });
+    const id = res.data.shareId as string;
+    updatePlan({ shareId: id });
+    const url = shareUrl(id);
+    if (navigator.share) {
+      try { await navigator.share({ title: `Voyage ${tripName(plan)}`, url }); return; } catch { /* partage annulé : on copie */ }
+    }
+    await navigator.clipboard.writeText(url);
+    toast("Lien du voyage copié", { label: "Ouvrir", href: `/voyage/${id}` });
+  } catch (err: unknown) {
+    toast((err as { response?: { data?: { error?: string } } })?.response?.data?.error || "Le partage n'a pas pu être activé.");
+  }
+}
+
+async function stopSharing(plan: Plan) {
+  if (!plan.tripId) return;
+  try { await axios.delete(`/api/trips/${plan.tripId}/share`); updatePlan({ shareId: undefined }); toast("Lien de partage désactivé"); }
+  catch { toast("Impossible de désactiver le lien."); }
 }
 
 /* ── briques visuelles ─────────────────────────────────────────────── */
@@ -175,6 +186,8 @@ function DashboardContent() {
     }
   };
 
+  useEffect(() => { if (params.get("settings") === "1") { setSettings(true); router.replace("/dashboard"); } }, [params, router]);
+
   // Lien direct vers un voyage sauvegardé (menu « Mes voyages » de la navbar)
   useEffect(() => {
     const id = params.get("trip");
@@ -200,8 +213,8 @@ function DashboardContent() {
   };
 
   const pills = [
-    ...(plan && !plan.tripId ? [{ id: "draft", name: plan.destination, active: true, onClick: () => setSettings(false) }] : []),
-    ...trips.map(t => ({ id: t.id, name: t.title, active: plan?.tripId === t.id, onClick: () => { setSettings(false); void open(t); } })),
+    ...(plan && !plan.tripId ? [{ id: "draft", name: tripName(plan), place: plan.destination, active: true, onClick: () => setSettings(false) }] : []),
+    ...trips.map(t => ({ id: t.id, name: t.name || t.title, place: t.title, active: plan?.tripId === t.id, onClick: () => { setSettings(false); void open(t); } })),
   ];
 
   return (
@@ -225,7 +238,7 @@ function DashboardContent() {
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {pills.map(t => (
           <button key={t.id} onClick={t.onClick} className={`flex shrink-0 items-center gap-2.5 rounded-full border py-1 pl-1 pr-4 text-sm font-bold ${t.active && !settings ? "border-ink bg-ink text-white" : "border-line bg-white text-ink hover:border-ink"}`}>
-            <Photo k={photoOf(t.name)} sizes="32px" className="h-8 w-8 rounded-full" />
+            <Photo k={photoOf(t.place)} sizes="32px" className="h-8 w-8 rounded-full" />
             {t.name}
             {loadingTrip === t.id && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
           </button>
@@ -310,10 +323,18 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
         <Photo k={photoOf(plan.destination)} alt={plan.destination} sizes="88px" className="h-[72px] w-[88px] shrink-0 rounded-[16px]" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="m-0 text-[clamp(24px,3vw,32px)] font-extrabold leading-none tracking-[-0.03em]">{plan.destination}</h1>
+            <h1 className="m-0 text-[clamp(24px,3vw,32px)] font-extrabold leading-none tracking-[-0.03em]">{tripName(plan)}</h1>
             <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${plan.tripId ? "bg-[#CFE6D6] text-ok" : "bg-gold-soft text-gold-deep"}`}>{plan.tripId ? "Sauvegardé" : "Brouillon"}</span>
           </div>
-          <span className="text-sm text-muted-2">{formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""} · depuis {plan.origin}</span>
+          <span className="text-sm text-muted-2">{formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""} · depuis {plan.origin}{plan.name ? ` · ${plan.destination}` : ""}</span>
+          {plan.shareId && (
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+              <span className="font-semibold text-ok">Lien public actif</span>
+              <button onClick={() => navigator.clipboard.writeText(shareUrl(plan.shareId!)).then(() => toast("Lien copié"))} className="font-semibold text-gold-deep hover:text-[#6E5323]">Copier</button>
+              <a href={`/voyage/${plan.shareId}`} target="_blank" rel="noopener noreferrer" className="font-semibold">Ouvrir</a>
+              <button onClick={() => stopSharing(plan)} className="text-muted-2 hover:text-danger">Désactiver</button>
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {!plan.tripId && (
@@ -508,18 +529,21 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
 }
 
 function EditTrip({ plan, onClose }: { plan: Plan; onClose: () => void }) {
-  const [form, setForm] = useState({ depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" });
+  const [form, setForm] = useState({ name: plan.name || "", depart: plan.depart, ret: plan.ret, travelers: plan.travelers, budget: plan.budget ? String(plan.budget) : "" });
   const apply = async () => {
-    const patch = { depart: form.depart, ret: form.ret < form.depart ? form.depart : form.ret, travelers: form.travelers, budget: form.budget ? Number(form.budget) : null };
+    const patch = { name: form.name.trim() || undefined, depart: form.depart, ret: form.ret < form.depart ? form.depart : form.ret, travelers: form.travelers, budget: form.budget ? Number(form.budget) : null };
     updatePlan(patch);
     if (plan.tripId) {
       try { await axios.patch(`/api/trips/${plan.tripId}`, { start_date: patch.depart, end_date: patch.ret }); } catch { /* ignoré */ }
+      // nom, voyageurs, budget : colonnes de la migration 0006
+      try { await axios.patch(`/api/trips/${plan.tripId}`, { name: patch.name ?? null, travelers: patch.travelers, budget: patch.budget }); } catch { /* ignoré */ }
     }
     onClose();
   };
   const field = "rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink";
   return (
     <div className="grid gap-3 rounded-[24px] border border-line bg-white p-5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+      <label className="col-span-full flex flex-col gap-1 text-xs font-semibold text-muted">Nom du voyage<input value={form.name} maxLength={80} placeholder={plan.destination} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Départ<input type="date" min={today()} value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Retour<input type="date" value={form.ret} min={form.depart} onChange={e => setForm(f => ({ ...f, ret: e.target.value }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Voyageurs<input type="number" min={1} max={9} value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: Math.max(1, Number(e.target.value) || 1) }))} className={field} /></label>
