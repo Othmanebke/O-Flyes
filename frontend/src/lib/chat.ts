@@ -4,7 +4,7 @@
 import { useSyncExternalStore } from "react";
 import axios from "axios";
 import { DESTINATIONS, estimate, eur, findDestination, type CatalogDestination } from "@/lib/catalog";
-import { addDays, defaultDepart } from "@/lib/plan";
+import { addDays, defaultDepart, getPrefs } from "@/lib/plan";
 import type { EnrichedDestination } from "@/types/chat";
 import { FREE_SEARCHES_PER_MONTH } from "@/lib/limits";
 
@@ -172,7 +172,8 @@ export async function send(text: string) {
     const history = all.slice(Math.max(0, all.findIndex(m => m.role === "user")));
     set(st => ({ messages: [...st.messages, userMsg], loading: true, open: true }));
     try {
-        const res = await axios.post("/api/chat", { messages: history.map(m => ({ role: m.role, content: m.text })) });
+        // Préférences de l'onboarding : ville de départ, budget habituel, envies
+        const res = await axios.post("/api/chat", { messages: history.map(m => ({ role: m.role, content: m.text })), prefs: getPrefs() });
         const options = ((res.data.enriched || []) as EnrichedDestination[]).map(fromEnriched);
         set(st => ({
             messages: [...st.messages, { role: "assistant", text: res.data.content || "Voici ce que j'ai trouvé :", options }],

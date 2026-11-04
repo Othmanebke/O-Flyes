@@ -15,6 +15,7 @@ const CHIPS: [string, PhotoKey, string][] = [
 const COLS = [
   { t: "Pages", links: [["Accueil", "/"], ["Destinations", "/explore"], ["Journal", "/blog"], ["Tarifs", "/pricing"], ["Mes voyages", "/dashboard"]] },
   { t: "Planifier", links: [["Copilote IA", "/assistant"], ["Vols", "/explore/flights"], ["Hôtels", "/explore/hotels"], ["Activités", "/explore/activities"]] },
+  { t: "Aide", links: [["Questions fréquentes", "/aide"], ["Contact", "/contact"], ["Mentions légales", "/legal"], ["Confidentialité", "/legal#confidentialite"]] },
 ];
 
 // Brume blanche qui fond le haut du footer dans la page
@@ -61,7 +62,9 @@ export default function Footer() {
           </form>
         )}
         <span className="text-sm font-semibold text-white/90">
-          {status === "error" ? "L'inscription n'a pas pu être enregistrée. Réessayez plus tard." : "Une seule lettre par mois · Désinscription en un clic"}
+          {status === "error"
+            ? "L'inscription n'a pas pu être enregistrée. Réessayez plus tard."
+            : <>Une seule lettre par mois · <Link href="/newsletter" className="plain-link underline underline-offset-2 hover:!text-white">Se désinscrire</Link></>}
         </span>
       </div>
 

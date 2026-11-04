@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard – AIVANA",
+  title: "Mon carnet de voyage",
   description: "Gérez vos voyages et votre profil AIVANA.",
 };
 

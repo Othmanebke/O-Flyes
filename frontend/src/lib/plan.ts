@@ -277,3 +277,27 @@ export function flightCoverage(p: Plan | null) {
         return: legs.includes("roundtrip") || legs.includes("return"),
     };
 }
+
+/* Place un élément à un jour du séjour (null = « à placer »), localement et sur le compte */
+export async function setItemDate(key: string, date: string | null) {
+    const plan = read();
+    if (!plan) return;
+    const item = plan.items.find(i => i.key === key);
+    write({ ...plan, items: plan.items.map(i => (i.key === key ? { ...i, date: date || undefined } : i)) });
+    if (plan.tripId && item?.serverId) {
+        try { await axios.patch(`/api/trips/${plan.tripId}/items/${item.serverId}`, { date }); } catch { /* reste modifié localement */ }
+    }
+}
+
+/* Jours du séjour, pour les sélecteurs « Jour 1 · sam. 12 déc. » */
+export function tripDays(p: Plan): { date: string; label: string }[] {
+    const n = Math.min(nightsBetween(p.depart, p.ret), 30);
+    return Array.from({ length: n + 1 }, (_, k) => {
+        const date = addDays(p.depart, k);
+        const d = new Date(date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+        return { date, label: `Jour ${k + 1} · ${d}` };
+    });
+}
+
+/* Date du jour (AAAA-MM-JJ) : minimum des sélecteurs de dates */
+export const today = () => isoDate(new Date());

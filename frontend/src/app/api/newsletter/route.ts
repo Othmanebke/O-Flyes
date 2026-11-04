@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const schema = z.object({ email: z.string().email().max(200) });
 
@@ -23,4 +24,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Inscription indisponible' }, { status: 503 });
     }
     return NextResponse.json({ ok: true }, { status: 201 });
+}
+
+// Désinscription : on supprime l'adresse de la liste
+export async function DELETE(request: Request) {
+    const parsed = schema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+        return NextResponse.json({ error: 'Adresse email invalide' }, { status: 400 });
+    }
+    const admin = createAdminClient();
+    if (!admin) return NextResponse.json({ error: 'Désinscription indisponible' }, { status: 503 });
+    const { error } = await admin.from('newsletter_subscribers').delete().eq('email', parsed.data.email.toLowerCase());
+    if (error) return NextResponse.json({ error: 'Désinscription indisponible' }, { status: 503 });
+    // même réponse que l'adresse soit inscrite ou non : on ne révèle pas qui est abonné
+    return NextResponse.json({ ok: true });
 }

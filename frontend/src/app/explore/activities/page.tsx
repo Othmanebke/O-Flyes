@@ -8,7 +8,7 @@ import Photo from "@/components/ui/Photo";
 import { Chip } from "@/components/ui/Pill";
 import { planInputFrom, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
-import { addItem, removeItem, toast, usePlan } from "@/lib/plan";
+import { addItem, removeItem, toast, tripDays, usePlan } from "@/lib/plan";
 import { isPhotoKey, photoFor } from "@/lib/photos";
 
 interface Activity {
@@ -33,6 +33,7 @@ function ActivitiesContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cat, setCat] = useState("Toutes");
+  const [day, setDay] = useState(""); // jour du séjour où ranger les ajouts
 
   const search = useCallback(async (c: SearchContext) => {
     if (!c.dest.trim()) return;
@@ -65,10 +66,11 @@ function ActivitiesContent() {
       key, type: "activity",
       title: a.title,
       subtitle: [a.category, a.duration, `${pax} pers.`].filter(Boolean).join(" · "),
-      price: a.price != null ? a.price * pax : null, estimated: true,
+      price: a.price != null ? a.price * pax : null, estimated: true, date: day || undefined,
       provider: a.source === "wikipedia" ? "Wikipédia" : "GetYourGuide", url: a.booking_url,
     }, planInputFrom(searched));
-    toast(`Activité ajoutée au voyage ${p.destination}`, { label: "Voir le carnet", href: "/dashboard" });
+    const when = day ? tripDays(p).find(d => d.date === day)?.label.split(" · ")[0] : null;
+    toast(`Activité ajoutée au voyage ${p.destination}${when ? `, ${when}` : ""}`, { label: "Voir le carnet", href: "/dashboard" });
   };
 
   return (
@@ -85,6 +87,16 @@ function ActivitiesContent() {
 
       {cats.length > 1 && (
         <div className="flex flex-wrap gap-2">{cats.map(c => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}</div>
+      )}
+
+      {plan && (
+        <label className="flex flex-wrap items-center gap-2 text-sm text-muted-2">
+          Ajouter pour :
+          <select value={day} onChange={e => setDay(e.target.value)} className="rounded-full border border-line-2 bg-white px-3 py-1.5 text-sm font-semibold text-ink">
+            <option value="">À placer plus tard</option>
+            {tripDays(plan).map(d => <option key={d.date} value={d.date}>{d.label}</option>)}
+          </select>
+        </label>
       )}
 
       <div className="flex flex-wrap justify-between gap-3 border-b border-line pb-3.5 text-sm text-muted-2">

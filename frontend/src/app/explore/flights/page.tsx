@@ -10,7 +10,7 @@ import { Chip } from "@/components/ui/Pill";
 import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
 import { planInputFrom, syncPlanWithSearch, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
-import { addItem, flightCoverage, removeItem, toast, usePlan, type FlightLeg } from "@/lib/plan";
+import { addItem, flightCoverage, removeItem, toast, today, usePlan, type FlightLeg } from "@/lib/plan";
 
 interface Flight {
   id: string;
@@ -152,7 +152,7 @@ function FlightsContent() {
         </div>
         <CityInput id="origin" label="Départ" value={ctx.origin} onChange={set("origin")} />
         <CityInput id="dest" label="Destination" value={ctx.dest} onChange={set("dest")} />
-        <Field id="out" label={isReturn ? "Date du retour" : "Aller"}><input id="out" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
+        <Field id="out" label={isReturn ? "Date du retour" : "Aller"}><input id="out" type="date" min={today()} value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
         {ctx.trip === "roundtrip" && (
           <Field id="back" label="Retour"><input id="back" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
         )}

@@ -9,7 +9,8 @@ const serif = Newsreader({ subsets: ["latin"], style: ["italic"], weight: ["500"
 const logo = Kaushan_Script({ subsets: ["latin"], weight: "400", variable: "--font-logo", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "AIVANA – Votre copilote de voyage",
+  // chaque page donne son nom : « Vols · AIVANA », « Lisbonne · AIVANA »…
+  title: { default: "AIVANA – Votre copilote de voyage", template: "%s · AIVANA" },
   description: "Décrivez votre budget, vos dates et vos envies : AIVANA propose des destinations avec un coût total estimé, compare vols, hôtels et activités, et range tout dans votre carnet de voyage.",
 };
 

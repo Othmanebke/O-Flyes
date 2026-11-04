@@ -35,3 +35,15 @@ describe('sightPrice', () => {
         expect(sightPrice('Palais de Bemposta')).toBe(12);
     });
 });
+
+import { tripDays } from './plan';
+
+describe('tripDays', () => {
+    it('liste chaque jour du séjour, arrivée et départ compris', () => {
+        const days = tripDays(plan([]));
+        expect(days).toHaveLength(8);
+        expect(days[0].date).toBe('2026-12-10');
+        expect(days[7].date).toBe('2026-12-17');
+        expect(days[0].label).toMatch(/^Jour 1 · /);
+    });
+});

@@ -14,7 +14,7 @@ import { eur, findDestination, searchCity } from "@/lib/catalog";
 import { ask } from "@/lib/chat";
 import { isPhotoKey, photoFor, type PhotoKey } from "@/lib/photos";
 import {
-  addDays, clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, toast, updatePlan, usePlan,
+  addDays, clearPlan, flightCoverage, formatRange, nightsBetween, planTotal, removeItem, resumeTrip, savePlan, setItemDate, toast, today, tripDays, updatePlan, usePlan,
   type Plan, type PlanItem,
 } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/browser";
@@ -300,6 +300,7 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
     return out;
   }, [plan, nights]);
   const unplaced = plan.items.filter(i => !i.date || !days.some(d => d.date === i.date));
+  const dayOptions = tripDays(plan);
   const sorted = [...plan.items].sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
 
   return (
@@ -367,7 +368,20 @@ function TripDashboard({ plan, editing, setEditing, saving, onSave, onRemove, lo
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3EEE6]"><Icon className="h-[17px] w-[17px]" aria-hidden /></span>
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate text-[15px] font-bold">{shortTitle(i)}</span>
-                        <span className="truncate text-[13px] text-muted">{[i.date && fmtDay(i.date), i.subtitle].filter(Boolean).join(" · ")}</span>
+                        <span className="truncate text-[13px] text-muted">{i.subtitle}</span>
+                        {/* Les vols suivent leurs dates ; hôtels et activités se placent dans le séjour */}
+                        {i.type !== "flight" && (
+                          <select
+                            value={i.date && dayOptions.some(d => d.date === i.date) ? i.date : ""}
+                            onChange={e => setItemDate(i.key, e.target.value || null)}
+                            aria-label={`Jour de « ${shortTitle(i)} »`}
+                            className={`mt-1 self-start rounded-full border px-2.5 py-1 text-xs font-semibold ${i.date ? "border-line-2 bg-white text-ink" : "border-gold-deep/50 bg-gold-soft text-gold-deep"}`}
+                          >
+                            <option value="">À placer dans le séjour</option>
+                            {dayOptions.map(d => <option key={d.date} value={d.date}>{d.label}</option>)}
+                          </select>
+                        )}
+                        {i.type === "flight" && i.date && <span className="text-[13px] text-muted">{fmtDay(i.date)}</span>}
                       </span>
                       <span className="flex items-center gap-3">
                         <span className="flex flex-col items-end">
@@ -506,7 +520,7 @@ function EditTrip({ plan, onClose }: { plan: Plan; onClose: () => void }) {
   const field = "rounded-full border border-line-2 bg-white px-3 py-2 text-sm text-ink";
   return (
     <div className="grid gap-3 rounded-[24px] border border-line bg-white p-5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
-      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Départ<input type="date" value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className={field} /></label>
+      <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Départ<input type="date" min={today()} value={form.depart} onChange={e => setForm(f => ({ ...f, depart: e.target.value }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Retour<input type="date" value={form.ret} min={form.depart} onChange={e => setForm(f => ({ ...f, ret: e.target.value }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Voyageurs<input type="number" min={1} max={9} value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: Math.max(1, Number(e.target.value) || 1) }))} className={field} /></label>
       <label className="flex flex-col gap-1 text-xs font-semibold text-muted">Budget total (€)<input type="number" min={0} step={50} value={form.budget} placeholder="Facultatif" onChange={e => setForm(f => ({ ...f, budget: e.target.value }))} className={field} /></label>

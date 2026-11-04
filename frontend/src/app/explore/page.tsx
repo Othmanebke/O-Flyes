@@ -7,6 +7,7 @@ import Photo from "@/components/ui/Photo";
 import { Chip } from "@/components/ui/Pill";
 import { CONTINENTS, DESTINATIONS, MONTHS_SHORT, TIERS, eur } from "@/lib/catalog";
 import type { PhotoKey } from "@/lib/photos";
+import { getPrefs } from "@/lib/plan";
 
 const STYLES = ["Nature", "Aventure", "Plage", "Culture", "Gastronomie", "Bien-être"];
 
@@ -17,13 +18,23 @@ function DestinationsContent() {
   const [month, setMonth] = useState("");
   const [style, setStyle] = useState("");
 
+  const [liked, setLiked] = useState<string[]>([]);
+  const [fromPrefs, setFromPrefs] = useState(false);
   useEffect(() => { setStyle(params.get("style") || ""); }, [params]);
+  // Préférences de l'onboarding : budget habituel présélectionné, envies mises en avant
+  useEffect(() => {
+    const p = getPrefs();
+    setLiked(p.styles || []);
+    if (p.budget && !params.get("style") && TIERS.some(t => t.label === p.budget)) { setTier(p.budget); setFromPrefs(true); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const results = DESTINATIONS
     .filter(d => tier === "Tous" || d.tier === tier)
     .filter(d => cont === "Toutes" || d.continent === cont)
     .filter(d => !month || d.months.includes(month))
-    .filter(d => !style || d.styles.includes(style));
+    .filter(d => !style || d.styles.includes(style))
+    // ce qui correspond à vos envies en premier
+    .sort((a, b) => b.styles.filter(x => liked.includes(x)).length - a.styles.filter(x => liked.includes(x)).length);
 
   const clear = () => { setTier("Tous"); setCont("Toutes"); setMonth(""); setStyle(""); };
 
@@ -61,6 +72,12 @@ function DestinationsContent() {
           <div className="flex-1" />
           <span className="text-[13px] text-muted">{results.length} destination{results.length > 1 ? "s" : ""}</span>
         </div>
+        {fromPrefs && tier !== "Tous" && (
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-2">
+            Filtré selon votre budget habituel ({tier}){liked.length ? `, vos envies en premier` : ""}.
+            <button onClick={() => { setTier("Tous"); setFromPrefs(false); }} className="font-semibold text-gold-deep hover:text-[#6E5323]">Tout voir</button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-x-5 gap-y-7 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">

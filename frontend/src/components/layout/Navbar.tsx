@@ -23,6 +23,7 @@ const LINKS = [
   { label: "Journal", href: "/blog", note: "Récits" },
   { label: "Mes voyages", href: "/dashboard", note: "Votre carnet" },
   { label: "Tarifs", href: "/pricing", note: "Gratuit ou Pro" },
+  { label: "Aide", href: "/aide", note: "Questions fréquentes" },
 ];
 
 /* Menu « Mes voyages » : accès au carnet, voyage en cours et voyages sauvegardés. */

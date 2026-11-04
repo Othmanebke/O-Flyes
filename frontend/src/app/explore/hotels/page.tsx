@@ -9,7 +9,7 @@ import { Chip } from "@/components/ui/Pill";
 import CityInput, { Field, fieldInput } from "@/components/trip/CityInput";
 import { planInputFrom, syncPlanWithSearch, useTripContext, type SearchContext } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
-import { addItem, nightsBetween, removeItem, toast, usePlan } from "@/lib/plan";
+import { addItem, nightsBetween, removeItem, toast, today, usePlan } from "@/lib/plan";
 import { isPhotoKey, photoFor } from "@/lib/photos";
 
 interface Hotel {
@@ -79,7 +79,7 @@ function HotelsContent() {
     <div className="mx-auto flex max-w-[1200px] flex-col gap-7 px-6 pb-24 pt-0">
       <form onSubmit={e => { e.preventDefault(); void search(ctx); }} className="relative z-10 -mt-[72px] flex flex-wrap gap-px overflow-hidden rounded-[22px] border border-line-2 bg-line-2 shadow-[0_24px_60px_rgba(15,27,45,0.18)] [&>*]:flex-[1_1_170px]">
         <CityInput id="city" label="Ville" value={ctx.dest} onChange={set("dest")} />
-        <Field id="in" label="Arrivée"><input id="in" type="date" value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
+        <Field id="in" label="Arrivée"><input id="in" type="date" min={today()} value={ctx.depart} onChange={e => set("depart")(e.target.value)} className={fieldInput} /></Field>
         <Field id="out" label="Départ"><input id="out" type="date" value={ctx.ret} min={ctx.depart} onChange={e => set("ret")(e.target.value)} className={fieldInput} /></Field>
         <Field id="pax" label="Voyageurs">
           <select id="pax" value={ctx.pax} onChange={e => set("pax")(e.target.value)} className={fieldInput}>

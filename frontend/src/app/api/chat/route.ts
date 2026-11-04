@@ -15,6 +15,11 @@ const chatRequestSchema = z.object({
             content: z.string().min(1).max(50000),
         })
     ).min(1).max(50),
+    prefs: z.object({
+        city: z.string().max(80).optional(),
+        budget: z.string().max(40).optional(),
+        styles: z.array(z.string().max(40)).max(12).optional(),
+    }).optional(),
 });
 
 // 3 destinations maximum par réponse
@@ -108,13 +113,22 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const validatedData = chatRequestSchema.parse(body);
+        const prefs = validatedData.prefs;
+        const prefsText = prefs && (prefs.city || prefs.budget || prefs.styles?.length)
+            ? `
+Profil indiqué par l'utilisateur à l'inscription (à utiliser par défaut, sauf s'il dit autre chose dans la conversation) : ${[
+                prefs.city && `part généralement de ${prefs.city}`,
+                prefs.budget && `budget habituel « ${prefs.budget} » pour deux`,
+                prefs.styles?.length && `aime : ${prefs.styles.join(', ')}`,
+            ].filter(Boolean).join(' ; ')}.`
+            : '';
 
         const today = new Date().toISOString().split('T')[0];
         const systemPrompt = {
             role: 'system' as const,
             content: `Tu es AIVANA, un assistant de voyage expert, luxueux et intelligent.
 Nous sommes le ${today}.
-Ton objectif est de planifier des voyages parfaits selon le budget et les envies de l'utilisateur.
+Ton objectif est de planifier des voyages parfaits selon le budget et les envies de l'utilisateur.${prefsText}
 Tu dois TOUJOURS répondre au format JSON valide.
 La structure JSON doit être EXACTEMENT :
 {
@@ -147,7 +161,7 @@ RÈGLES DE CONVERSATION (très important) :
 
         let assistantMessage = "";
         let draftDestinations: DraftDestination[] = [];
-        let originCity = "Paris";
+        let originCity = prefs?.city?.trim() || "Paris";
         let budgetEur: number | null = null;
         let travelDate: string | null = null;
 
@@ -178,7 +192,7 @@ RÈGLES DE CONVERSATION (très important) :
 _Totaux estimés à partir de notre catalogue : vérifiez le prix du jour chez la compagnie et l'hôtel avant de réserver._`;
         }
 
-        if (originCity === "Paris" && grounded.length > 0) {
+        if (originCity === "Paris" && !prefs?.city && grounded.length > 0) {
             const userMentionedParis = JSON.stringify(validatedData.messages).toLowerCase().includes('paris');
             if (!userMentionedParis) {
                 assistantMessage += `\n\n_Estimation calculée au départ de Paris — précise ta ville de départ pour des prix de vol exacts._`;
