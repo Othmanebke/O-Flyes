@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Flag, Globe, MapPin, MessageSquare, Plane, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Globe, MapPin, MessageSquare, Plane, Search } from "lucide-react";
 import Photo from "@/components/ui/Photo";
 import Logo from "@/components/ui/Logo";
 import ArrowPill from "@/components/ui/Pill";
@@ -382,28 +382,37 @@ export default function HomePage() {
 
       {/* 10 — Final */}
       <section className="relative overflow-hidden px-6 pb-[140px] pt-[120px] text-center">
-        <div aria-hidden className="hidden min-[1180px]:block">
+        <div aria-hidden className="hidden min-[1440px]:block">
           <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1440 800" preserveAspectRatio="none" fill="none"><path d="M180 230 C 420 220, 560 260, 520 380 S 520 620, 760 610 S 980 360, 1000 470 S 1180 700, 1330 560" stroke="#C9C2B6" strokeWidth="2" strokeDasharray="7 8" /></svg>
-          <Plane data-float="1" className="absolute left-[max(2%,calc(50%-660px))] top-[150px] h-[54px] w-[54px] text-[#BDB6AA]" style={{ transform: "rotate(12deg)" }} />
+          {/* Avion et repère posés exactement aux extrémités du pointillé : mêmes coordonnées
+              que le tracé (viewBox 1440 × 800 étiré sur la section), exprimées en %. */}
+          <span data-float="1" className="absolute flex h-[52px] w-[52px] items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_8px_20px_rgba(15,27,45,0.08)]"
+            style={{ left: `${(180 / 1440) * 100}%`, top: `${(230 / 800) * 100}%`, transform: "translate(calc(-100% - 6px), -50%)" }}>
+            <Plane className="h-[22px] w-[22px]" style={{ transform: "rotate(45deg)" }} aria-hidden />
+          </span>
           <div data-float="3" className="absolute bottom-[110px] left-[max(2%,calc(50%-640px))] h-[150px] w-[200px] bg-white p-2.5"
             style={{ transform: "rotate(-24deg)", WebkitMask: "radial-gradient(circle 5px at 5px 5px, transparent 98%, #000) -5px -5px / 14px 14px", mask: "radial-gradient(circle 5px at 5px 5px, transparent 98%, #000) -5px -5px / 14px 14px", filter: "drop-shadow(0 8px 16px rgba(15,27,45,0.15))" }}>
             <Photo k="EZE" sizes="200px" className="h-full w-full" />
           </div>
-          <div data-float="2" className="absolute right-[max(2%,calc(50%-660px))] top-[170px] aspect-[4/3] w-[clamp(240px,22vw,380px)]">
+          <div data-float="2" className="absolute right-[max(2%,calc(50%-800px))] top-[170px] aspect-[4/3] w-[clamp(240px,18vw,360px)]">
             <div className="absolute inset-0 rounded-[22px] bg-gold-soft" style={{ transform: "rotate(4deg)" }} />
             <div className="absolute inset-0 rounded-[22px] bg-sky" style={{ transform: "rotate(-2deg)" }} />
             <div className="absolute inset-0 rounded-[22px] bg-white p-2.5 shadow-[0_20px_40px_rgba(15,27,45,0.15)]" style={{ transform: "rotate(-8deg)" }}>
               <Photo k="wall" sizes="380px" className="h-full w-full rounded-[14px]" />
             </div>
           </div>
-          <Flag className="absolute bottom-[190px] right-[max(3%,calc(50%-620px))] h-[30px] w-[30px] text-[#D9463B]" style={{ transform: "rotate(-10deg)" }} />
+          <span className="absolute flex flex-col items-center" style={{ left: `${(1330 / 1440) * 100}%`, top: `${(560 / 800) * 100}%`, transform: "translate(-50%, calc(-100% + 4px))" }}>
+            <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-ink text-gold shadow-[0_8px_20px_rgba(15,27,45,0.18)]"><MapPin className="h-5 w-5" aria-hidden /></span>
+            <span className="h-2.5 w-0.5 bg-ink" />
+            <span className="h-2 w-2 rounded-full bg-ink" />
+          </span>
         </div>
         <div className="relative flex flex-col items-center">
-          <h2 data-reveal className="m-0 max-w-[1100px] text-[clamp(56px,10vw,160px)] font-extrabold leading-[0.92] tracking-[-0.055em]">
+          <h2 data-reveal className="m-0 max-w-[1100px] text-[clamp(56px,9vw,160px)] font-extrabold leading-[0.92] tracking-[-0.055em]">
             Le m<span className="mx-[0.02em] inline-block h-[0.72em] w-[0.72em] overflow-hidden rounded-full align-[-0.06em]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/globe.png" alt="o" className="h-full w-full scale-[1.12] object-cover" />
-            </span>nde entier<br />vous <em className="font-serif font-semibold italic tracking-[-0.02em]">attend</em>
+            </span>nde<br />entier<br />vous <em className="font-serif font-semibold italic tracking-[-0.02em]">attend</em>
           </h2>
           <button onClick={() => ask("")} className="relative -mt-1.5 flex items-center gap-7 rounded-full bg-gold-soft py-2.5 pl-9 pr-2.5 text-[clamp(18px,1.8vw,28px)] font-bold text-ink transition-colors hover:bg-[#E8D3A4]" style={{ transform: "rotate(3deg)" }}>
             Commencer à planifier
