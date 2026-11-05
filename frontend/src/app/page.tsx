@@ -217,18 +217,23 @@ export default function HomePage() {
   return (
     <div ref={root} className="overflow-x-hidden bg-paper">
       {/* 01 — Hero */}
-      <section className="relative flex min-h-[max(740px,100vh)] flex-col overflow-hidden bg-[#1E2420]">
-        <div data-parallax="0.2" className="absolute inset-x-0 top-0 h-[115%]">
-          <Photo k="hero" alt="Montagnes au lever du soleil" priority sizes="100vw" className="h-full w-full" />
+      <section className="relative flex min-h-[max(740px,100vh)] flex-col overflow-hidden">
+        {/* Fond sombre + photo dans un calque qui s'arrête 2 px avant le bas de la section :
+            si la jonction tombe sur un demi-pixel (fréquent sur téléphone), aucune couleur
+            sombre n'est mélangée à la dernière ligne, donc pas de trait gris. */}
+        <div className="absolute inset-x-0 bottom-[2px] top-0 overflow-hidden bg-[#1E2420]">
+          <div data-parallax="0.2" className="absolute inset-x-0 top-0 h-[115%]">
+            <Photo k="hero" alt="Montagnes au lever du soleil" priority sizes="100vw" className="h-full w-full" />
+          </div>
+          <div className="absolute inset-0 bg-[rgba(10,16,26,0.28)]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(10,14,20,0.5) 0%, rgba(10,14,20,0.18) 40%, rgba(10,14,20,0.05) 70%)",
+            }}
+          />
         </div>
-        <div className="absolute inset-0 bg-[rgba(10,16,26,0.28)]" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(10,14,20,0.5) 0%, rgba(10,14,20,0.18) 40%, rgba(10,14,20,0.05) 70%)",
-          }}
-        />
         <div className="relative z-[2] flex flex-1 flex-col items-center gap-6 px-6 pb-[260px] pt-[calc(clamp(40px,9vh,110px)+116px)] text-center">
           <span data-reveal className="text-white">
             <Logo size={64} />

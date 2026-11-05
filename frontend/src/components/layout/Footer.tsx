@@ -78,19 +78,23 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-[#0B1422] font-sans text-white">
-      <Photo
-        k="clouds"
-        sizes="(max-width: 640px) 400vw, (max-width: 1024px) 200vw, 110vw"
-        className="absolute inset-0 opacity-75"
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)",
-        }}
-      />
+    <footer className="relative overflow-hidden font-sans text-white">
+      {/* Fond sombre + photo dans un calque qui commence 2 px sous le haut du footer :
+          si la jonction tombe sur un demi-pixel, aucune couleur sombre n'apparaît en trait. */}
+      <div className="absolute inset-x-0 bottom-0 top-[2px] bg-[#0B1422]">
+        <Photo
+          k="clouds"
+          sizes="(max-width: 640px) 400vw, (max-width: 1024px) 200vw, 110vw"
+          className="absolute inset-0 opacity-75"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)",
+          }}
+        />
+      </div>
       {/* Fondu continu depuis la couleur de la page : pas de trait à la jonction */}
       <div
         aria-hidden
