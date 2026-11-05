@@ -16,8 +16,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${sans.variable} ${serif.variable} ${logo.variable}`}>
-      <body className="flex min-h-screen flex-col">
+    // suppressHydrationWarning : des extensions (Grammarly…) ajoutent des attributs à <html>/<body>
+    <html lang="fr" className={`${sans.variable} ${serif.variable} ${logo.variable}`} suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <ClientShell>{children}</ClientShell>
         {process.env.VERCEL && <Analytics />}
       </body>
