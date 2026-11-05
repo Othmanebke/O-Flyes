@@ -193,33 +193,7 @@ $$;
 REVOKE ALL ON FUNCTION public.rate_limit_hit(text, int, int) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.rate_limit_hit(text, int, int) TO service_role;
 
--- ─── 5. Double authentification imposée par la base ──────────────────────────
--- Policy RESTRICTIVE (combinée en ET avec les policies existantes) : si l'utilisateur
--- a un facteur TOTP vérifié, son jeton doit être de niveau aal2 pour lire ou modifier
--- ses voyages. Même un client qui contourne l'interface ne peut pas passer outre.
-DROP POLICY IF EXISTS "Require aal2 when MFA enrolled" ON public.trips;
-CREATE POLICY "Require aal2 when MFA enrolled" ON public.trips
-  AS RESTRICTIVE TO authenticated
-  USING (
-    array[(SELECT auth.jwt()->>'aal')] <@ (
-      SELECT CASE WHEN count(id) > 0 THEN array['aal2'] ELSE array['aal1', 'aal2'] END
-      FROM auth.mfa_factors
-      WHERE user_id = (SELECT auth.uid()) AND status = 'verified'
-    )
-  );
-
-DROP POLICY IF EXISTS "Require aal2 when MFA enrolled" ON public.trip_items;
-CREATE POLICY "Require aal2 when MFA enrolled" ON public.trip_items
-  AS RESTRICTIVE TO authenticated
-  USING (
-    array[(SELECT auth.jwt()->>'aal')] <@ (
-      SELECT CASE WHEN count(id) > 0 THEN array['aal2'] ELSE array['aal1', 'aal2'] END
-      FROM auth.mfa_factors
-      WHERE user_id = (SELECT auth.uid()) AND status = 'verified'
-    )
-  );
-
--- ─── 6. Policies trips / trip_items : WITH CHECK explicite sur UPDATE ────────
+-- ─── 5. Policies trips / trip_items : WITH CHECK explicite sur UPDATE ────────
 -- (Postgres réutilise USING par défaut, mais on l'écrit pour que ce soit lisible :
 -- impossible de « donner » un voyage à un autre compte ou de déplacer un élément
 -- vers le voyage de quelqu'un d'autre.)
@@ -231,3 +205,37 @@ DROP POLICY IF EXISTS "Users can update own trip items" ON public.trip_items;
 CREATE POLICY "Users can update own trip items" ON public.trip_items FOR UPDATE
   USING (EXISTS (SELECT 1 FROM public.trips WHERE trips.id = trip_items.trip_id AND trips.user_id = auth.uid()))
   WITH CHECK (EXISTS (SELECT 1 FROM public.trips WHERE trips.id = trip_items.trip_id AND trips.user_id = auth.uid()));
+
+-- ─── 6. Double authentification par code email (migrations/0008) ────────────
+-- 2. La session a-t-elle été validée par un code reçu par email ?
+--    Supabase écrit dans le jeton (JWT) la méthode de connexion, champ « amr » :
+--    [{"method":"oauth"}] pour Google/GitHub, [{"method":"otp"}] après un code email.
+CREATE OR REPLACE FUNCTION public.session_email_verified()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(
+      CASE WHEN jsonb_typeof(auth.jwt() -> 'amr') = 'array' THEN auth.jwt() -> 'amr' ELSE '[]'::jsonb END
+    ) AS e
+    WHERE e ->> 'method' IN ('otp', 'magiclink')
+  );
+$$;
+
+-- 3. Policy RESTRICTIVE (combinée en ET avec les policies existantes) : une session
+--    Google/GitHub non validée par le code email ne peut ni lire ni écrire de voyages,
+--    même en appelant l'API Supabase directement.
+DROP POLICY IF EXISTS "Require email code" ON public.trips;
+CREATE POLICY "Require email code" ON public.trips
+  AS RESTRICTIVE FOR ALL TO authenticated
+  USING ((SELECT public.session_email_verified()))
+  WITH CHECK ((SELECT public.session_email_verified()));
+
+DROP POLICY IF EXISTS "Require email code" ON public.trip_items;
+CREATE POLICY "Require email code" ON public.trip_items
+  AS RESTRICTIVE FOR ALL TO authenticated
+  USING ((SELECT public.session_email_verified()))
+  WITH CHECK ((SELECT public.session_email_verified()));

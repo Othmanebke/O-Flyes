@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { emailVerified } from '@/lib/emailCode';
 
 // Garde commune des routes API privées.
 // 1. getUser() valide le jeton auprès de Supabase (on ne fait pas confiance au cookie seul).
-// 2. Si l'utilisateur a activé la double authentification, la session doit être de niveau
-//    aal2 (code TOTP saisi) : un mot de passe/lien magique seul ne suffit pas.
-//    La même règle est imposée en base par des policies RLS (migration 0007).
+// 2. Double authentification : la session doit avoir été validée par un code reçu par
+//    email (lib/emailCode.ts). Une connexion Google/GitHub seule est refusée.
+//    La même règle est imposée en base par une policy RLS (migration 0008).
 export type Guarded =
     | { ok: true; supabase: SupabaseClient; user: User }
     | { ok: false; response: NextResponse };
@@ -17,9 +18,10 @@ export async function requireUser(): Promise<Guarded> {
     if (error || !user) {
         return { ok: false, response: NextResponse.json({ error: 'Connexion requise' }, { status: 401 }) };
     }
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
-        return { ok: false, response: NextResponse.json({ error: 'Code de double authentification requis', code: 'mfa_required' }, { status: 403 }) };
+    // Le jeton vient d'être validé par getUser() : on peut lire son contenu (amr)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!emailVerified(session?.access_token)) {
+        return { ok: false, response: NextResponse.json({ error: 'Code de vérification email requis', code: 'email_code_required' }, { status: 403 }) };
     }
     return { ok: true, supabase, user };
 }

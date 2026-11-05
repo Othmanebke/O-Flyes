@@ -48,7 +48,7 @@ export default function LegalPage() {
           <p className="m-0">Sans compte, votre voyage en cours et la conversation avec le copilote restent dans votre navigateur (stockage local).</p>
           <p className="m-0">Avec un compte (connexion par email, Google ou GitHub), nous conservons votre email, votre nom, vos préférences de voyage et vos voyages sauvegardés. Les messages envoyés au copilote sont transmis au fournisseur d&apos;IA (Groq) pour générer la réponse.</p>
           <p className="m-0">Inscription à la lettre mensuelle : seule l&apos;adresse email est conservée ; vous pouvez <Link href="/newsletter">vous désinscrire</Link> à tout moment.</p>
-          <p className="m-0">Vos droits (accès, portabilité, rectification, effacement) s&apos;exercent directement dans <Link href="/dashboard?settings=1">Paramètres du compte</Link> : téléchargement de toutes vos données au format JSON et suppression définitive du compte et de vos voyages. Vous pouvez aussi écrire à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Les connexions sont protégées par HTTPS, et la double authentification peut être activée dans les paramètres.</p>
+          <p className="m-0">Vos droits (accès, portabilité, rectification, effacement) s&apos;exercent directement dans <Link href="/dashboard?settings=1">Paramètres du compte</Link> : téléchargement de toutes vos données au format JSON et suppression définitive du compte et de vos voyages. Vous pouvez aussi écrire à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Les connexions sont protégées par HTTPS.</p>
         </Section>
 
         <Section title="Crédits">

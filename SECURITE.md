@@ -9,13 +9,13 @@ pour qu'une erreur à un niveau ne suffise pas à exposer les données.
 
 | Mesure | Détail | Code |
 |---|---|---|
-| Pas de mot de passe stocké | Connexion par lien magique (email), Google ou GitHub (OAuth 2.0 / PKCE), gérée par Supabase Auth | `app/auth/login/page.tsx` |
-| Double authentification (TOTP) | Code à 6 chiffres d'une application (Google Authenticator…), activable dans Paramètres | `components/account/AccountSecurity.tsx`, `app/auth/mfa/page.tsx` |
-| 2FA imposée côté serveur | Une session sans code (niveau `aal1`) est refusée par l'API (`403 mfa_required`)… | `lib/api/guard.ts` |
-| … et en base | … et par une policy RLS *restrictive* qui exige `aal2` dès qu'un facteur est enregistré | `migrations/0007` §5 |
+| Pas de mot de passe stocké | Connexion par code à usage unique envoyé par email, Google ou GitHub (OAuth 2.0 / PKCE), gérée par Supabase Auth | `app/auth/login/page.tsx` |
+| Double authentification par email | Avec Google ou GitHub, un 2e facteur est exigé : un code à usage unique envoyé à l'adresse du compte (preuve d'accès à la boîte mail) | `app/auth/verify/page.tsx` |
+| … imposée côté serveur | Une session non validée par code email est refusée par l'API (`403 email_code_required`), d'après le champ `amr` du jeton signé | `lib/emailCode.ts`, `lib/api/guard.ts` |
+| … et en base | Policy RLS *restrictive* : sans session validée par code email, aucune lecture ni écriture de voyage | `migrations/0008` |
 | Jeton vérifié à chaque appel | `getUser()` valide le JWT auprès de Supabase (on ne fait pas confiance au cookie seul) | `lib/api/guard.ts` |
 | Pas de redirection ouverte | Le paramètre `next` n'accepte que des chemins internes (`//evil.com` et `/\evil.com` refusés) | `lib/safeNext.ts` (testé) |
-| Captcha anti-robot | Cloudflare Turnstile sur l'envoi du lien magique (vérifié par Supabase) et la newsletter (vérifié par l'API) | `components/ui/Turnstile.tsx`, `lib/api/captcha.ts` |
+| Captcha anti-robot | Cloudflare Turnstile sur l'envoi du code de connexion (vérifié par Supabase) et la newsletter (vérifié par l'API) | `components/ui/Turnstile.tsx`, `lib/api/captcha.ts` |
 | Plusieurs méthodes par compte | Lier ou retirer Google/GitHub depuis les paramètres | `AccountSecurity.tsx` |
 
 ## 2. Base de données (Supabase / PostgreSQL)
@@ -70,7 +70,7 @@ Les liens externes s'ouvrent avec `rel="noopener noreferrer"`.
 ## 5. RGPD
 
 - **Droit d'accès et de portabilité (art. 15 et 20)** : *Paramètres → Mes données →
-  Télécharger* produit un fichier JSON complet (compte, méthodes de connexion, 2FA, voyages,
+  Télécharger* produit un fichier JSON complet (compte, méthodes de connexion, voyages,
   itinéraires, abonnement). Code : `app/api/account/export/route.ts`.
 - **Droit à l'effacement (art. 17)** : *Supprimer mon compte*, confirmé en tapant `SUPPRIMER`.
   Le compte, les voyages et leurs éléments sont effacés (`ON DELETE CASCADE`), l'abonnement
@@ -99,4 +99,16 @@ curl -i -X DELETE localhost:3000/api/newsletter -H 'content-type: application/js
   -d '{"email":"victime@example.com"}'                       # 401
 # En-têtes de sécurité
 curl -I http://localhost:3000/
+```
+
+## Réglage Supabase : modèles d'email avec le code
+
+Dans **Authentication → Emails → Templates**, remplacer le contenu de **« Magic Link »** et de
+**« Confirm signup »** par :
+
+```html
+<h2>Votre code AIVANA</h2>
+<p>Saisissez ce code sur la page de connexion :</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+<p>Il expire dans une heure. Si vous n'avez rien demandé, ignorez cet email.</p>
 ```

@@ -11,6 +11,7 @@ import type { PhotoKey } from "@/lib/photos";
 import Turnstile, { captchaOn } from "@/components/ui/Turnstile";
 import { GitHubMark, GoogleMark } from "@/components/ui/BrandIcons";
 import { safeNext } from "@/lib/safeNext";
+import { CODE_MAX, CODE_MIN, cleanCode } from "@/lib/emailCode";
 
 type Provider = "google" | "github";
 
@@ -35,27 +36,36 @@ function LoginContent() {
     if (error) { setFailed(true); setLoading(null); }
   };
 
-  // Lien magique par email : marche sans aucun réglage externe (pas de Google Cloud)
+  // Connexion par code à usage unique envoyé par email : il faut une adresse valide
+  // (et y avoir accès) pour recevoir le code. Le compte est créé à la première connexion.
   const [email, setEmail] = useState("");
-  const [mail, setMail] = useState<"idle" | "sending" | "sent" | "error" | "captcha">("idle");
+  const [mail, setMail] = useState<"idle" | "sending" | "sent" | "error" | "captcha" | "checking" | "wrong">("idle");
+  const [code, setCode] = useState("");
   // Captcha anti-robot (Cloudflare Turnstile) : Supabase vérifie le jeton lui-même
   // quand la protection est activée dans Authentication > Attack Protection.
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
-  const sendLink = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (captchaOn() && !captcha) { setMail("captcha"); return; }
     setMail("sending");
     const { error } = await createClient().auth.signInWithOtp({
       email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        captchaToken: captcha ?? undefined,
-      },
+      options: { captchaToken: captcha ?? undefined },
     });
     setMail(error ? "error" : "sent");
-    if (error) setCaptchaReset(n => n + 1);
+    setCaptchaReset(n => n + 1);
   };
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code.length < CODE_MIN) return;
+    setMail("checking");
+    const { error } = await createClient().auth.verifyOtp({ email: email.trim(), token: code, type: "email" });
+    if (error) { setMail("wrong"); setCode(""); return; }
+    // rechargement complet : la nouvelle session est relue partout (navbar, carnet…)
+    window.location.replace(next);
+  };
+  const codeStep = mail === "sent" || mail === "checking" || mail === "wrong";
 
   const saving = next.includes("save=1") && plan;
 
@@ -95,19 +105,32 @@ function LoginContent() {
 
           {supabaseConfigured() ? (
             <div className="flex flex-col gap-2.5">
-              {mail === "sent" ? (
-                <div className="rounded-2xl border border-ok/40 bg-ok/[0.08] px-4 py-3 text-sm text-ok">
-                  Lien envoyé à <strong>{email}</strong>. Ouvrez-le depuis ce navigateur pour vous connecter.
-                </div>
+              {codeStep ? (
+                <form onSubmit={verifyCode} className="flex flex-col gap-2.5">
+                  <div className="rounded-2xl border border-ok/40 bg-ok/[0.08] px-4 py-3 text-sm text-ok">
+                    Code envoyé à <strong>{email}</strong>. Pensez à regarder dans les spams.
+                  </div>
+                  <label htmlFor="login-code" className="text-sm font-semibold">Code reçu par email</label>
+                  <input
+                    id="login-code" inputMode="numeric" autoComplete="one-time-code" autoFocus maxLength={CODE_MAX} required
+                    value={code} onChange={e => setCode(cleanCode(e.target.value))} placeholder="Code à 6 chiffres ou plus"
+                    className="h-14 rounded-full border border-line-2 bg-cream px-6 text-center font-mono text-2xl tracking-[0.3em] text-ink outline-none placeholder:font-sans placeholder:text-base placeholder:tracking-normal focus:border-gold-deep"
+                  />
+                  <button type="submit" disabled={mail === "checking" || code.length < CODE_MIN} className="h-12 rounded-full bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">
+                    {mail === "checking" ? "Vérification…" : "Se connecter"}
+                  </button>
+                  {mail === "wrong" && <span className="text-sm text-danger">Code incorrect ou expiré. Vérifiez le dernier email reçu.</span>}
+                  <button type="button" onClick={() => { setMail("idle"); setCode(""); }} className="self-start text-sm text-muted-2 hover:text-ink">Changer d&apos;adresse ou renvoyer un code</button>
+                </form>
               ) : (
-                <form onSubmit={sendLink} className="flex flex-col gap-2.5">
+                <form onSubmit={sendCode} className="flex flex-col gap-2.5">
                   <label htmlFor="login-email" className="text-sm font-semibold">Votre email</label>
                   <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="vous@exemple.fr" className="h-12 rounded-full border border-line-2 bg-cream px-5 text-[15px] text-ink outline-none focus:border-gold-deep" />
                   <button type="submit" disabled={mail === "sending"} className="h-12 rounded-full bg-ink text-[15px] font-semibold text-paper hover:bg-ink-2 disabled:opacity-60">
-                    {mail === "sending" ? "Envoi…" : "Recevoir un lien de connexion"}
+                    {mail === "sending" ? "Envoi…" : "Recevoir un code de connexion"}
                   </button>
                   <Turnstile onToken={setCaptcha} theme="light" resetKey={captchaReset} />
-                  {mail === "captcha" && <span className="text-sm text-danger">Cochez la vérification anti-robot avant d&apos;envoyer le lien.</span>}
+                  {mail === "captcha" && <span className="text-sm text-danger">Cochez la vérification anti-robot avant d&apos;envoyer le code.</span>}
                   {mail === "error" && <span className="text-sm text-danger">L&apos;envoi a échoué. Vérifiez l&apos;adresse ou réessayez dans une minute.</span>}
                 </form>
               )}
@@ -120,6 +143,7 @@ function LoginContent() {
                 <GitHubMark />
                 {loading === "github" ? "Redirection…" : "Continuer avec GitHub"}
               </button>
+              <p className="m-0 text-center text-xs text-muted">Double authentification : avec Google ou GitHub, un code vous sera aussi envoyé par email.</p>
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-line-2 px-4 py-3 text-sm text-muted-2">

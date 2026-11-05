@@ -26,8 +26,6 @@ export async function GET() {
         if (data) newsletter = { subscribed: true, since: data.created_at };
     }
 
-    const { data: factors } = await supabase.auth.mfa.listFactors();
-
     const payload = {
         exported_at: new Date().toISOString(),
         service: 'AIVANA',
@@ -38,7 +36,6 @@ export async function GET() {
             last_sign_in_at: user.last_sign_in_at,
             sign_in_methods: (user.identities || []).map(i => ({ provider: i.provider, linked_at: i.created_at })),
             profile: user.user_metadata,
-            two_factor_authentication: (factors?.totp || []).filter(f => f.status === 'verified').map(f => ({ type: 'totp', name: f.friendly_name, created_at: f.created_at })),
         },
         newsletter,
         trips: trips || [],
