@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { ArrowUpRight, ChevronDown, Loader2, Menu, Plus, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -285,7 +286,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
             </button>
             {/* Sur l'accueil, le logo est dans le hero (au-dessus du titre) */}
             {!overlay && (
-              <Link href="/" aria-label="Accueil Aivana" className="plain-link pointer-events-auto !text-ink">
+              <Link href="/" aria-label="Accueil AIVANA" className="plain-link pointer-events-auto !text-ink">
                 <Logo size={30} />
               </Link>
             )}
@@ -343,16 +344,18 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
               onClick={plan}
               aria-label="Planifier un voyage avec le copilote"
               className={clsx(
-                "pointer-events-auto flex h-12 items-center gap-3 rounded-full p-0 text-[14px] font-bold tracking-[-0.01em] transition-colors min-[860px]:p-1.5 min-[860px]:pl-5",
+                "pointer-events-auto flex h-12 items-center gap-2.5 rounded-full p-0 text-[14px] font-bold tracking-[-0.01em] transition-colors min-[380px]:p-1.5 min-[380px]:pl-4 min-[860px]:gap-3 min-[860px]:pl-5",
                 glass
                   ? "bg-white text-ink shadow-[0_8px_24px_rgba(15,27,45,0.18)] hover:bg-[#FBF6EA]"
                   : "bg-ink text-white shadow-[0_6px_20px_rgba(15,27,45,0.16)] hover:bg-ink-2",
               )}
             >
+              {/* mobile : libellé court, grand écran : libellé complet */}
+              <span className="hidden whitespace-nowrap min-[380px]:inline min-[860px]:hidden">Planifier</span>
               <span className="hidden whitespace-nowrap min-[860px]:inline">Planifier un voyage</span>
               <span
                 className={clsx(
-                  "flex h-12 w-12 items-center justify-center rounded-full min-[860px]:h-9 min-[860px]:w-9",
+                  "flex h-12 w-12 items-center justify-center rounded-full min-[380px]:h-9 min-[380px]:w-9",
                   glass ? "bg-ink text-gold" : "bg-gold text-ink",
                 )}
               >
@@ -363,64 +366,91 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
         </div>
       </nav>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[300] flex bg-paper font-sans text-ink"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Menu"
-        >
-          {/* Colonne des liens : défile si l'écran est trop bas, tailles indexées sur largeur ET hauteur */}
-          <div className="flex min-w-0 flex-1 flex-col gap-[clamp(16px,3vh,28px)] overflow-y-auto px-5 py-5 sm:px-10 sm:py-[clamp(20px,4vh,40px)]">
-            <div className="flex items-center justify-between">
-              <button onClick={() => setOpen(false)} className="flex items-center gap-3 text-[15px] font-bold text-ink">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white">
-                  <X className="h-5 w-5" aria-hidden />
-                </span>
-                Fermer
-              </button>
-              <Logo size={28} />
-            </div>
-            <nav className="grid gap-x-10 sm:grid-cols-2 sm:my-auto">
-              {[
-                ...LINKS,
-                user
-                  ? { label: "Mon compte", href: "/dashboard", note: user.name }
-                  : { label: "Connexion", href: "/auth/login", note: "Ou créer un compte" },
-              ].map(l => (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  className="plain-link flex items-baseline justify-between gap-4 border-b border-dashed border-line-2 py-[clamp(8px,1.4vh,14px)] transition-colors hover:!text-gold-deep"
+      {/* Le menu est rendu directement dans <body> (portail) : sinon il resterait
+          coincé sous la bulle du copilote, à cause du conteneur collant de la navbar. */}
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[300] flex animate-fade-up bg-paper font-sans text-ink"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+          >
+            {/* Colonne des liens : défile si l'écran est trop bas, tailles indexées sur largeur ET hauteur */}
+            <div className="flex min-w-0 flex-1 flex-col gap-[clamp(16px,3vh,28px)] overflow-y-auto px-5 py-5 sm:px-10 sm:py-[clamp(20px,4vh,40px)]">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 text-[15px] font-bold text-ink"
                 >
-                  <span
-                    className={clsx(
-                      "text-[clamp(20px,min(3vw,4.2vh),34px)] font-bold leading-[1.1] tracking-[-0.035em]",
-                      pathname === l.href && "text-gold-deep",
-                    )}
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white">
+                    <X className="h-5 w-5" aria-hidden />
+                  </span>
+                  Fermer
+                </button>
+                <Logo size={28} />
+              </div>
+              <nav className="grid gap-x-10 sm:grid-cols-2 sm:my-auto">
+                {[
+                  ...LINKS,
+                  user
+                    ? { label: "Mon compte", href: "/dashboard", note: user.name }
+                    : { label: "Connexion", href: "/auth/login", note: "Ou créer un compte" },
+                ].map(l => (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    className="plain-link flex items-baseline justify-between gap-4 border-b border-dashed border-line-2 py-[clamp(8px,1.4vh,14px)] transition-colors hover:!text-gold-deep"
                   >
-                    {l.label}
-                  </span>
-                  <span className="hidden whitespace-nowrap font-serif text-[15px] italic text-muted min-[420px]:inline">
-                    {l.note}
-                  </span>
+                    <span
+                      className={clsx(
+                        "flex items-center gap-2.5 text-[clamp(22px,min(3vw,4.2vh),34px)] font-bold leading-[1.1] tracking-[-0.035em]",
+                        pathname === l.href && "text-gold-deep",
+                      )}
+                    >
+                      {pathname === l.href && <span className="h-2 w-2 shrink-0 rounded-full bg-gold" aria-hidden />}
+                      {l.label}
+                    </span>
+                    <span className="whitespace-nowrap font-serif text-[14px] italic text-muted sm:text-[15px]">
+                      {l.note}
+                    </span>
+                  </Link>
+                ))}
+              </nav>
+              <ArrowPillInline onClick={plan} />
+              {/* Bas du menu : liens secondaires */}
+              <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5 text-[13px] text-muted">
+                <Link href="/contact" className="plain-link hover:!text-ink">
+                  Contact
                 </Link>
-              ))}
-            </nav>
-            <ArrowPillInline onClick={plan} />
-          </div>
-          {/* Photo : uniquement sur grand écran, elle ne prend jamais la place des liens */}
-          <div className="relative m-4 hidden w-[38%] max-w-[560px] shrink-0 overflow-hidden rounded-[28px] bg-[#2A2620] min-[1100px]:block">
-            <Photo k="balloons" sizes="40vw" className="absolute inset-0" />
-            <div className="absolute inset-x-6 bottom-6 flex flex-col gap-1.5 text-white">
-              <span className="font-serif text-[26px] italic">Où partez-vous ensuite ?</span>
-              <span className="text-[15px] text-white/85">
-                {DESTINATIONS.length} destinations, de {eur(Math.min(...DESTINATIONS.map(d => d.budgetMin)))} à deux.
-              </span>
+                <Link href="/legal" className="plain-link hover:!text-ink">
+                  Mentions légales
+                </Link>
+                <Link href="/legal#confidentialite" className="plain-link hover:!text-ink">
+                  Confidentialité
+                </Link>
+                <span className="ml-auto font-serif italic">Votre copilote de voyage</span>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+            {/* Photo : uniquement sur grand écran, elle ne prend jamais la place des liens.
+              Cadre haut et étroit : on demande une image large pour qu'elle reste nette une fois recadrée. */}
+            <div className="relative m-4 hidden w-[38%] max-w-[560px] shrink-0 overflow-hidden rounded-[28px] bg-[#2A2620] min-[1100px]:block">
+              <Photo tall k="balloons" sizes="60vw" className="absolute inset-0" />
+              <div
+                className="absolute inset-x-0 bottom-0 h-1/2"
+                style={{ background: "linear-gradient(to top, rgba(8,14,26,0.75), rgba(8,14,26,0))" }}
+                aria-hidden
+              />
+              <div className="absolute inset-x-6 bottom-6 flex flex-col gap-1.5 text-white">
+                <span className="font-serif text-[26px] italic">Où partez-vous ensuite ?</span>
+                <span className="text-[15px] text-white/85">
+                  {DESTINATIONS.length} destinations, de {eur(Math.min(...DESTINATIONS.map(d => d.budgetMin)))} à deux.
+                </span>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

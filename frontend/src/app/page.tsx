@@ -164,7 +164,7 @@ function Stamp({
       className={`absolute hidden bg-white p-1.5 shadow-float outline-dashed outline-2 outline-offset-[-3px] outline-line min-[900px]:block ${className}`}
       style={{ width: w, height: h, transform: `rotate(${rot}deg)` }}
     >
-      <Photo k={k} sizes="120px" className="h-full w-full" />
+      <Photo tall k={k} sizes="120px" className="h-full w-full" />
     </div>
   );
 }
@@ -276,10 +276,21 @@ export default function HomePage() {
             </button>
           </form>
         </div>
+        {/* Fondu continu vers la couleur de la page : la jonction avec la section suivante
+            est exactement de la même couleur, donc aucun trait visible. */}
         <div
-          data-float="2"
           aria-hidden
-          className="pointer-events-none absolute -bottom-[70px] -left-[10%] -right-[10%] z-[3] h-[300px] blur-[26px]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[280px]"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(249,248,246,0) 0%, rgba(249,248,246,0.75) 50%, #F9F8F6 82%, #F9F8F6 100%)",
+          }}
+        />
+        {/* Brume par-dessus (formes de nuages). Elle ne bouge pas (une animation la soulevait
+            et laissait voir un trait sombre en bas), et déborde largement sur les côtés. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-[70px] -left-[160px] -right-[160px] z-[3] h-[300px] blur-[26px]"
           style={{
             background:
               "radial-gradient(ellipse 22% 55% at 12% 62%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 20% 50% at 38% 82%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 24% 55% at 66% 70%, #F9F8F6 55%, transparent 72%), radial-gradient(ellipse 22% 60% at 90% 58%, #F9F8F6 55%, transparent 72%), linear-gradient(to top, #F9F8F6 38%, transparent 80%)",
@@ -305,7 +316,7 @@ export default function HomePage() {
                 <span
                   className={`block overflow-hidden rounded-full transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${center ? "h-[170px] w-[170px] shadow-[0_24px_50px_rgba(15,27,45,0.22)] sm:h-[240px] sm:w-[240px]" : "h-[84px] w-[84px] sm:h-[150px] sm:w-[150px]"}`}
                 >
-                  <Photo k={s.k} alt={s.label} sizes="240px" className="h-full w-full" />
+                  <Photo tall k={s.k} alt={s.label} sizes="240px" className="h-full w-full" />
                 </span>
                 <span className={center ? "text-base font-semibold" : "text-[13px] font-semibold"}>{s.label}</span>
               </button>
@@ -401,6 +412,7 @@ export default function HomePage() {
               >
                 <div className="relative aspect-[5/4] overflow-hidden rounded-[22px]">
                   <Photo
+                    tall
                     k={d.code as PhotoKey}
                     alt={d.name}
                     sizes="(max-width: 700px) 100vw, 400px"
@@ -438,16 +450,19 @@ export default function HomePage() {
             />
             <div aria-hidden className="relative h-[150px] w-[200px] shrink-0">
               <Photo
+                tall
                 k="RAK"
                 sizes="100px"
                 className="absolute left-0 top-2.5 h-[130px] w-[100px] -rotate-[8deg] rounded-2xl opacity-85 blur-[3px]"
               />
               <Photo
+                tall
                 k="lake"
                 sizes="100px"
                 className="absolute right-0 top-2.5 h-[130px] w-[100px] rotate-[8deg] rounded-2xl opacity-85 blur-[3px]"
               />
               <Photo
+                tall
                 k="pyr"
                 sizes="100px"
                 className="absolute left-[50px] top-0 h-[150px] w-[100px] rounded-2xl shadow-[0_12px_24px_rgba(15,27,45,0.2)]"
@@ -501,6 +516,7 @@ export default function HomePage() {
               >
                 {name}
                 <Photo
+                  tall
                   k={k}
                   sizes="120px"
                   className="h-[clamp(64px,7vw,120px)] w-[clamp(64px,7vw,120px)] -rotate-[8deg] rounded-full border-4 border-white"
@@ -551,6 +567,7 @@ export default function HomePage() {
                 </button>
                 <div className="grid min-w-0 flex-1 gap-[18px] rounded-[28px] bg-white p-3.5 shadow-card [grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))]">
                   <Photo
+                    tall
                     k={sd.code as PhotoKey}
                     alt={sd.name}
                     sizes="(max-width: 700px) 100vw, 430px"
@@ -601,7 +618,7 @@ export default function HomePage() {
                       aria-label={d.name}
                       className={`overflow-hidden rounded-full border-2 bg-white p-0 transition-all ${on ? "h-[52px] w-[52px] border-ink" : "h-10 w-10 border-white"}`}
                     >
-                      <Photo k={d.code as PhotoKey} sizes="52px" className="h-full w-full" />
+                      <Photo tall k={d.code as PhotoKey} sizes="52px" className="h-full w-full" />
                     </button>
                   );
                 })}
@@ -648,6 +665,7 @@ export default function HomePage() {
             ))}
           </div>
           <Photo
+            tall
             k={STEPS[step].th}
             sizes="120px"
             className="h-[120px] w-[120px] rounded-full border-4 border-white/15"
@@ -688,7 +706,7 @@ export default function HomePage() {
             className="absolute hidden overflow-hidden rounded-full border-[3px] border-white shadow-float min-[1180px]:block"
             style={{ left: a.x, top: a.y, width: a.s, height: a.s }}
           >
-            <Photo k={a.k} sizes="64px" className="h-full w-full" />
+            <Photo tall k={a.k} sizes="64px" className="h-full w-full" />
           </div>
         ))}
         <div className="relative mx-auto flex max-w-[1300px] flex-col items-center gap-20 text-center">
@@ -733,7 +751,7 @@ export default function HomePage() {
               className="shrink-0 overflow-hidden rounded-[28px] shadow-[0_20px_40px_rgba(15,27,45,0.14)] will-change-transform"
               style={{ width: GW[i % 7], height: GH[i % 7] }}
             >
-              <Photo k={k} sizes="400px" className="h-full w-full" />
+              <Photo tall k={k} sizes="400px" className="h-full w-full" />
             </div>
           ))}
         </div>
@@ -812,7 +830,7 @@ export default function HomePage() {
               filter: "drop-shadow(0 8px 16px rgba(15,27,45,0.15))",
             }}
           >
-            <Photo k="EZE" sizes="200px" className="h-full w-full" />
+            <Photo tall k="EZE" sizes="200px" className="h-full w-full" />
           </div>
           <div
             data-float="2"
@@ -824,7 +842,7 @@ export default function HomePage() {
               className="absolute inset-0 rounded-[22px] bg-white p-2.5 shadow-[0_20px_40px_rgba(15,27,45,0.15)]"
               style={{ transform: "rotate(-8deg)" }}
             >
-              <Photo k="wall" sizes="380px" className="h-full w-full rounded-[14px]" />
+              <Photo tall k="wall" sizes="380px" className="h-full w-full rounded-[14px]" />
             </div>
           </div>
           <span
@@ -893,6 +911,7 @@ export default function HomePage() {
               >
                 <div className="relative h-[clamp(240px,26vw,340px)] overflow-hidden rounded-[22px]">
                   <Photo
+                    tall
                     k={s.k}
                     sizes="(max-width: 700px) 100vw, 800px"
                     className="h-full w-full"

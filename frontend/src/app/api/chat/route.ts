@@ -123,7 +123,7 @@ Profil indiqué par l'utilisateur à l'inscription (à utiliser par défaut, sau
     const today = new Date().toISOString().split("T")[0];
     const systemPrompt = {
       role: "system" as const,
-      content: `Tu es AIVANA, un assistant de voyage expert, luxueux et intelligent.
+      content: `Tu es AIVANA, un assistant de voyage expert, chaleureux et précis. Vouvoie toujours l'utilisateur.
 Nous sommes le ${today}.
 Ton objectif est de planifier des voyages parfaits selon le budget et les envies de l'utilisateur.${prefsText}
 Tu dois TOUJOURS répondre au format JSON valide.
@@ -192,7 +192,7 @@ _Totaux estimés à partir de notre catalogue : vérifiez le prix du jour chez l
     if (originCity === "Paris" && !prefs?.city && grounded.length > 0) {
       const userMentionedParis = JSON.stringify(validatedData.messages).toLowerCase().includes("paris");
       if (!userMentionedParis) {
-        assistantMessage += `\n\n_Estimation calculée au départ de Paris — précise ta ville de départ pour des prix de vol exacts._`;
+        assistantMessage += `\n\n_Estimation calculée au départ de Paris — précisez votre ville de départ pour des prix de vol plus justes._`;
       }
     }
 

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import axios from "axios";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUp, ArrowUpRight } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import Photo from "@/components/ui/Photo";
 import Turnstile, { captchaOn } from "@/components/ui/Turnstile";
@@ -79,7 +79,11 @@ export default function Footer() {
 
   return (
     <footer className="relative overflow-hidden bg-[#0B1422] font-sans text-white">
-      <Photo k="clouds" sizes="100vw" className="absolute inset-0 opacity-75" />
+      <Photo
+        k="clouds"
+        sizes="(max-width: 640px) 400vw, (max-width: 1024px) 200vw, 110vw"
+        className="absolute inset-0 opacity-75"
+      />
       <div
         className="absolute inset-0"
         style={{
@@ -87,8 +91,17 @@ export default function Footer() {
             "linear-gradient(to bottom, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.35) 40%, rgba(8,14,26,0.82) 70%, rgba(8,14,26,0.94) 100%)",
         }}
       />
+      {/* Fondu continu depuis la couleur de la page : pas de trait à la jonction */}
       <div
-        className="pointer-events-none absolute -left-[10%] -right-[10%] -top-[90px] h-[300px] blur-[30px]"
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[300px]"
+        style={{
+          background:
+            "linear-gradient(to bottom, #F9F8F6 0%, #F9F8F6 18%, rgba(249,248,246,0.75) 50%, rgba(249,248,246,0) 100%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute -left-[160px] -right-[160px] -top-[90px] h-[300px] blur-[30px]"
         style={{ background: MIST }}
       />
 
@@ -119,12 +132,12 @@ export default function Footer() {
               onChange={e => setEmail(e.target.value)}
               onFocus={() => setWantsCaptcha(true)}
               placeholder="Votre adresse email"
-              className="h-[58px] min-w-0 flex-1 border-none bg-transparent px-[22px] text-[17px] text-ink outline-none"
+              className="h-[52px] min-w-0 flex-1 border-none bg-transparent px-4 text-[16px] text-ink outline-none sm:h-[58px] sm:px-[22px] sm:text-[17px]"
             />
             <button
               type="submit"
               disabled={status === "sending"}
-              className="whitespace-nowrap rounded-full bg-[#5A5450] px-[26px] text-base font-bold text-white transition-colors hover:bg-ink disabled:opacity-60"
+              className="whitespace-nowrap rounded-full bg-ink px-[18px] text-[15px] font-bold text-white transition-colors hover:bg-gold hover:text-ink disabled:opacity-60 sm:px-[26px] sm:text-base"
             >
               {status === "sending" ? "Envoi…" : "S'inscrire"}
             </button>
@@ -197,6 +210,19 @@ export default function Footer() {
               ))}
             </div>
           ))}
+        </div>
+
+        {/* Bandeau du bas */}
+        <div className="flex flex-col gap-4 border-t border-white/15 pt-6 text-[13px] text-white/60 md:flex-row md:items-center md:justify-between">
+          <span>© {new Date().getFullYear()} AIVANA · Projet étudiant, YNOV Campus</span>
+          <span>Données : Open-Meteo, Wikipédia, OpenStreetMap, France Diplomatie</span>
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="flex items-center gap-1.5 self-start font-semibold text-white/80 hover:text-white md:self-auto"
+          >
+            Retour en haut <ArrowUp className="h-3.5 w-3.5" aria-hidden />
+          </button>
         </div>
       </div>
     </footer>

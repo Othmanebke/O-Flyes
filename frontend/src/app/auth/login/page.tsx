@@ -106,7 +106,7 @@ function LoginContent() {
         <div className="grid grid-cols-3 gap-2.5">
           {TILES.map(([k, title, sub]) => (
             <div key={k} className="relative h-[120px] overflow-hidden rounded-[18px] border border-line">
-              <Photo k={k} sizes="180px" className="h-full w-full" />
+              <Photo tall k={k} sizes="180px" className="h-full w-full" />
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{ background: "linear-gradient(to top, rgba(18,16,12,0.72) 0%, rgba(18,16,12,0) 70%)" }}
