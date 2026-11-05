@@ -1,255 +1,201 @@
-# Architecture d'AIVANA
+# Architecture
 
-Ce document explique comment le code est organisé et pourquoi. Il se lit en 10 minutes et
-permet de retrouver n'importe quelle fonctionnalité dans le dépôt.
+Ici j'explique comment le projet est construit et pourquoi j'ai fait ces choix. Si vous cherchez où se
+trouve une fonctionnalité dans le code, c'est le bon endroit pour commencer.
 
-## 1. Vue d'ensemble
+## Vue d'ensemble
 
 ```mermaid
 flowchart LR
-    U[Navigateur<br/>React 19] -->|pages, navigation| N[Next.js 15<br/>App Router<br/>hébergé sur Vercel]
-    U -->|session, connexion| SA[Supabase Auth]
-    N -->|routes /api/*| API[API Next.js<br/>Route Handlers]
-    API -->|requêtes avec la session<br/>de l'utilisateur, RLS| DB[(Supabase<br/>PostgreSQL)]
-    API -->|copilote, itinéraire| G[Groq<br/>LLM gpt-oss-20b]
-    API -->|données gratuites| EXT[Open-Meteo · Wikipédia<br/>Photon OSM · taux de change]
-    SA --> DB
+    U[Navigateur] -->|pages| N[Next.js 15 sur Vercel]
+    U -->|connexion| SA[Supabase Auth]
+    N -->|routes /api| API[API Next.js]
+    API -->|requêtes avec la session de l'utilisateur| DB[(PostgreSQL Supabase)]
+    API -->|copilote, itinéraire| G[Groq]
+    API -->|météo, lieux, change| EXT[Open-Meteo, Wikipédia, OpenStreetMap]
     SA -->|codes par email| M[SMTP Gmail]
 ```
 
-Une seule application **Next.js** contient à la fois l'interface (pages React) et le back-end
-(routes `/api/*`). **Supabase** fournit la base PostgreSQL, l'authentification et la sécurité
-par ligne (RLS). **Groq** exécute le modèle de langage du copilote.
+Tout tient dans une seule application Next.js : les pages en React et le back-end dans `src/app/api`.
+Pour la base de données et les comptes j'utilise Supabase (PostgreSQL + Auth), et pour l'IA, Groq.
 
-| Couche | Technologie | Rôle |
-|---|---|---|
-| Interface | React 19, Next.js 15 (App Router), Tailwind CSS | Pages, composants, navigation |
-| Back-end | Route Handlers Next.js (`src/app/api`) | Validation, règles métier, appels externes |
-| Base de données | PostgreSQL (Supabase) + RLS | Voyages, éléments, newsletter, compteurs anti-abus |
-| Authentification | Supabase Auth | Code par email, Google, GitHub, double authentification |
-| IA | Groq (`openai/gpt-oss-20b`) | Copilote conversationnel, génération d'itinéraire |
-| Validation | Zod | Schéma de chaque entrée d'API |
-| Qualité | TypeScript strict, ESLint, Prettier, Jest, GitHub Actions | Voir §7 |
+Au début du projet ce n'était pas du tout ça. J'étais parti sur des microservices (auth, IA, base,
+partenaires, une API gateway, Redis...), neuf services en tout, déployés sur Render. Ça marchait en local
+mais en production c'était pénible : l'offre gratuite limite le nombre de services, chaque service mettait
+du temps à se réveiller, et quand un tombait les autres suivaient. J'ai d'abord tout regroupé en un
+monolithe, puis je suis passé sur Next.js + Supabase. Avec le recul c'était le bon choix pour un projet que
+je fais seul : moins d'infra à gérer, et je peux me concentrer sur le produit.
 
-## 2. Organisation des dossiers
+Les technos utilisées :
+
+- **Next.js 15 / React 19** : le front et l'API dans le même projet, déploiement automatique sur Vercel.
+- **TypeScript** en mode strict.
+- **Tailwind CSS** : les couleurs de la charte (`ink`, `gold`, `paper`...) sont définies une seule fois
+  dans `tailwind.config.js`.
+- **Supabase** : PostgreSQL, l'authentification (code par email, Google, GitHub) et la RLS.
+- **Groq** avec le modèle `openai/gpt-oss-20b` pour le copilote.
+- **Zod** pour valider tout ce qui arrive dans l'API.
+
+## Les dossiers
 
 ```
 frontend/
 ├── src/
-│   ├── app/                      ROUTES (une URL = un dossier)
-│   │   ├── page.tsx              Accueil
-│   │   ├── explore/              Destinations, vols, hôtels, activités
-│   │   ├── destination/[id]/     Fiche d'une destination (météo, change, lieux, budget)
-│   │   ├── assistant/            Copilote IA en plein écran
-│   │   ├── dashboard/            Carnet de voyage (page) → composants dans components/dashboard
-│   │   ├── carnet/               Version imprimable / PDF du voyage
-│   │   ├── voyage/[shareId]/     Page publique d'un voyage partagé (lecture seule)
-│   │   ├── auth/                 Connexion (login), 2e facteur (verify), retour OAuth (callback)
-│   │   ├── onboarding/           Préférences du voyageur à la 1re connexion
-│   │   ├── blog/ aide/ contact/ legal/ newsletter/ credits/
-│   │   └── api/                  BACK-END (voir §4)
-│   ├── components/               COMPOSANTS RÉUTILISABLES, rangés par domaine
-│   │   ├── layout/               Navbar, Footer, ClientShell, gardes de navigation
-│   │   ├── dashboard/            Morceaux du carnet (TripDashboard, NextSteps, Settings…)
-│   │   ├── trip/                 Itinéraire IA, conseils voyageurs, barre de voyage
-│   │   ├── chat/                 Fenêtre du copilote (ChatDock)
-│   │   ├── account/              Sécurité du compte et RGPD
-│   │   └── ui/                   Briques visuelles (Logo, Photo, Pill, Turnstile…)
-│   ├── lib/                      LOGIQUE SANS INTERFACE (testable)
-│   │   ├── api/                  Garde d'accès, limitation de requêtes, captcha
-│   │   ├── supabase/             Clients Supabase (navigateur, serveur, admin)
-│   │   ├── ai/ + agents/         Appel à Groq, extraction JSON, agent d'itinéraire
-│   │   ├── travel/ + world/      Compagnies aériennes, hébergements, conseils, villes
-│   │   ├── catalog.ts            81 destinations, 36 pays : estimations de budget
-│   │   ├── plan.ts               « Voyage en cours » partagé entre les pages
-│   │   └── *.test.ts             Tests unitaires à côté du code testé
-│   ├── types/                    Types TypeScript partagés
-│   └── middleware.ts             Rafraîchissement de la session à chaque page
-├── supabase/
-│   ├── setup.sql                 Installation complète d'un projet Supabase vide
-│   └── migrations/0001…0008      Historique des évolutions du schéma
-├── eslint.config.mjs · .prettierrc.json · jest.config.js · tsconfig.json
-└── Dockerfile                    Image de production (alternative à Vercel)
+│   ├── app/                 les pages et l'API (un dossier = une URL)
+│   │   ├── explore/         destinations, vols, hôtels, activités
+│   │   ├── destination/[id] fiche d'une destination
+│   │   ├── dashboard/       le carnet de voyage
+│   │   ├── carnet/          version imprimable du voyage
+│   │   ├── voyage/[shareId] page publique d'un voyage partagé
+│   │   ├── auth/            connexion, vérification par code, retour OAuth
+│   │   └── api/             le back-end
+│   ├── components/          les composants, rangés par thème
+│   │   ├── dashboard/       les morceaux du carnet
+│   │   ├── layout/          navbar, footer...
+│   │   ├── trip/ chat/ account/ ui/
+│   ├── lib/                 la logique (calculs, appels externes, sécurité) + les tests
+│   ├── types/               les types partagés
+│   └── middleware.ts        rafraîchit la session à chaque page
+└── supabase/
+    ├── setup.sql            pour installer la base d'un coup
+    └── migrations/          l'historique du schéma (0001 à 0008)
 ```
 
-**Règle de rangement** : `app/` décrit *les URL*, `components/` *l'affichage*, `lib/` *la logique*.
-Une fonction de calcul (budget, nuits, prix estimé) est dans `lib/` et testée ; un composant ne
-fait qu'afficher et appeler ces fonctions.
+La règle que j'essaie de suivre : `app/` pour les URL, `components/` pour l'affichage, `lib/` pour la
+logique. Les calculs (budget, nombre de nuits, prix estimés...) sont dans `lib/` pour pouvoir les tester
+sans interface. Par exemple le carnet faisait plus de 700 lignes dans un seul fichier, je l'ai découpé en
+composants dans `components/dashboard/` et la page fait maintenant 157 lignes.
 
-## 3. Le « voyage en cours » (état côté client)
+## Le voyage en cours
 
-Le visiteur peut composer un voyage **sans compte**. Le voyage est stocké dans le navigateur
-(`localStorage`) et partagé entre toutes les pages par un petit store (`lib/plan.ts`) basé sur
-`useSyncExternalStore` de React : pas besoin de Redux ni de Context global.
+Un truc que je voulais absolument : pouvoir préparer un voyage sans créer de compte. Le voyage en cours
+est donc gardé dans le navigateur (`localStorage`) et toutes les pages le lisent via `src/lib/plan.ts`.
+J'utilise le hook `useSyncExternalStore` de React, ça évite d'installer Redux pour un état aussi simple, et
+ça se synchronise même entre deux onglets.
+
+Quand l'utilisateur sauvegarde (et là on lui demande de se connecter), le voyage est créé en base et chaque
+ajout suivant est aussi envoyé au serveur.
 
 ```mermaid
 sequenceDiagram
     participant V as Visiteur
-    participant P as Pages (explore, destination…)
-    participant S as lib/plan.ts (localStorage)
+    participant P as Pages
+    participant S as plan.ts
     participant API as /api/trips
-    participant DB as PostgreSQL
-    V->>P: « Ajouter ce vol »
+    V->>P: ajoute un vol
     P->>S: addItem()
     S-->>P: toutes les pages se mettent à jour
-    V->>P: « Sauvegarder » (connexion demandée si besoin)
+    V->>P: sauvegarde
     P->>API: POST /api/trips puis /items
-    API->>DB: insert (RLS : user_id = auth.uid())
-    Note over S,DB: ensuite, chaque ajout est aussi envoyé au serveur
 ```
 
-## 4. Le back-end (routes `/api`)
+## L'API
 
-| Route | Méthodes | Accès | Rôle |
-|---|---|---|---|
-| `/api/trips` | GET, POST | connecté + code email | Lister / créer ses voyages |
-| `/api/trips/[tripId]` | GET, PATCH, DELETE | idem | Lire / modifier / supprimer un voyage |
-| `/api/trips/[tripId]/items` | GET, POST | idem | Éléments d'un voyage (vol, hôtel, activité) |
-| `/api/trips/[tripId]/items/[itemId]` | PATCH, DELETE | idem | Placer un élément un jour, marquer « réservé » |
-| `/api/trips/[tripId]/proposal` | GET, POST | idem | Itinéraire jour par jour généré par l'IA |
-| `/api/trips/[tripId]/share` | POST, DELETE | idem | Activer / couper le lien public |
-| `/api/account` | DELETE | idem | Suppression du compte (RGPD) |
-| `/api/account/export` | GET | idem | Export JSON des données (RGPD) |
-| `/api/chat` | POST | public, limité par IP | Copilote conversationnel |
-| `/api/partner/*/search` | GET | public, limité par IP | Recherche de vols, hôtels, activités, villes |
-| `/api/destination-info` | GET | public, limité par IP | Météo, taux de change, lieux à voir |
-| `/api/newsletter` | POST, DELETE | public + captcha | Inscription / désinscription |
+Les routes principales :
 
-Chaque route privée suit le même schéma, toujours dans cet ordre :
+| Route | Rôle |
+|---|---|
+| `/api/trips` | lister et créer ses voyages |
+| `/api/trips/[tripId]` | lire, modifier, supprimer un voyage |
+| `/api/trips/[tripId]/items` | ajouter des vols, hôtels, activités |
+| `/api/trips/[tripId]/proposal` | itinéraire jour par jour généré par l'IA |
+| `/api/trips/[tripId]/share` | activer ou couper le lien de partage |
+| `/api/account` et `/api/account/export` | suppression du compte et export des données |
+| `/api/chat` | le copilote (ouvert sans compte, mais limité) |
+| `/api/partner/...` et `/api/destination-info` | recherches et infos des fiches |
+| `/api/newsletter` | inscription et désinscription |
+
+Toutes les routes privées sont écrites de la même façon, ça m'évite d'oublier une vérification :
 
 ```ts
-export async function POST(request: Request, { params }: Ctx) {
-  const { tripId } = await params;
-  if (!isUuid(tripId)) return notFound();                 // 1. paramètres d'URL valides
-  const g = await requireUser();                          // 2. utilisateur + code email vérifiés
-  if (!g.ok) return g.response;
-  if (!(await rateLimit(`…:${g.user.id}`, 30, 3600)))     // 3. anti-abus
-    return tooManyRequests(3600);
-  const parsed = schema.safeParse(await request.json());  // 4. corps validé par Zod
-  if (!parsed.success) return badRequest();
-  const { data, error } = await g.supabase.from(…)…;      // 5. requête avec la session (RLS)
-  if (error) return serverError("contexte", error);       // 6. erreur générique, détail en logs
-  return NextResponse.json(data);
-}
+const { tripId } = await params;
+if (!isUuid(tripId)) return notFound();          // l'id doit être un UUID
+const g = await requireUser();                   // utilisateur connecté + code email validé
+if (!g.ok) return g.response;
+const parsed = schema.safeParse(await request.json()); // le corps est validé avec Zod
+if (!parsed.success) return badRequest();
+const { data, error } = await g.supabase.from("trips")...; // la RLS s'applique
+if (error) return serverError("contexte", error); // message générique, détail dans les logs
 ```
 
-### Le copilote IA
+`requireUser()` est dans `src/lib/api/guard.ts`.
 
-```mermaid
-sequenceDiagram
-    participant U as Utilisateur
-    participant C as /api/chat
-    participant G as Groq (LLM)
-    participant K as lib/catalog.ts
-    U->>C: messages + préférences
-    C->>C: limite par IP, validation Zod (rôles user/assistant uniquement)
-    C->>G: consignes système + conversation, réponse JSON exigée
-    G-->>C: texte + destinations proposées + budget/date compris
-    C->>K: pour chaque destination : estimation vol + hôtel
-    C-->>U: réponse + cartes destinations avec liens Booking / Skyscanner
-```
+### Le copilote
 
-Le modèle ne donne **jamais** de prix : ils sont calculés par notre code à partir du catalogue et
-affichés comme « estimés ». Ça évite qu'une IA invente des tarifs.
+Le copilote envoie la conversation à Groq en demandant une réponse en JSON (texte, budget compris, date,
+destinations proposées). Par contre je ne laisse jamais l'IA donner des prix : elle a tendance à en inventer.
+Les prix sont calculés par mon code à partir du catalogue (`estimate()` dans `lib/catalog.ts`) et affichés
+comme des estimations, avec un lien vers le vrai site (Booking, Skyscanner...).
 
-## 5. Base de données
+Pour l'itinéraire du carnet, `lib/agents/roadtripAgent.ts` demande un programme jour par jour et nettoie la
+réponse si le modèle oublie des champs. En juin j'avais fait une version avec plusieurs agents (destination,
+transport, budget...) mais c'était lent et ça consommait beaucoup de quota, donc je suis revenu à un seul
+appel bien structuré.
+
+## La base de données
 
 ```mermaid
 erDiagram
-    AUTH_USERS ||--o{ TRIPS : "possède"
-    TRIPS ||--o{ TRIP_ITEMS : "contient"
-    DESTINATIONS |o--o{ TRIPS : "référence"
-    AUTH_USERS {
-        uuid id PK
-        text email
-        jsonb user_metadata "nom, préférences"
-    }
+    USERS ||--o{ TRIPS : possede
+    TRIPS ||--o{ TRIP_ITEMS : contient
     TRIPS {
-        uuid id PK
-        uuid user_id FK
-        uuid destination_id FK
+        uuid id
+        uuid user_id
         text title
-        text name
         date start_date
         date end_date
         int travelers
         numeric budget
-        uuid share_id "lien public"
-        jsonb proposal_json "itinéraire IA"
+        uuid share_id
+        jsonb proposal_json
     }
     TRIP_ITEMS {
-        uuid id PK
-        uuid trip_id FK
-        text type "flight, hotel, activity"
+        uuid id
+        uuid trip_id
+        text type
         text title
         numeric price_estimate
-        text external_url "http(s) uniquement"
-        jsonb metadata "jour, aller/retour, réservé"
-    }
-    DESTINATIONS {
-        uuid id PK
-        text name
-        text country
-    }
-    NEWSLETTER_SUBSCRIBERS {
-        uuid id PK
-        text email UK
-        uuid unsubscribe_token UK
-    }
-    RATE_LIMITS {
-        text key PK
-        int count
-        timestamptz window_start
+        text external_url
+        jsonb metadata
     }
 ```
 
-- Suppression d'un compte ⇒ suppression en cascade des voyages puis des éléments (`ON DELETE CASCADE`).
-- **RLS** sur toutes les tables : un utilisateur ne voit que ses lignes, et seulement si sa session a été
-  validée par un code email (policy restrictive, migration 0008).
-- Les migrations sont **numérotées et ré-exécutables** (`IF NOT EXISTS`, `DROP … IF EXISTS`).
+Un utilisateur a des voyages, un voyage a des éléments (vol, hôtel ou activité). Les infos qui changent selon
+le type d'élément (le jour où il est placé, aller ou retour, réservé ou non) sont dans une colonne JSONB
+`metadata`, ça évite d'avoir plein de colonnes vides. Si on supprime un compte, ses voyages et leurs éléments
+partent avec (`ON DELETE CASCADE`).
 
-## 6. Authentification
+Il y a aussi `newsletter_subscribers` et `rate_limits` (le compteur anti-abus). La RLS est activée sur toutes
+les tables, j'en parle plus en détail dans [SECURITE.md](../SECURITE.md).
+
+## La connexion
+
+On peut se connecter avec un code reçu par email, ou avec Google / GitHub. Dans ce deuxième cas, on demande
+quand même un code par email après : c'est la double authentification.
 
 ```mermaid
 flowchart TD
-    A[Page de connexion] -->|email| B[Code envoyé par email]
-    A -->|Google / GitHub| C[Fournisseur OAuth]
-    C --> D[/auth/callback : échange du code PKCE/]
-    D -->|session « oauth »| E[/auth/verify : code envoyé à l'email du compte/]
-    B --> F{Code correct ?}
-    E --> F
-    F -->|oui : session « otp »| G[Accès au carnet]
-    F -->|non| A
+    A[Page de connexion] -->|email| B[code envoyé par email]
+    A -->|Google ou GitHub| C[OAuth] --> D[/auth/verify : code envoyé par email/]
+    B --> E{code bon ?}
+    D --> E
+    E -->|oui| F[accès au carnet]
 ```
 
-La méthode de connexion est inscrite par Supabase dans le jeton signé (champ `amr`). L'API
-(`lib/api/guard.ts`) et la base (`session_email_verified()`) refusent toute session qui n'a pas
-été validée par un code email. Détails dans [SECURITE.md](../SECURITE.md).
+## Qualité
 
-## 7. Qualité du code
+- `npm run check` lance tout : TypeScript, ESLint, Prettier et les tests Jest (111 tests).
+- La même chose tourne sur GitHub Actions à chaque push, avec en plus un `npm audit` et un build.
+- Les messages de commit suivent la convention `feat:`, `fix:`, `refactor:`, `docs:`...
+- Les commentaires dans le code sont en français et expliquent surtout pourquoi je fais les choses.
 
-| Outil | Commande | Ce qu'il garantit |
-|---|---|---|
-| TypeScript (mode `strict`) | `npm run typecheck` | Aucune erreur de type, pas de `any` |
-| ESLint (règles Next.js + TS) | `npm run lint` | Bonnes pratiques React, hooks, accessibilité |
-| Prettier | `npm run format:check` | Formatage identique dans tout le projet |
-| Jest (9 suites, 111 tests) | `npm test` | Calculs de budget, vols, itinéraire, sécurité |
-| Tout d'un coup | `npm run check` | Les quatre ci-dessus |
-| GitHub Actions | à chaque push | Les mêmes vérifications + audit des dépendances + build |
-
-Conventions :
-- **Commits** au format *Conventional Commits* (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
-- **Commentaires en français**, qui expliquent le *pourquoi* plutôt que le *quoi*.
-- Composants en `PascalCase.tsx`, logique en `camelCase.ts`, tests `*.test.ts` à côté du fichier testé.
-- Aucun secret dans le code : variables d'environnement (`.env.example` documente la liste).
-
-## 8. Lancer le projet
+## Lancer le projet
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local   # puis remplir les clés Supabase et Groq
-npm run dev                  # http://localhost:3000
+cp .env.example .env.local   # mettre les clés Supabase et Groq
+npm run dev
 ```
 
-Base de données : coller `frontend/supabase/setup.sql` dans le SQL Editor de Supabase.
+Pour la base : coller `frontend/supabase/setup.sql` dans le SQL Editor de Supabase.

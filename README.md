@@ -49,12 +49,10 @@ frontend/supabase/  setup.sql (installation complète) + migrations numérotées
 
 ## Documentation
 
-| Document | Contenu |
-|---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Schémas, rôle de chaque dossier, routes API, base de données, flux d'authentification |
-| [SECURITE.md](SECURITE.md) | Toutes les mesures de sécurité, où elles sont dans le code, démonstrations |
-| [docs/PILOTAGE.md](docs/PILOTAGE.md) | Méthode, sprints, journal des décisions, risques, indicateurs |
-| [docs/pilotage/backlog-notion.csv](docs/pilotage/backlog-notion.csv) | Backlog complet, importable dans Notion ou Jira |
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) : comment le projet est construit et pourquoi
+- [SECURITE.md](SECURITE.md) : ce qui est en place côté sécurité et où le trouver dans le code
+- [docs/PILOTAGE.md](docs/PILOTAGE.md) : organisation du projet, sprints, décisions
+- [docs/pilotage/backlog-notion.csv](docs/pilotage/backlog-notion.csv) : le backlog (import Notion ou Jira)
 
 ## Lancer en local
 
