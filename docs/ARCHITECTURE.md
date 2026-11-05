@@ -1,7 +1,7 @@
 # Architecture
 
-Ici j'explique comment le projet est construit et pourquoi j'ai fait ces choix. Si vous cherchez où se
-trouve une fonctionnalité dans le code, c'est le bon endroit pour commencer.
+Ici j'explique comment le projet est construit et pourquoi j'ai fait ces choix. 
+Si vous cherchez où se trouve une fonctionnalité dans le code, c'est le bon endroit pour commencer.
 
 ## Vue d'ensemble
 

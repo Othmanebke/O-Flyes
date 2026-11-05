@@ -73,7 +73,7 @@ const STICKERS = [
     clip: "polygon(100.0% 50.0%,99.1% 53.2%,96.6% 56.1%,93.2% 58.6%,89.6% 60.6%,86.7% 62.5%,85.1% 64.5%,84.8% 67.2%,85.5% 70.5%,86.6% 74.4%,87.3% 78.6%,87.0% 82.4%,85.4% 85.4%,82.4% 87.0%,78.6% 87.3%,74.4% 86.6%,70.5% 85.5%,67.2% 84.8%,64.5% 85.1%,62.5% 86.7%,60.6% 89.6%,58.6% 93.2%,56.1% 96.6%,53.2% 99.1%,50.0% 100.0%,46.8% 99.1%,43.9% 96.6%,41.4% 93.2%,39.4% 89.6%,37.5% 86.7%,35.5% 85.1%,32.8% 84.8%,29.5% 85.5%,25.6% 86.6%,21.4% 87.3%,17.6% 87.0%,14.6% 85.4%,13.0% 82.4%,12.7% 78.6%,13.4% 74.4%,14.5% 70.5%,15.2% 67.2%,14.9% 64.5%,13.3% 62.5%,10.4% 60.6%,6.8% 58.6%,3.4% 56.1%,0.9% 53.2%,0.0% 50.0%,0.9% 46.8%,3.4% 43.9%,6.8% 41.4%,10.4% 39.4%,13.3% 37.5%,14.9% 35.5%,15.2% 32.8%,14.5% 29.5%,13.4% 25.6%,12.7% 21.4%,13.0% 17.6%,14.6% 14.6%,17.6% 13.0%,21.4% 12.7%,25.6% 13.4%,29.5% 14.5%,32.8% 15.2%,35.5% 14.9%,37.5% 13.3%,39.4% 10.4%,41.4% 6.8%,43.9% 3.4%,46.8% 0.9%,50.0% 0.0%,53.2% 0.9%,56.1% 3.4%,58.6% 6.8%,60.6% 10.4%,62.5% 13.3%,64.5% 14.9%,67.2% 15.2%,70.5% 14.5%,74.4% 13.4%,78.6% 12.7%,82.4% 13.0%,85.4% 14.6%,87.0% 17.6%,87.3% 21.4%,86.6% 25.6%,85.5% 29.5%,84.8% 32.8%,85.1% 35.5%,86.7% 37.5%,89.6% 39.4%,93.2% 41.4%,96.6% 43.9%,99.1% 46.8%)",
   },
   {
-    t: "Copilote IA 24 h/24",
+    t: "Copilote IA 24 h/24",
     Icon: MessageSquare,
     bg: "#F1E3C2",
     x: "min(81%, calc(100% - 310px))",
@@ -696,14 +696,11 @@ export default function HomePage() {
             <span className="text-[clamp(110px,17vw,260px)] font-extrabold leading-[0.85] tracking-[-0.06em]">
               {DESTINATIONS.length}
             </span>
-            <span
-              className="absolute -right-[70px] -top-1.5 whitespace-nowrap rounded-full bg-white px-[22px] py-2 text-[clamp(16px,1.6vw,24px)] font-semibold shadow-[0_8px_20px_rgba(15,27,45,0.08)] max-sm:-right-2"
-              style={{ transform: "rotate(12deg)" }}
-            >
+            <span className="-mt-2 rotate-[-3deg] whitespace-nowrap rounded-full bg-white px-[22px] py-2 text-[clamp(16px,1.6vw,24px)] font-semibold shadow-[0_8px_20px_rgba(15,27,45,0.08)] lg:absolute lg:-right-[70px] lg:-top-1.5 lg:mt-0 lg:rotate-[12deg]">
               Destinations choisies
             </span>
           </div>
-          <div className="grid w-full gap-12 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+          <div className="grid w-full gap-x-6 gap-y-12 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] lg:gap-12">
             {STATS.map(s => (
               <div key={s.k} data-reveal className="flex flex-col items-center">
                 <span className="whitespace-nowrap font-serif text-[clamp(72px,8vw,120px)] font-medium italic leading-[0.9] tracking-[-0.02em]">
@@ -726,7 +723,7 @@ export default function HomePage() {
       {/* 09 — Galerie en arc */}
       <section
         aria-hidden
-        className="relative overflow-hidden pb-[200px] pt-[30px]"
+        className="relative overflow-hidden pb-6 pt-[30px] sm:pb-[200px]"
         style={{ background: "linear-gradient(to bottom, #EAEFF4 0%, #EAEFF4 55%, #F9F8F6 100%)" }}
       >
         <div data-marquee="0.45" data-arc className="flex w-max items-center gap-[22px] py-10">
@@ -777,7 +774,7 @@ export default function HomePage() {
       </section>
 
       {/* 10 — Final */}
-      <section className="relative overflow-hidden px-6 pb-[140px] pt-[120px] text-center">
+      <section className="relative overflow-hidden px-6 pb-[90px] pt-[60px] text-center sm:pb-[140px] sm:pt-[120px]">
         <div aria-hidden className="hidden min-[1440px]:block">
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"

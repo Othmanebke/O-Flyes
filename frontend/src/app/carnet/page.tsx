@@ -123,9 +123,9 @@ export default function CarnetPage() {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs text-muted">
-                  <th className="py-2 pr-3 font-semibold">Type</th>
+                  <th className="py-2 pr-3 font-semibold max-sm:hidden">Type</th>
                   <th className="py-2 pr-3 font-semibold">Élément</th>
-                  <th className="py-2 pr-3 font-semibold">Date</th>
+                  <th className="py-2 pr-3 font-semibold max-sm:hidden">Date</th>
                   <th className="py-2 pr-3 text-right font-semibold">Prix estimé</th>
                   <th className="py-2 text-right font-semibold">Statut</th>
                 </tr>
@@ -133,8 +133,12 @@ export default function CarnetPage() {
               <tbody>
                 {items.map(i => (
                   <tr key={i.key} className="border-b border-line align-top [break-inside:avoid]">
-                    <td className="py-2.5 pr-3 font-semibold">{KIND[i.type]}</td>
+                    <td className="py-2.5 pr-3 font-semibold max-sm:hidden">{KIND[i.type]}</td>
                     <td className="py-2.5 pr-3">
+                      {/* sur mobile, le type et la date passent sous le titre (colonnes masquées) */}
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-muted sm:hidden">
+                        {KIND[i.type]} · {i.date ? fmtDay(i.date) : "date à définir"}
+                      </span>
                       <span className="font-semibold">{shortTitle(i)}</span>
                       {(i.subtitle || i.provider) && (
                         <span className="block text-xs text-muted">
@@ -143,7 +147,7 @@ export default function CarnetPage() {
                       )}
                       {i.url && !i.booked && <span className="block break-all text-[11px] text-muted">{i.url}</span>}
                     </td>
-                    <td className="whitespace-nowrap py-2.5 pr-3">{i.date ? fmtDay(i.date) : "—"}</td>
+                    <td className="whitespace-nowrap py-2.5 pr-3 max-sm:hidden">{i.date ? fmtDay(i.date) : "—"}</td>
                     <td className="tabular whitespace-nowrap py-2.5 pr-3 text-right font-semibold">
                       {i.price === 0 ? "Gratuit" : i.price != null ? eur(i.price) : "—"}
                     </td>

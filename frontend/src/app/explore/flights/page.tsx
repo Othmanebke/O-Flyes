@@ -15,6 +15,7 @@ import {
   type SearchContext,
 } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
+import FilterAside from "@/components/ui/FilterAside";
 import { addItem, flightCoverage, removeItem, toast, today, usePlan, type FlightLeg } from "@/lib/plan";
 
 interface Flight {
@@ -337,7 +338,7 @@ function FlightsContent() {
         )}
 
         <div className="flex flex-wrap items-start gap-10">
-          <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
+          <FilterAside>
             <fieldset className="flex flex-col gap-2.5">
               <legend className="mb-2.5 text-sm font-semibold">Escales</legend>
               {(
@@ -364,7 +365,7 @@ function FlightsContent() {
                 ))}
               </fieldset>
             )}
-          </aside>
+          </FilterAside>
 
           <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">

@@ -95,7 +95,7 @@ function DestinationsContent() {
           placeholder="Chercher une ville ou un pays…"
           className="h-11 min-w-0 flex-[1_1_260px] rounded-full border border-line-2 bg-cream px-5 text-[15px] text-ink outline-none focus:border-gold-deep"
         />
-        <div className="flex gap-1 rounded-full border border-line bg-cream p-[3px]">
+        <div className="scroll-x flex max-w-full gap-1 rounded-full border border-line bg-cream p-[3px]">
           {(
             [
               ["best", "Recommandé"],
@@ -108,7 +108,7 @@ function DestinationsContent() {
               key={v}
               onClick={() => setSort(v)}
               aria-pressed={sort === v}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium ${sort === v ? "bg-ink text-paper" : "text-muted-2"}`}
+              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium ${sort === v ? "bg-ink text-paper" : "text-muted-2"}`}
             >
               {label}
             </button>
@@ -117,8 +117,8 @@ function DestinationsContent() {
       </div>
 
       <div className="flex flex-col gap-3.5 border-y border-line py-[18px]">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-[72px] text-[13px] text-muted">Budget</span>
+        <div className="scroll-x -mx-6 flex items-center gap-2 px-6 max-sm:flex-nowrap sm:mx-0 sm:flex-wrap sm:px-0">
+          <span className="w-[72px] shrink-0 text-[13px] text-muted">Budget</span>
           <Chip active={tier === "Tous"} onClick={() => setTier("Tous")}>
             Tous
           </Chip>
@@ -128,16 +128,16 @@ function DestinationsContent() {
             </Chip>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-[72px] text-[13px] text-muted">Région</span>
+        <div className="scroll-x -mx-6 flex items-center gap-2 px-6 max-sm:flex-nowrap sm:mx-0 sm:flex-wrap sm:px-0">
+          <span className="w-[72px] shrink-0 text-[13px] text-muted">Région</span>
           {["Toutes", ...CONTINENTS].map(c => (
             <Chip key={c} active={cont === c} onClick={() => setCont(c)}>
               {c}
             </Chip>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-[72px] text-[13px] text-muted">Envie</span>
+        <div className="scroll-x -mx-6 flex items-center gap-2 px-6 max-sm:flex-nowrap sm:mx-0 sm:flex-wrap sm:px-0">
+          <span className="w-[72px] shrink-0 text-[13px] text-muted">Envie</span>
           {["", ...STYLES].map(s => (
             <Chip key={s || "all"} active={style === s} onClick={() => setStyle(s)}>
               {s || "Toutes"}
@@ -145,7 +145,7 @@ function DestinationsContent() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="month" className="w-[72px] text-[13px] text-muted">
+          <label htmlFor="month" className="w-[72px] shrink-0 text-[13px] text-muted">
             Départ en
           </label>
           <select

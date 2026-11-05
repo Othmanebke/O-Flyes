@@ -15,6 +15,7 @@ import {
 } from "@/components/trip/useTripContext";
 import { eur, findDestination } from "@/lib/catalog";
 import { addItem, nightsBetween, removeItem, toast, today, usePlan } from "@/lib/plan";
+import FilterAside from "@/components/ui/FilterAside";
 import { isPhotoKey, photoFor } from "@/lib/photos";
 
 interface Hotel {
@@ -152,7 +153,7 @@ function HotelsContent() {
       <TripBar />
 
       <div className="flex flex-wrap items-start gap-10">
-        <aside className="flex min-w-[200px] flex-[0_1_220px] flex-col gap-6">
+        <FilterAside>
           <div className="flex flex-col gap-2.5">
             <span className="text-sm font-semibold">Confort</span>
             <div className="flex flex-wrap gap-1.5">
@@ -186,7 +187,7 @@ function HotelsContent() {
               {max >= 400 ? "Sans limite" : `Jusqu'à ${eur(max)}`}
             </span>
           </div>
-        </aside>
+        </FilterAside>
 
         <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

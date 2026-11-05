@@ -49,6 +49,15 @@
   .accent {
     @apply font-serif font-medium italic tracking-[-0.02em];
   }
+  /* Rangée défilable horizontalement (mobile), sans barre de défilement visible */
+  .scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
   .tabular {
     font-variant-numeric: tabular-nums;
   }

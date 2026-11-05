@@ -81,7 +81,7 @@ export function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={clsx(
-        "whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] transition-colors",
+        "shrink-0 whitespace-nowrap rounded-full border px-3 py-[7px] text-[13px] transition-colors",
         active ? "border-ink bg-ink text-paper" : "border-line-2 bg-transparent text-muted-2 hover:border-muted",
         className,
       )}

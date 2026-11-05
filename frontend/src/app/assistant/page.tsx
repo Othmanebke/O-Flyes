@@ -88,16 +88,16 @@ function AssistantContent() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-wrap items-start gap-10 px-6">
       <div className="flex min-h-[calc(100vh-76px)] min-w-0 flex-[1_1_520px] flex-col">
-        <div className="flex items-center justify-between gap-3 border-b border-line pb-5 pt-7">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5 pt-7">
           <div className="flex flex-col gap-1">
-            <h1 className="m-0 text-[28px]">
+            <h1 className="m-0 text-[24px] leading-tight sm:text-[28px]">
               Votre <em className="accent">assistant</em> voyage
             </h1>
             <span className="text-[13px] text-muted">Même conversation que la bulle, en plein écran</span>
           </div>
           <button
             onClick={resetChat}
-            className="rounded-full border border-line-2 px-3 py-2 text-[13px] text-muted-2 hover:border-muted hover:text-ink"
+            className="shrink-0 whitespace-nowrap rounded-full border border-line-2 px-3 py-2 text-[13px] text-muted-2 hover:border-muted hover:text-ink"
           >
             Nouvelle discussion
           </button>

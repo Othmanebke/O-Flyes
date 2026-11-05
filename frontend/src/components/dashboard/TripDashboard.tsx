@@ -115,7 +115,7 @@ export default function TripDashboard({
           sizes="88px"
           className="h-[72px] w-[88px] shrink-0 rounded-[16px]"
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="m-0 text-[clamp(24px,3vw,32px)] font-extrabold leading-none tracking-[-0.03em]">
               {tripName(plan)}
@@ -208,7 +208,7 @@ export default function TripDashboard({
       )}
 
       {/* Indicateurs */}
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
+      <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4">
         <Kpi
           icon={<Wallet className="h-4 w-4" aria-hidden />}
           label="Total estimé"
@@ -288,13 +288,13 @@ export default function TripDashboard({
                   return (
                     <div
                       key={i.key}
-                      className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 py-3 first:pt-0 last:pb-0"
+                      className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[40px_minmax(0,1fr)_auto]"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3EEE6]">
                         <Icon className="h-[17px] w-[17px]" aria-hidden />
                       </span>
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-[15px] font-bold">{shortTitle(i)}</span>
+                        <span className="text-[15px] font-bold max-sm:line-clamp-2 sm:truncate">{shortTitle(i)}</span>
                         <span className="truncate text-[13px] text-muted">{i.subtitle}</span>
                         {/* Les vols suivent leurs dates ; hôtels et activités se placent dans le séjour */}
                         {i.type !== "flight" && (
@@ -302,7 +302,7 @@ export default function TripDashboard({
                             value={i.date && dayOptions.some(d => d.date === i.date) ? i.date : ""}
                             onChange={e => setItemDate(i.key, e.target.value || null)}
                             aria-label={`Jour de « ${shortTitle(i)} »`}
-                            className={`mt-1 self-start rounded-full border px-2.5 py-1 text-xs font-semibold ${i.date ? "border-line-2 bg-white text-ink" : "border-gold-deep/50 bg-gold-soft text-gold-deep"}`}
+                            className={`mt-1 max-w-full self-start rounded-full border px-2.5 py-1 text-xs font-semibold ${i.date ? "border-line-2 bg-white text-ink" : "border-gold-deep/50 bg-gold-soft text-gold-deep"}`}
                           >
                             <option value="">À placer dans le séjour</option>
                             {dayOptions.map(d => (
@@ -316,15 +316,16 @@ export default function TripDashboard({
                           <span className="text-[13px] text-muted">{fmtDay(i.date)}</span>
                         )}
                       </span>
-                      <span className="flex items-center gap-3">
-                        <span className="flex flex-col items-end">
+                      {/* mobile : prix et actions sur une 2e ligne, sous le titre */}
+                      <span className="col-start-2 flex items-center gap-3 sm:col-start-auto">
+                        <span className="mr-auto flex items-center gap-2 sm:mr-0 sm:flex-col sm:items-end sm:gap-0">
                           <span className="tabular whitespace-nowrap text-[15px] font-extrabold">
                             {i.price === 0 ? "Gratuit" : i.price != null ? eur(i.price) : "—"}
                           </span>
                           <button
                             onClick={() => setItemBooked(i.key, !i.booked)}
                             title={i.booked ? "Annuler : pas encore réservé" : "Je l'ai réservé chez le partenaire"}
-                            className={`mt-0.5 flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold transition-colors ${i.booked ? "bg-[#CFE6D6] text-ok hover:bg-[#BFDCC8]" : "bg-gold-soft text-gold-deep hover:bg-[#EAD7AC]"}`}
+                            className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold sm:mt-0.5 transition-colors ${i.booked ? "bg-[#CFE6D6] text-ok hover:bg-[#BFDCC8]" : "bg-gold-soft text-gold-deep hover:bg-[#EAD7AC]"}`}
                           >
                             {i.booked ? (
                               <>
