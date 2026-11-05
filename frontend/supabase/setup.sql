@@ -221,7 +221,7 @@ AS $$
     FROM jsonb_array_elements(
       CASE WHEN jsonb_typeof(auth.jwt() -> 'amr') = 'array' THEN auth.jwt() -> 'amr' ELSE '[]'::jsonb END
     ) AS e
-    WHERE e ->> 'method' IN ('otp', 'magiclink')
+    WHERE e ->> 'method' IN ('otp', 'magiclink', 'email/signup')
   );
 $$;
 

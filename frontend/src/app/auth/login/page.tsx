@@ -51,7 +51,8 @@ function LoginContent() {
     setMail("sending");
     const { error } = await createClient().auth.signInWithOtp({
       email: email.trim(),
-      options: { captchaToken: captcha ?? undefined },
+      // emailRedirectTo : si le modèle d'email contient un lien plutôt que le code, le lien marche aussi
+      options: { captchaToken: captcha ?? undefined, emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     setMail(error ? "error" : "sent");
     setCaptchaReset(n => n + 1);

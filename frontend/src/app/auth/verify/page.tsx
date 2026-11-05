@@ -35,14 +35,14 @@ function VerifyContent() {
     setState("sending");
     const { error } = await createClient().auth.signInWithOtp({
       email: address,
-      options: { shouldCreateUser: false, captchaToken: token ?? undefined },
+      options: { shouldCreateUser: false, captchaToken: token ?? undefined, emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     if (error) { setState("send-error"); setCaptchaReset(n => n + 1); return; }
     sessionStorage.setItem("aivana-code-sent", String(Date.now()));
     setState("sent");
     setWait(RESEND_DELAY);
     setTimeout(() => input.current?.focus(), 50);
-  }, []);
+  }, [next]);
 
   // Session ouverte par Google/GitHub : on récupère l'email du compte et on envoie le code
   useEffect(() => {

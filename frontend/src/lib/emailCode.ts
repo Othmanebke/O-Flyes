@@ -7,7 +7,8 @@
 // validée par un code email ; un compte Google ou GitHub seul ne suffit pas.
 // La même règle est imposée en base (migration 0008, fonction session_email_verified).
 
-const VERIFIED_METHODS = ["otp", "magiclink"];
+// otp = code saisi ; magiclink = lien cliqué dans l'email ; email/signup = 1re confirmation par email
+const VERIFIED_METHODS = ["otp", "magiclink", "email/signup"];
 
 function decodePayload(token: string): Record<string, unknown> | null {
     try {
