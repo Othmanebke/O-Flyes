@@ -10,3 +10,6 @@ dist/
 maquette/
 .next-check/
 .next-devcheck/
+
+# Notes personnelles de soutenance (non publiées)
+soutenance/

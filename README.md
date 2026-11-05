@@ -39,18 +39,22 @@ Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase (P
 
 ```
 frontend/src/
-├── app/
-│   ├── page.tsx               Accueil
-│   ├── explore/               Destinations, vols, hôtels, activités
-│   ├── destination/[id]/      Fiche destination + estimation
-│   ├── assistant/             Copilote en plein écran
-│   ├── dashboard/             Carnet de voyage
-│   ├── auth/                  Connexion (code par email, Google, GitHub) + vérification email
-│   ├── onboarding/ blog/ aide/ contact/ legal/ newsletter/
-│   └── api/                   chat, partner/*, trips/*, account/*, destination-info, newsletter
-├── components/                layout, chat, trip, ui, account
-└── lib/                       catalog, photos, plan, chat, session, articles, supabase, travel, ai, api (sécurité)
+├── app/            Routes : une URL = un dossier (pages + API dans app/api)
+├── components/     Interface, rangée par domaine (layout, dashboard, trip, chat, account, ui)
+├── lib/            Logique sans interface, testée (budget, vols, IA, sécurité, Supabase)
+├── types/          Types TypeScript partagés
+└── middleware.ts   Rafraîchissement de la session
+frontend/supabase/  setup.sql (installation complète) + migrations numérotées
 ```
+
+## Documentation
+
+| Document | Contenu |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Schémas, rôle de chaque dossier, routes API, base de données, flux d'authentification |
+| [SECURITE.md](SECURITE.md) | Toutes les mesures de sécurité, où elles sont dans le code, démonstrations |
+| [docs/PILOTAGE.md](docs/PILOTAGE.md) | Méthode, sprints, journal des décisions, risques, indicateurs |
+| [docs/pilotage/backlog-notion.csv](docs/pilotage/backlog-notion.csv) | Backlog complet, importable dans Notion ou Jira |
 
 ## Lancer en local
 
@@ -84,17 +88,25 @@ TURNSTILE_SECRET_KEY=
 4. Connexion GitHub (facultatif) : GitHub → Settings → Developer settings → **OAuth Apps → New OAuth App**,
    *Authorization callback URL* = `https://<projet>.supabase.co/auth/v1/callback`, puis coller le Client ID
    et un Client secret dans **Authentication → Sign In / Providers → GitHub**.
-5. Codes par email : **Authentication → Emails → Templates**, dans « Magic Link » **et** « Confirm signup », afficher le code avec `{{ .Token }}` (voir SECURITE.md). Conseillé : **Providers → Email → Email OTP Length = 6**.
+5. Codes par email : **Authentication → Emails → SMTP Settings** : activer un SMTP (ex. Gmail : `smtp.gmail.com`,
+   port 465, mot de passe d'application). Puis **Templates** → « Magic link or OTP » **et** « Confirm sign up » :
+   afficher le code avec `{{ .Token }}` (modèle dans SECURITE.md). Conseillé : **Providers → Email → Email OTP Length = 6**.
 6. Associer plusieurs méthodes à un compte : **Authentication → Sign In / Providers** → activer **Allow manual linking**.
 7. Captcha (facultatif) : créer un widget sur dash.cloudflare.com → **Turnstile**, mettre les deux clés dans
    `.env.local`, et coller la clé secrète dans **Authentication → Attack Protection → Enable Captcha (Turnstile)**.
 
 Les mesures de sécurité sont détaillées dans [SECURITE.md](SECURITE.md).
 
-## Scripts
+## Scripts (dans `frontend/`)
 
 ```bash
-npm run dev     # serveur de développement
-npm run build   # build de production
-npm test        # tests unitaires (Jest)
+npm run dev          # serveur de développement
+npm run build        # build de production
+npm test             # tests unitaires (Jest)
+npm run lint         # règles de code (ESLint)
+npm run typecheck    # vérification des types (TypeScript)
+npm run format       # formatage automatique (Prettier)
+npm run check        # tout vérifier d'un coup (types, lint, formatage, tests)
 ```
+
+Ces vérifications tournent aussi automatiquement sur GitHub à chaque push (`.github/workflows/ci.yml`).

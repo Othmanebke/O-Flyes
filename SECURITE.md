@@ -103,8 +103,8 @@ curl -I http://localhost:3000/
 
 ## Réglage Supabase : modèles d'email avec le code
 
-Dans **Authentication → Emails → Templates**, remplacer le contenu de **« Magic Link »** et de
-**« Confirm signup »** par :
+Dans **Authentication → Emails → Templates**, remplacer le contenu de **« Magic link or OTP »** et de
+**« Confirm sign up »** par (un SMTP personnalisé doit être actif pour pouvoir les modifier) :
 
 ```html
 <h2>Votre code AIVANA</h2>
