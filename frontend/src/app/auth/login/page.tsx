@@ -11,7 +11,7 @@ import type { PhotoKey } from "@/lib/photos";
 import Turnstile, { captchaOn } from "@/components/ui/Turnstile";
 import { GitHubMark, GoogleMark } from "@/components/ui/BrandIcons";
 import { safeNext } from "@/lib/safeNext";
-import { CODE_MAX, CODE_MIN, cleanCode } from "@/lib/emailCode";
+import { CODE_MAX, CODE_MIN, cleanCode, sendErrorMessage } from "@/lib/emailCode";
 
 type Provider = "google" | "github";
 
@@ -41,6 +41,7 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [mail, setMail] = useState<"idle" | "sending" | "sent" | "error" | "captcha" | "checking" | "wrong">("idle");
   const [code, setCode] = useState("");
+  const [sendError, setSendError] = useState("");
   // Captcha anti-robot (Cloudflare Turnstile) : Supabase vérifie le jeton lui-même
   // quand la protection est activée dans Authentication > Attack Protection.
   const [captcha, setCaptcha] = useState<string | null>(null);
@@ -54,6 +55,7 @@ function LoginContent() {
       // emailRedirectTo : si le modèle d'email contient un lien plutôt que le code, le lien marche aussi
       options: { captchaToken: captcha ?? undefined, emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
+    if (error) setSendError(sendErrorMessage(error));
     setMail(error ? "error" : "sent");
     setCaptchaReset(n => n + 1);
   };
@@ -132,7 +134,7 @@ function LoginContent() {
                   </button>
                   <Turnstile onToken={setCaptcha} theme="light" resetKey={captchaReset} />
                   {mail === "captcha" && <span className="text-sm text-danger">Cochez la vérification anti-robot avant d&apos;envoyer le code.</span>}
-                  {mail === "error" && <span className="text-sm text-danger">L&apos;envoi a échoué. Vérifiez l&apos;adresse ou réessayez dans une minute.</span>}
+                  {mail === "error" && <span className="text-sm text-danger">{sendError}</span>}
                 </form>
               )}
               <div className="my-1 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />ou<span className="h-px flex-1 bg-line" /></div>

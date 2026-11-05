@@ -41,3 +41,17 @@ export function maskEmail(email: string) {
     if (!domain) return email;
     return `${name.slice(0, 3)}${name.length > 3 ? "•••" : ""}@${domain}`;
 }
+
+// Message clair selon la cause de l'échec d'envoi du code (erreur Supabase Auth)
+export function sendErrorMessage(error: { status?: number; code?: string; message?: string } | null | undefined): string {
+    const status = error?.status ?? 0;
+    const msg = (error?.message || "").toLowerCase();
+    if (status === 429 || msg.includes("rate limit") || msg.includes("security purposes")) {
+        return "Trop de demandes rapprochées : patientez une minute avant de redemander un code.";
+    }
+    if (msg.includes("captcha")) return "La vérification anti-robot a échoué. Cochez-la puis réessayez.";
+    if (status >= 500) {
+        return "Le service d'envoi d'emails ne répond pas pour le moment. Réessayez dans quelques minutes.";
+    }
+    return "L'envoi a échoué. Vérifiez l'adresse email puis réessayez.";
+}

@@ -9,7 +9,7 @@ import Logo from "@/components/ui/Logo";
 import Turnstile, { captchaOn } from "@/components/ui/Turnstile";
 import { createClient } from "@/lib/supabase/browser";
 import { safeNext } from "@/lib/safeNext";
-import { CODE_MAX, CODE_MIN, cleanCode, emailVerified, maskEmail } from "@/lib/emailCode";
+import { CODE_MAX, CODE_MIN, cleanCode, emailVerified, maskEmail, sendErrorMessage } from "@/lib/emailCode";
 
 const RESEND_DELAY = 60; // secondes (Supabase refuse un nouvel envoi avant 60 s)
 
@@ -20,6 +20,7 @@ function VerifyContent() {
   const [code, setCode] = useState("");
   const [state, setState] = useState<"loading" | "idle" | "sending" | "sent" | "checking" | "wrong" | "send-error">("loading");
   const [wait, setWait] = useState(0);
+  const [sendError, setSendError] = useState("");
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
   const autoSent = useRef(false);
@@ -37,7 +38,7 @@ function VerifyContent() {
       email: address,
       options: { shouldCreateUser: false, captchaToken: token ?? undefined, emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
-    if (error) { setState("send-error"); setCaptchaReset(n => n + 1); return; }
+    if (error) { setSendError(sendErrorMessage(error)); setState("send-error"); setCaptchaReset(n => n + 1); return; }
     sessionStorage.setItem("aivana-code-sent", String(Date.now()));
     setState("sent");
     setWait(RESEND_DELAY);
@@ -51,7 +52,7 @@ function VerifyContent() {
       if (!session) { window.location.replace(`/auth/login?next=${encodeURIComponent(next)}`); return; }
       if (emailVerified(session.access_token)) { window.location.replace(next); return; }
       const address = session.user.email;
-      if (!address) { setState("send-error"); return; }
+      if (!address) { setSendError("Ce compte n'a pas d'adresse email : impossible d'envoyer un code."); setState("send-error"); return; }
       setEmail(address);
       // envoi automatique (sauf si un code vient déjà de partir, ex. rechargement de la page)
       const last = Number(sessionStorage.getItem("aivana-code-sent") || 0);
@@ -109,7 +110,7 @@ function VerifyContent() {
             </button>
             {state === "sent" && <span className="text-sm text-ok">Code envoyé. Pensez à regarder dans les spams.</span>}
             {state === "wrong" && <span className="text-sm text-danger">Code incorrect ou expiré. Vérifiez le dernier email reçu.</span>}
-            {state === "send-error" && <span className="text-sm text-danger">L&apos;envoi du code a échoué. Patientez une minute puis renvoyez-le.</span>}
+            {state === "send-error" && <span className="text-sm text-danger">{sendError}</span>}
           </form>
         )}
 
