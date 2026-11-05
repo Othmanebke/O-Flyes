@@ -11,7 +11,10 @@ function Bar() {
   const [visible, setVisible] = useState(false);
   const timers = useRef<number[]>([]);
 
-  const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  const clear = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
 
   // Démarrage : clic sur un lien de la même origine qui mène ailleurs
   useEffect(() => {
@@ -25,7 +28,11 @@ function Bar() {
       clear();
       setVisible(true);
       setWidth(12);
-      timers.current.push(window.setTimeout(() => setWidth(45), 120), window.setTimeout(() => setWidth(70), 600), window.setTimeout(() => setWidth(85), 1600));
+      timers.current.push(
+        window.setTimeout(() => setWidth(45), 120),
+        window.setTimeout(() => setWidth(70), 600),
+        window.setTimeout(() => setWidth(85), 1600),
+      );
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
@@ -35,7 +42,12 @@ function Bar() {
   useEffect(() => {
     clear();
     setWidth(w => (w > 0 ? 100 : 0));
-    timers.current.push(window.setTimeout(() => { setVisible(false); setWidth(0); }, 280));
+    timers.current.push(
+      window.setTimeout(() => {
+        setVisible(false);
+        setWidth(0);
+      }, 280),
+    );
     return clear;
   }, [pathname, params]);
 
@@ -50,5 +62,9 @@ function Bar() {
 }
 
 export default function RouteProgress() {
-  return <Suspense><Bar /></Suspense>;
+  return (
+    <Suspense>
+      <Bar />
+    </Suspense>
+  );
 }

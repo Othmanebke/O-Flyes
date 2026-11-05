@@ -17,21 +17,39 @@ export default function Toaster() {
       timer = setTimeout(() => setToast(null), 4500);
     };
     window.addEventListener("aivana-toast", on);
-    return () => { window.removeEventListener("aivana-toast", on); clearTimeout(timer); };
+    return () => {
+      window.removeEventListener("aivana-toast", on);
+      clearTimeout(timer);
+    };
   }, []);
 
   if (!toast) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-24 z-[250] flex justify-center px-4" role="status" aria-live="polite">
-      <div key={toast.id} className="pointer-events-auto flex animate-fade-up items-center gap-3 rounded-full bg-ink py-2 pl-2 pr-3 text-sm text-white shadow-panel">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gold-soft text-ink"><Check className="h-4 w-4" aria-hidden /></span>
+    <div
+      className="pointer-events-none fixed inset-x-0 top-24 z-[250] flex justify-center px-4"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        key={toast.id}
+        className="pointer-events-auto flex animate-fade-up items-center gap-3 rounded-full bg-ink py-2 pl-2 pr-3 text-sm text-white shadow-panel"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gold-soft text-ink">
+          <Check className="h-4 w-4" aria-hidden />
+        </span>
         <span>{toast.message}</span>
         {toast.action && (
-          <Link href={toast.action.href} onClick={() => setToast(null)} className="plain-link whitespace-nowrap rounded-full bg-white px-3 py-1 text-[13px] font-semibold !text-ink">
+          <Link
+            href={toast.action.href}
+            onClick={() => setToast(null)}
+            className="plain-link whitespace-nowrap rounded-full bg-white px-3 py-1 text-[13px] font-semibold !text-ink"
+          >
             {toast.action.label}
           </Link>
         )}
-        <button onClick={() => setToast(null)} aria-label="Fermer" className="text-white/60 hover:text-white"><X className="h-4 w-4" aria-hidden /></button>
+        <button onClick={() => setToast(null)} aria-label="Fermer" className="text-white/60 hover:text-white">
+          <X className="h-4 w-4" aria-hidden />
+        </button>
       </div>
     </div>
   );

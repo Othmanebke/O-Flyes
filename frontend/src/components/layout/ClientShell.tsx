@@ -21,7 +21,10 @@ function AutoHideNav() {
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
-        if (Math.abs(y - last) > 6) { setHidden(y > last && y > 80); last = y; }
+        if (Math.abs(y - last) > 6) {
+          setHidden(y > last && y > 80);
+          last = y;
+        }
         ticking = false;
       });
     };
@@ -47,11 +50,14 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     <>
       <RouteProgress />
       <EmailCodeGuard />
-      {!standalone && (
-        home
-          ? <div className="absolute inset-x-0 top-0 z-50"><Navbar overlay /></div>
-          : <AutoHideNav />
-      )}
+      {!standalone &&
+        (home ? (
+          <div className="absolute inset-x-0 top-0 z-50">
+            <Navbar overlay />
+          </div>
+        ) : (
+          <AutoHideNav />
+        ))}
       <main className="flex-1">{children}</main>
       {!standalone && !noFooter && <Footer />}
       {/* /assistant est déjà la conversation en plein écran */}

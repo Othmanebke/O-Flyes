@@ -4,14 +4,26 @@ import "./globals.css";
 import ClientShell from "@/components/layout/ClientShell";
 import { Analytics } from "@vercel/analytics/next";
 
-const sans = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-sans", display: "swap" });
-const serif = Newsreader({ subsets: ["latin"], style: ["italic"], weight: ["500", "600"], variable: "--font-serif", display: "swap" });
+const sans = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+  display: "swap",
+});
+const serif = Newsreader({
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["500", "600"],
+  variable: "--font-serif",
+  display: "swap",
+});
 const logo = Kaushan_Script({ subsets: ["latin"], weight: "400", variable: "--font-logo", display: "swap" });
 
 export const metadata: Metadata = {
   // chaque page donne son nom : « Vols · AIVANA », « Lisbonne · AIVANA »…
   title: { default: "AIVANA – Votre copilote de voyage", template: "%s · AIVANA" },
-  description: "Décrivez votre budget, vos dates et vos envies : AIVANA propose des destinations avec un coût total estimé, compare vols, hôtels et activités, et range tout dans votre carnet de voyage.",
+  description:
+    "Décrivez votre budget, vos dates et vos envies : AIVANA propose des destinations avec un coût total estimé, compare vols, hôtels et activités, et range tout dans votre carnet de voyage.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

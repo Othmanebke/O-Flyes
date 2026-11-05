@@ -27,7 +27,10 @@ function loadScript() {
       s.src = SRC;
       s.async = true;
       s.onload = () => resolve();
-      s.onerror = () => { loading = null; reject(new Error("turnstile")); };
+      s.onerror = () => {
+        loading = null;
+        reject(new Error("turnstile"));
+      };
       document.head.appendChild(s);
     });
   }
@@ -51,17 +54,19 @@ export default function Turnstile({ onToken, theme = "auto", resetKey = 0, class
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY || !ref.current) return;
     let cancelled = false;
-    loadScript().then(() => {
-      if (cancelled || !ref.current || !window.turnstile) return;
-      id.current = window.turnstile.render(ref.current, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme,
-        language: "fr",
-        callback: (t: string) => cb.current(t),
-        "expired-callback": () => cb.current(null),
-        "error-callback": () => cb.current(null),
-      });
-    }).catch(() => cb.current(null));
+    loadScript()
+      .then(() => {
+        if (cancelled || !ref.current || !window.turnstile) return;
+        id.current = window.turnstile.render(ref.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          theme,
+          language: "fr",
+          callback: (t: string) => cb.current(t),
+          "expired-callback": () => cb.current(null),
+          "error-callback": () => cb.current(null),
+        });
+      })
+      .catch(() => cb.current(null));
     return () => {
       cancelled = true;
       if (id.current && window.turnstile) window.turnstile.remove(id.current);
@@ -70,7 +75,10 @@ export default function Turnstile({ onToken, theme = "auto", resetKey = 0, class
   }, [theme]);
 
   useEffect(() => {
-    if (resetKey && id.current && window.turnstile) { window.turnstile.reset(id.current); cb.current(null); }
+    if (resetKey && id.current && window.turnstile) {
+      window.turnstile.reset(id.current);
+      cb.current(null);
+    }
   }, [resetKey]);
 
   if (!TURNSTILE_SITE_KEY) return null;

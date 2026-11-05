@@ -22,18 +22,22 @@ export default function DestinationFacts({ id, depart }: { id: string; depart: s
 
   useEffect(() => {
     setFailed(false);
-    axios.get<Info>("/api/destination-info", { params: { id, month } })
+    axios
+      .get<Info>("/api/destination-info", { params: { id, month } })
       .then(r => setInfo(r.data))
       .catch(() => setFailed(true));
   }, [id, month]);
 
   if (failed) return null;
-  const w = info?.weather, fx = info?.exchange;
+  const w = info?.weather,
+    fx = info?.exchange;
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[28px]">Sur place, <em className="accent">en vrai</em></h2>
+        <h2 className="m-0 text-[28px]">
+          Sur place, <em className="accent">en vrai</em>
+        </h2>
         <span className="text-[13px] text-muted">Données réelles : Open-Meteo, ExchangeRate-API, Wikipédia</span>
       </div>
       {!info ? (
@@ -43,16 +47,26 @@ export default function DestinationFacts({ id, depart }: { id: string; depart: s
           <div className="grid border-y border-line [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
             {w && w.maxAvg !== null && (
               <div className="flex flex-col gap-1.5 py-[18px] pr-4">
-                <span className="text-[13px] text-muted">Météo en {MONTHS_LONG[info.month]} (relevés {w.year})</span>
-                <span className="tabular text-[17px] font-medium">{w.minAvg}° / {w.maxAvg} °C</span>
-                <span className="text-[13px] text-muted-2">{w.rainyDays} jour{w.rainyDays > 1 ? "s" : ""} de pluie sur {w.days}</span>
+                <span className="text-[13px] text-muted">
+                  Météo en {MONTHS_LONG[info.month]} (relevés {w.year})
+                </span>
+                <span className="tabular text-[17px] font-medium">
+                  {w.minAvg}° / {w.maxAvg} °C
+                </span>
+                <span className="text-[13px] text-muted-2">
+                  {w.rainyDays} jour{w.rainyDays > 1 ? "s" : ""} de pluie sur {w.days}
+                </span>
               </div>
             )}
             {fx && (
               <div className="flex flex-col gap-1.5 py-[18px] pr-4">
                 <span className="text-[13px] text-muted">Change du jour</span>
-                <span className="tabular text-[17px] font-medium">1 € = {fmtRate(fx.rate)} {fx.currency}</span>
-                <span className="text-[13px] text-muted-2">{fx.currencyName} · 100 € = {fmtRate(fx.rate * 100)} {fx.currency}</span>
+                <span className="tabular text-[17px] font-medium">
+                  1 € = {fmtRate(fx.rate)} {fx.currency}
+                </span>
+                <span className="text-[13px] text-muted-2">
+                  {fx.currencyName} · 100 € = {fmtRate(fx.rate * 100)} {fx.currency}
+                </span>
               </div>
             )}
             {!fx && (
@@ -68,9 +82,17 @@ export default function DestinationFacts({ id, depart }: { id: string; depart: s
               <span className="text-[15px] font-semibold">Lieux à voir autour</span>
               <div className="grid gap-x-8 border-t border-line [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
                 {info.sights.map(s => (
-                  <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className="plain-link flex items-center justify-between gap-3 border-b border-line py-3 text-[15px] hover:!text-gold-deep">
+                  <a
+                    key={s.url}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="plain-link flex items-center justify-between gap-3 border-b border-line py-3 text-[15px] hover:!text-gold-deep"
+                  >
                     <span className="min-w-0 truncate">{s.title}</span>
-                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted">{s.km} km <ExternalLink className="h-3 w-3" aria-hidden /></span>
+                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
+                      {s.km} km <ExternalLink className="h-3 w-3" aria-hidden />
+                    </span>
                   </a>
                 ))}
               </div>

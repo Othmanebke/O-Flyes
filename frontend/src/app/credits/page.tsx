@@ -17,12 +17,19 @@ export default function CreditsPage() {
   return (
     <div className="mx-auto flex max-w-[900px] flex-col gap-8 px-6 pb-24 pt-12">
       <div className="flex flex-col gap-3">
-        <h1 className="m-0 text-[clamp(34px,4.4vw,52px)] leading-[1.05]">Crédits <em className="accent">photo</em></h1>
+        <h1 className="m-0 text-[clamp(34px,4.4vw,52px)] leading-[1.05]">
+          Crédits <em className="accent">photo</em>
+        </h1>
         <p className="m-0 max-w-[640px] text-base leading-relaxed text-muted-2">
           Les photos des destinations d&apos;origine et les illustrations du site viennent d&apos;
-          <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a> (licence Unsplash, utilisation libre).
-          Les photos des villes ci-dessous viennent de <a href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>,
-          sous licence libre : merci à leurs auteurs.
+          <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">
+            Unsplash
+          </a>{" "}
+          (licence Unsplash, utilisation libre). Les photos des villes ci-dessous viennent de{" "}
+          <a href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer">
+            Wikimedia Commons
+          </a>
+          , sous licence libre : merci à leurs auteurs.
         </p>
       </div>
 
@@ -41,10 +48,18 @@ export default function CreditsPage() {
                 {dest ? <Link href={`/destination/${dest.id}`}>{dest.name}</Link> : code}
               </td>
               <td className="py-2.5 pr-3 text-muted-2">
-                <a href={p.page} target="_blank" rel="noopener noreferrer" className="!text-muted-2">{p.author}</a>
+                <a href={p.page} target="_blank" rel="noopener noreferrer" className="!text-muted-2">
+                  {p.author}
+                </a>
               </td>
               <td className="py-2.5 text-muted-2">
-                {p.licenseUrl ? <a href={p.licenseUrl} target="_blank" rel="noopener noreferrer" className="!text-muted-2">{p.license}</a> : p.license}
+                {p.licenseUrl ? (
+                  <a href={p.licenseUrl} target="_blank" rel="noopener noreferrer" className="!text-muted-2">
+                    {p.license}
+                  </a>
+                ) : (
+                  p.license
+                )}
               </td>
             </tr>
           ))}

@@ -20,7 +20,13 @@ export const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Faut-il un compte ?",
-    a: <>Non pour découvrir et composer un voyage : il est gardé dans votre navigateur. Un compte (lien par email ou Google) sert à le sauvegarder, à le retrouver sur tous vos appareils et à recevoir un itinéraire jour par jour. <Link href="/auth/login">Créer un compte</Link></>,
+    a: (
+      <>
+        Non pour découvrir et composer un voyage : il est gardé dans votre navigateur. Un compte (lien par email ou
+        Google) sert à le sauvegarder, à le retrouver sur tous vos appareils et à recevoir un itinéraire jour par jour.{" "}
+        <Link href="/auth/login">Créer un compte</Link>
+      </>
+    ),
   },
   {
     q: "D'où viennent la météo, le change et les lieux à voir ?",
@@ -28,6 +34,12 @@ export const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Que deviennent mes données ?",
-    a: <>Sans compte, rien ne quitte votre navigateur, sauf les messages envoyés au copilote. Avec un compte, nous gardons votre email, votre nom et vos voyages, que vous pouvez supprimer depuis le carnet. <Link href="/legal#confidentialite">Politique de confidentialité</Link></>,
+    a: (
+      <>
+        Sans compte, rien ne quitte votre navigateur, sauf les messages envoyés au copilote. Avec un compte, nous
+        gardons votre email, votre nom et vos voyages, que vous pouvez supprimer depuis le carnet.{" "}
+        <Link href="/legal#confidentialite">Politique de confidentialité</Link>
+      </>
+    ),
   },
 ];

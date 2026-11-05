@@ -29,8 +29,12 @@ export default function CarnetPage() {
     return (
       <div className="mx-auto flex max-w-[640px] flex-col items-center gap-4 px-6 py-24 text-center">
         <Logo size={40} />
-        <p className="m-0 text-muted-2">Aucun voyage en cours sur cet appareil. Ouvrez un voyage depuis votre carnet pour le télécharger en PDF.</p>
-        <Link href="/dashboard" className="plain-link rounded-full bg-ink px-5 py-3 text-sm font-bold !text-white">Mon carnet</Link>
+        <p className="m-0 text-muted-2">
+          Aucun voyage en cours sur cet appareil. Ouvrez un voyage depuis votre carnet pour le télécharger en PDF.
+        </p>
+        <Link href="/dashboard" className="plain-link rounded-full bg-ink px-5 py-3 text-sm font-bold !text-white">
+          Mon carnet
+        </Link>
       </div>
     );
   }
@@ -53,9 +57,16 @@ export default function CarnetPage() {
 
       {/* Barre d'outils : invisible sur le PDF */}
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper/95 px-6 py-3 backdrop-blur print:hidden">
-        <Link href="/dashboard" className="plain-link flex items-center gap-2 text-sm font-semibold !text-ink"><ArrowLeft className="h-4 w-4" aria-hidden /> Retour au carnet</Link>
-        <span className="hidden text-[13px] text-muted md:inline">Dans la fenêtre qui s&apos;ouvre, choisissez « Enregistrer au format PDF ».</span>
-        <button onClick={() => window.print()} className="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-ink-2">
+        <Link href="/dashboard" className="plain-link flex items-center gap-2 text-sm font-semibold !text-ink">
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Retour au carnet
+        </Link>
+        <span className="hidden text-[13px] text-muted md:inline">
+          Dans la fenêtre qui s&apos;ouvre, choisissez « Enregistrer au format PDF ».
+        </span>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-ink-2"
+        >
           <Download className="h-4 w-4" aria-hidden /> Télécharger le PDF
         </button>
       </div>
@@ -67,7 +78,10 @@ export default function CarnetPage() {
             <span className="text-xs font-bold uppercase tracking-[0.14em] text-gold-deep">Carnet de voyage</span>
             <h1 className="m-0 text-[34px] font-extrabold leading-tight tracking-[-0.03em]">{tripName(plan)}</h1>
             <span className="text-sm text-muted-2">
-              {plan.name ? `${plan.destination} · ` : ""}{country ? `${country} · ` : ""}{formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur{plan.travelers > 1 ? "s" : ""} · depuis {plan.origin}
+              {plan.name ? `${plan.destination} · ` : ""}
+              {country ? `${country} · ` : ""}
+              {formatRange(plan.depart, plan.ret)} · {nights} nuit{nights > 1 ? "s" : ""} · {plan.travelers} voyageur
+              {plan.travelers > 1 ? "s" : ""} · depuis {plan.origin}
             </span>
           </div>
           <Logo size={34} />
@@ -77,8 +91,20 @@ export default function CarnetPage() {
         <section className="grid grid-cols-3 gap-3">
           {[
             { l: "Total estimé", v: eur(total), s: `${eur(total / Math.max(1, plan.travelers))} par personne` },
-            { l: "Budget", v: plan.budget ? eur(plan.budget) : "—", s: plan.budget ? (total > plan.budget ? `${eur(total - plan.budget)} au-dessus` : `${eur(plan.budget - total)} de marge`) : "Non fixé" },
-            { l: "Réservations", v: `${booked} / ${plan.items.length}`, s: booked === plan.items.length && plan.items.length ? "Tout est réservé" : "réservées" },
+            {
+              l: "Budget",
+              v: plan.budget ? eur(plan.budget) : "—",
+              s: plan.budget
+                ? total > plan.budget
+                  ? `${eur(total - plan.budget)} au-dessus`
+                  : `${eur(plan.budget - total)} de marge`
+                : "Non fixé",
+            },
+            {
+              l: "Réservations",
+              v: `${booked} / ${plan.items.length}`,
+              s: booked === plan.items.length && plan.items.length ? "Tout est réservé" : "réservées",
+            },
           ].map(k => (
             <div key={k.l} className="flex flex-col gap-1 rounded-[14px] border border-line p-3.5">
               <span className="text-xs font-semibold text-muted">{k.l}</span>
@@ -91,7 +117,9 @@ export default function CarnetPage() {
         {/* Réservations */}
         <section className="flex flex-col gap-3 [break-inside:avoid]">
           <h2 className="m-0 text-lg font-extrabold">Réservations</h2>
-          {items.length === 0 ? <p className="m-0 text-sm text-muted">Aucun élément pour l&apos;instant.</p> : (
+          {items.length === 0 ? (
+            <p className="m-0 text-sm text-muted">Aucun élément pour l&apos;instant.</p>
+          ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs text-muted">
@@ -108,12 +136,22 @@ export default function CarnetPage() {
                     <td className="py-2.5 pr-3 font-semibold">{KIND[i.type]}</td>
                     <td className="py-2.5 pr-3">
                       <span className="font-semibold">{shortTitle(i)}</span>
-                      {(i.subtitle || i.provider) && <span className="block text-xs text-muted">{[i.provider, i.subtitle].filter(Boolean).join(" · ")}</span>}
+                      {(i.subtitle || i.provider) && (
+                        <span className="block text-xs text-muted">
+                          {[i.provider, i.subtitle].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
                       {i.url && !i.booked && <span className="block break-all text-[11px] text-muted">{i.url}</span>}
                     </td>
                     <td className="whitespace-nowrap py-2.5 pr-3">{i.date ? fmtDay(i.date) : "—"}</td>
-                    <td className="tabular whitespace-nowrap py-2.5 pr-3 text-right font-semibold">{i.price === 0 ? "Gratuit" : i.price != null ? eur(i.price) : "—"}</td>
-                    <td className={`whitespace-nowrap py-2.5 text-right text-xs font-bold ${i.booked ? "text-ok" : "text-gold-deep"}`}>{i.booked ? "Réservé" : "À réserver"}</td>
+                    <td className="tabular whitespace-nowrap py-2.5 pr-3 text-right font-semibold">
+                      {i.price === 0 ? "Gratuit" : i.price != null ? eur(i.price) : "—"}
+                    </td>
+                    <td
+                      className={`whitespace-nowrap py-2.5 text-right text-xs font-bold ${i.booked ? "text-ok" : "text-gold-deep"}`}
+                    >
+                      {i.booked ? "Réservé" : "À réserver"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -132,15 +170,29 @@ export default function CarnetPage() {
                 ...(n === days.length - 1 && n > 0 ? [`Retour vers ${plan.origin}`] : []),
               ];
               return (
-                <li key={d.date} className="grid grid-cols-[170px_minmax(0,1fr)] gap-4 border-b border-dashed border-line py-2 text-sm [break-inside:avoid]">
-                  <span className="whitespace-nowrap font-bold">Jour {n + 1} <span className="font-normal text-muted">· {fmtDay(d.date)}</span></span>
-                  <span className="flex flex-col gap-0.5 text-muted-2">{lines.length ? lines.map((l, j) => <span key={j}>{l}</span>) : <span className="text-muted">Journée libre</span>}</span>
+                <li
+                  key={d.date}
+                  className="grid grid-cols-[170px_minmax(0,1fr)] gap-4 border-b border-dashed border-line py-2 text-sm [break-inside:avoid]"
+                >
+                  <span className="whitespace-nowrap font-bold">
+                    Jour {n + 1} <span className="font-normal text-muted">· {fmtDay(d.date)}</span>
+                  </span>
+                  <span className="flex flex-col gap-0.5 text-muted-2">
+                    {lines.length ? (
+                      lines.map((l, j) => <span key={j}>{l}</span>)
+                    ) : (
+                      <span className="text-muted">Journée libre</span>
+                    )}
+                  </span>
                 </li>
               );
             })}
           </ol>
           {unplaced.length > 0 && (
-            <p className="m-0 text-sm text-muted-2"><span className="font-bold text-ink">À placer dans le séjour : </span>{unplaced.map(i => shortTitle(i)).join(", ")}</p>
+            <p className="m-0 text-sm text-muted-2">
+              <span className="font-bold text-ink">À placer dans le séjour : </span>
+              {unplaced.map(i => shortTitle(i)).join(", ")}
+            </p>
           )}
         </section>
 
@@ -151,8 +203,9 @@ export default function CarnetPage() {
         </section>
 
         <footer className="border-t border-line pt-4 text-[11px] leading-relaxed text-muted">
-          Prix estimés au moment de la planification : le tarif réel est celui affiché par chaque partenaire lors de la réservation.
-          Carnet généré par AIVANA le {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.
+          Prix estimés au moment de la planification : le tarif réel est celui affiché par chaque partenaire lors de la
+          réservation. Carnet généré par AIVANA le{" "}
+          {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.
         </footer>
       </article>
     </>

@@ -5,6 +5,8 @@
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "start": "cd frontend && npm run start",
-    "lint": "cd frontend && npm run lint"
+    "lint": "cd frontend && npm run lint",
+    "test": "cd frontend && npm test",
+    "check": "cd frontend && npm run check"
   }
 }

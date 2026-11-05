@@ -10,36 +10,45 @@ import { commonsUrl, isCommons, photoBase, type PhotoKey } from "@/lib/photos";
 const unsplashLoader = ({ src, width }: ImageLoaderProps) => `${src}&w=${width}`;
 
 interface Props {
-    k: PhotoKey;
-    alt?: string;
-    sizes?: string;
-    priority?: boolean;
-    className?: string;
-    imgClassName?: string;
-    style?: CSSProperties;
-    imgStyle?: CSSProperties;
+  k: PhotoKey;
+  alt?: string;
+  sizes?: string;
+  priority?: boolean;
+  className?: string;
+  imgClassName?: string;
+  style?: CSSProperties;
+  imgStyle?: CSSProperties;
 }
 
 /* Photo en object-cover qui remplit son conteneur. En cas d'erreur de chargement,
    il reste le fond sable #D9D2C4. */
-export default function Photo({ k, alt = "", sizes = "100vw", priority, className, imgClassName, style, imgStyle }: Props) {
-    const [failed, setFailed] = useState(false);
-    return (
-        // twMerge : un « absolute » passé en className remplace bien le « relative » par défaut
-        <div className={twMerge("relative overflow-hidden bg-placeholder", className)} style={style}>
-            {!failed && (
-                <Image
-                    loader={isCommons(k) ? ({ width }) => commonsUrl(k, width) : unsplashLoader}
-                    src={isCommons(k) ? commonsUrl(k, 960) : photoBase(k)}
-                    alt={alt}
-                    fill
-                    sizes={sizes}
-                    priority={priority}
-                    onError={() => setFailed(true)}
-                    className={clsx("object-cover", imgClassName)}
-                    style={imgStyle}
-                />
-            )}
-        </div>
-    );
+export default function Photo({
+  k,
+  alt = "",
+  sizes = "100vw",
+  priority,
+  className,
+  imgClassName,
+  style,
+  imgStyle,
+}: Props) {
+  const [failed, setFailed] = useState(false);
+  return (
+    // twMerge : un « absolute » passé en className remplace bien le « relative » par défaut
+    <div className={twMerge("relative overflow-hidden bg-placeholder", className)} style={style}>
+      {!failed && (
+        <Image
+          loader={isCommons(k) ? ({ width }) => commonsUrl(k, width) : unsplashLoader}
+          src={isCommons(k) ? commonsUrl(k, 960) : photoBase(k)}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          onError={() => setFailed(true)}
+          className={clsx("object-cover", imgClassName)}
+          style={imgStyle}
+        />
+      )}
+    </div>
+  );
 }

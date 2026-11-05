@@ -17,14 +17,23 @@ export default function EmailCodeGuard() {
     const supabase = createClient();
     let alive = true;
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (alive && session && !emailVerified(session.access_token)) {
         router.replace(`/auth/verify?next=${encodeURIComponent(pathname)}`);
       }
     };
     void check();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { void check(); });
-    return () => { alive = false; subscription.unsubscribe(); };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void check();
+    });
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
   }, [pathname, router]);
 
   return null;

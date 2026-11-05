@@ -6,7 +6,9 @@ const isDev = process.env.NODE_ENV !== "production";
 let supabase = "";
 try {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) supabase = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host;
-} catch { /* URL invalide : la CSP n'autorisera simplement pas Supabase */ }
+} catch {
+  /* URL invalide : la CSP n'autorisera simplement pas Supabase */
+}
 
 // Content Security Policy : liste blanche des sources que le navigateur a le droit
 // de charger. Limite fortement l'impact d'une éventuelle faille XSS.
@@ -34,7 +36,10 @@ const securityHeaders = [
   // les sites externes ne voient que le domaine d'origine, pas l'URL complète
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // fonctionnalités du navigateur inutiles au site : désactivées
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+  },
   // HTTPS obligatoire pendant 2 ans (ignoré en http://localhost)
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },

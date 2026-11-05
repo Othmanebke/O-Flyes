@@ -1,17 +1,17 @@
 export interface RoadtripStep {
-    dayRange: string;
-    locationName: string;
-    country: string;
-    description: string;
-    transportToNext?: string;
-    estimatedCost?: string;
-    activities: string[];
+  dayRange: string;
+  locationName: string;
+  country: string;
+  description: string;
+  transportToNext?: string;
+  estimatedCost?: string;
+  activities: string[];
 }
 
 export interface RoadtripProposal {
-    title: string;
-    summary: string;
-    totalDays: number;
-    steps: RoadtripStep[];
-    generatedAt?: string;
+  title: string;
+  summary: string;
+  totalDays: number;
+  steps: RoadtripStep[];
+  generatedAt?: string;
 }

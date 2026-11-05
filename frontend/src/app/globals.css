@@ -6,26 +6,36 @@
   body {
     @apply bg-paper text-ink font-sans antialiased;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-sans font-bold tracking-[-0.035em];
   }
   a {
-    color: #9A7A34;
+    color: #9a7a34;
   }
   a:hover {
-    color: #6E5323;
+    color: #6e5323;
   }
-  input, button, textarea, select {
+  input,
+  button,
+  textarea,
+  select {
     font-family: inherit;
   }
   ::placeholder {
-    color: #736E66;
+    color: #736e66;
   }
-  input[type="checkbox"], input[type="radio"], input[type="range"] {
-    accent-color: #9A7A34;
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    accent-color: #9a7a34;
   }
   :focus-visible {
-    outline: 2px solid #9A7A34;
+    outline: 2px solid #9a7a34;
     outline-offset: 2px;
   }
 }
@@ -43,7 +53,8 @@
     font-variant-numeric: tabular-nums;
   }
   /* Liens neutres (cartes cliquables) : pas de couleur or */
-  .plain-link, .plain-link:hover {
+  .plain-link,
+  .plain-link:hover {
     color: inherit;
     text-decoration: none;
   }
@@ -51,7 +62,9 @@
 
 /* Aucune animation pour les personnes qui le demandent */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -23,11 +23,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <article className="mx-auto flex max-w-[760px] flex-col gap-7 px-6 pb-24 pt-8">
       <nav aria-label="Fil d'Ariane" className="flex gap-2 text-[13px] text-muted">
-        <Link href="/blog" className="plain-link !text-muted hover:!text-ink">Journal</Link><span>/</span><span className="text-muted-2">{a.place}</span>
+        <Link href="/blog" className="plain-link !text-muted hover:!text-ink">
+          Journal
+        </Link>
+        <span>/</span>
+        <span className="text-muted-2">{a.place}</span>
       </nav>
       <Photo k={a.photo} alt="" priority sizes="760px" className="h-[clamp(220px,40vw,380px)] rounded-[24px]" />
       <div className="flex flex-col gap-3">
-        <span className="text-[13px] text-muted">{a.tag} · {formatDate(a.date)} · {a.minutes} min de lecture</span>
+        <span className="text-[13px] text-muted">
+          {a.tag} · {formatDate(a.date)} · {a.minutes} min de lecture
+        </span>
         <h1 className="m-0 text-[clamp(32px,4.4vw,48px)] leading-[1.08]">{a.title}</h1>
         <p className="m-0 text-lg leading-relaxed text-muted-2">{a.excerpt}</p>
       </div>
@@ -46,7 +52,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <div className="flex flex-col gap-0.5">
               <span className="text-[13px] text-muted">Planifier ce voyage</span>
               <span className="text-lg font-bold tracking-[-0.02em]">{d.name}</span>
-              <span className="text-[13px] text-muted-2">{d.duration} · dès {eur(d.budgetMin)} à deux</span>
+              <span className="text-[13px] text-muted-2">
+                {d.duration} · dès {eur(d.budgetMin)} à deux
+              </span>
             </div>
           </div>
           <ArrowPill href={`/destination/${d.id}`}>Voir et chiffrer</ArrowPill>

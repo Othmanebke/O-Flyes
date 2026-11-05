@@ -33,13 +33,17 @@ function SignInMethods() {
     const { data } = await createClient().auth.getUserIdentities();
     setIdentities(data?.identities || []);
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const link = async (provider: "google" | "github") => {
     setMsg(null);
     const { error } = await createClient().auth.linkIdentity({
       provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/dashboard?settings=1")}` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/dashboard?settings=1")}`,
+      },
     });
     if (error) setMsg("Liaison impossible pour le moment (la liaison manuelle doit être activée dans Supabase).");
   };
@@ -56,27 +60,47 @@ function SignInMethods() {
 
   return (
     <section className={card} aria-labelledby="sec-methods">
-      <h2 id="sec-methods" className="m-0 flex items-center gap-2 text-[20px]"><Link2 className="h-5 w-5" aria-hidden /> Méthodes de connexion</h2>
-      <p className="m-0 text-sm text-muted-2">Associez plusieurs comptes pour toujours pouvoir vous connecter, même si l&apos;un d&apos;eux devient inaccessible.</p>
-      {identities === null ? <p className="m-0 text-sm text-muted">Chargement…</p> : (
+      <h2 id="sec-methods" className="m-0 flex items-center gap-2 text-[20px]">
+        <Link2 className="h-5 w-5" aria-hidden /> Méthodes de connexion
+      </h2>
+      <p className="m-0 text-sm text-muted-2">
+        Associez plusieurs comptes pour toujours pouvoir vous connecter, même si l&apos;un d&apos;eux devient
+        inaccessible.
+      </p>
+      {identities === null ? (
+        <p className="m-0 text-sm text-muted">Chargement…</p>
+      ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {emailIdentity && (
             <li className="flex items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3 text-sm">
-              <span className="flex items-center gap-2.5 font-semibold"><KeyRound className="h-[18px] w-[18px]" aria-hidden /> Code par email</span>
+              <span className="flex items-center gap-2.5 font-semibold">
+                <KeyRound className="h-[18px] w-[18px]" aria-hidden /> Code par email
+              </span>
               <span className="text-ok">Actif</span>
             </li>
           )}
           {PROVIDERS.map(p => {
             const id = has(p.id);
             return (
-              <li key={p.id} className="flex items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3 text-sm">
-                <span className="flex items-center gap-2.5 font-semibold">{p.icon} {p.label}</span>
+              <li
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3 text-sm"
+              >
+                <span className="flex items-center gap-2.5 font-semibold">
+                  {p.icon} {p.label}
+                </span>
                 {id ? (
-                  identities.length > 1
-                    ? <button onClick={() => unlink(id)} className="text-muted-2 hover:text-danger">Retirer</button>
-                    : <span className="text-ok">Actif</span>
+                  identities.length > 1 ? (
+                    <button onClick={() => unlink(id)} className="text-muted-2 hover:text-danger">
+                      Retirer
+                    </button>
+                  ) : (
+                    <span className="text-ok">Actif</span>
+                  )
                 ) : (
-                  <button onClick={() => link(p.id)} className="font-semibold hover:text-gold-deep">Associer</button>
+                  <button onClick={() => link(p.id)} className="font-semibold hover:text-gold-deep">
+                    Associer
+                  </button>
                 )}
               </li>
             );
@@ -100,35 +124,66 @@ function MyData() {
     setState("deleting");
     try {
       await axios.delete("/api/account", { data: { confirm: confirmText } });
-      await createClient().auth.signOut().catch(() => undefined);
+      await createClient()
+        .auth.signOut()
+        .catch(() => undefined);
       // On efface aussi ce que le navigateur garde (voyage en cours, préférences)
-      Object.keys(localStorage).filter(k => k.startsWith("aivana") || k.startsWith("roadtrip_")).forEach(k => localStorage.removeItem(k));
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("aivana") || k.startsWith("roadtrip_"))
+        .forEach(k => localStorage.removeItem(k));
       window.location.replace("/?compte=supprime");
     } catch (err) {
-      setError(axios.isAxiosError(err) && err.response?.data?.error ? err.response.data.error : "La suppression a échoué.");
+      setError(
+        axios.isAxiosError(err) && err.response?.data?.error ? err.response.data.error : "La suppression a échoué.",
+      );
       setState("error");
     }
   };
 
   return (
     <section className={card} aria-labelledby="sec-data">
-      <h2 id="sec-data" className="m-0 flex items-center gap-2 text-[20px]"><Download className="h-5 w-5" aria-hidden /> Mes données</h2>
+      <h2 id="sec-data" className="m-0 flex items-center gap-2 text-[20px]">
+        <Download className="h-5 w-5" aria-hidden /> Mes données
+      </h2>
       <p className="m-0 text-sm text-muted-2">
-        Conformément au RGPD, vous pouvez télécharger toutes les données que nous conservons sur vous
-        (compte, voyages, itinéraires, abonnement) ou supprimer définitivement votre compte.
+        Conformément au RGPD, vous pouvez télécharger toutes les données que nous conservons sur vous (compte, voyages,
+        itinéraires, abonnement) ou supprimer définitivement votre compte.
       </p>
-      <a href="/api/account/export" download className={`plain-link ${btn} border border-line-2 !text-ink hover:border-ink`}>
+      <a
+        href="/api/account/export"
+        download
+        className={`plain-link ${btn} border border-line-2 !text-ink hover:border-ink`}
+      >
         <Download className="h-4 w-4" aria-hidden /> Télécharger mes données (JSON)
       </a>
 
-      <form onSubmit={remove} className="mt-2 flex flex-col gap-2.5 rounded-2xl border border-danger/30 bg-danger/[0.04] p-4">
+      <form
+        onSubmit={remove}
+        className="mt-2 flex flex-col gap-2.5 rounded-2xl border border-danger/30 bg-danger/[0.04] p-4"
+      >
         <strong className="text-sm text-danger">Supprimer mon compte</strong>
-        <p className="m-0 text-sm text-muted-2">Vos voyages, éléments et itinéraires seront effacés immédiatement et définitivement. Les liens de partage cesseront de fonctionner.</p>
-        <label htmlFor="delete-confirm" className="text-sm">Tapez <strong>SUPPRIMER</strong> pour confirmer</label>
+        <p className="m-0 text-sm text-muted-2">
+          Vos voyages, éléments et itinéraires seront effacés immédiatement et définitivement. Les liens de partage
+          cesseront de fonctionner.
+        </p>
+        <label htmlFor="delete-confirm" className="text-sm">
+          Tapez <strong>SUPPRIMER</strong> pour confirmer
+        </label>
         <div className="flex flex-wrap gap-2">
-          <input id="delete-confirm" value={confirmText} onChange={e => setConfirmText(e.target.value)} autoComplete="off" className="h-[42px] w-[180px] rounded-full border border-line-2 bg-white px-4 text-sm" />
-          <button type="submit" disabled={confirmText !== "SUPPRIMER" || state === "deleting"} className={`${btn} bg-danger text-white hover:opacity-90`}>
-            <Trash2 className="h-4 w-4" aria-hidden /> {state === "deleting" ? "Suppression…" : "Supprimer définitivement"}
+          <input
+            id="delete-confirm"
+            value={confirmText}
+            onChange={e => setConfirmText(e.target.value)}
+            autoComplete="off"
+            className="h-[42px] w-[180px] rounded-full border border-line-2 bg-white px-4 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={confirmText !== "SUPPRIMER" || state === "deleting"}
+            className={`${btn} bg-danger text-white hover:opacity-90`}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />{" "}
+            {state === "deleting" ? "Suppression…" : "Supprimer définitivement"}
           </button>
         </div>
         {state === "error" && <p className="m-0 text-sm text-danger">{error}</p>}

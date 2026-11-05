@@ -27,7 +27,17 @@ export interface SearchContext {
    `ready` passe à true une fois le contexte lu côté navigateur. */
 export function useTripContext() {
   const params = useSearchParams();
-  const [ctx, setCtx] = useState<SearchContext>({ origin: "Paris", dest: "", depart: "", ret: "", pax: 2, children: 0, infants: 0, trip: "roundtrip", leg: "outbound" });
+  const [ctx, setCtx] = useState<SearchContext>({
+    origin: "Paris",
+    dest: "",
+    depart: "",
+    ret: "",
+    pax: 2,
+    children: 0,
+    infants: 0,
+    trip: "roundtrip",
+    leg: "outbound",
+  });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -42,9 +52,29 @@ export function useTripContext() {
 
     if (params.get("leg") === "retour") {
       // Vol retour : de la destination vers la maison, à la date de retour
-      setCtx({ origin: dest, dest: home, depart: ret, ret, pax, children: 0, infants: 0, trip: "oneway", leg: "return" });
+      setCtx({
+        origin: dest,
+        dest: home,
+        depart: ret,
+        ret,
+        pax,
+        children: 0,
+        infants: 0,
+        trip: "oneway",
+        leg: "return",
+      });
     } else {
-      setCtx({ origin: home, dest, depart, ret, pax, children: 0, infants: 0, trip: params.get("trip") === "oneway" ? "oneway" : "roundtrip", leg: "outbound" });
+      setCtx({
+        origin: home,
+        dest,
+        depart,
+        ret,
+        pax,
+        children: 0,
+        infants: 0,
+        trip: params.get("trip") === "oneway" ? "oneway" : "roundtrip",
+        leg: "outbound",
+      });
     }
     setReady(true);
   }, [params]);
@@ -58,11 +88,15 @@ export function syncPlanWithSearch(c: SearchContext) {
   const plan = getPlan();
   if (!plan || c.leg === "return") return;
   const cat = findDestination(plan.destination);
-  const same = [plan.destination, cat ? searchCity(cat) : ""].some(n => n && n.toLowerCase() === c.dest.trim().toLowerCase());
+  const same = [plan.destination, cat ? searchCity(cat) : ""].some(
+    n => n && n.toLowerCase() === c.dest.trim().toLowerCase(),
+  );
   if (!same) return;
-  updatePlan(c.trip === "roundtrip"
-    ? { depart: c.depart, ret: c.ret, travelers: c.pax + c.children + c.infants, origin: c.origin }
-    : { depart: c.depart, travelers: c.pax + c.children + c.infants, origin: c.origin });
+  updatePlan(
+    c.trip === "roundtrip"
+      ? { depart: c.depart, ret: c.ret, travelers: c.pax + c.children + c.infants, origin: c.origin }
+      : { depart: c.depart, travelers: c.pax + c.children + c.infants, origin: c.origin },
+  );
 }
 
 /* Contexte à utiliser pour créer le voyage si on ajoute un élément sans voyage en cours */
@@ -70,7 +104,9 @@ export function planInputFrom(c: SearchContext): PlanInput {
   const place = c.leg === "return" ? c.origin : c.dest;
   const cat = findDestination(place);
   return {
-    destination: cat?.name || place, destId: cat?.id, country: cat?.country,
+    destination: cat?.name || place,
+    destId: cat?.id,
+    country: cat?.country,
     origin: c.leg === "return" ? c.dest : c.origin,
     depart: c.leg === "return" ? undefined : c.depart,
     ret: c.trip === "roundtrip" || c.leg === "return" ? c.ret : undefined,
